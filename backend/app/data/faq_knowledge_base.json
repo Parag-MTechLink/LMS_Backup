@@ -1,0 +1,4996 @@
+[
+  {
+    "question": "Where do I see the lab management dashboard?",
+    "answer": "Go to Lab Management from the main menu. The Dashboard is the first page; it shows summary counts for RFQs, projects, samples, test executions, and other key metrics based on your role.",
+    "module": "Dashboard",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I get to the Dashboard?",
+    "answer": "After logging in, select Lab Management. The default landing page is the Dashboard. You can also click Dashboard in the sidebar.",
+    "module": "Dashboard",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "What statistics appear on the Dashboard?",
+    "answer": "The Dashboard shows aggregate counts such as RFQs, projects, customers, samples, test plans, test executions, and test results. Exact widgets depend on your role and backend configuration.",
+    "module": "Dashboard",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "Can I customize the Dashboard?",
+    "answer": "Dashboard content is role-based. Customization options depend on implementation; typically filters or date ranges may be available.",
+    "module": "Dashboard",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "Why is my Dashboard loading slowly?",
+    "answer": "The Dashboard fetches multiple APIs in parallel. Ensure your network and backend are responsive. Clear cache or refresh; if using cached data, wait for the next refresh.",
+    "module": "Dashboard",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "What does the Dashboard show for role 5?",
+    "answer": "The Dashboard shows summary statistics relevant to your role: Admin and Lab Manager see full overview; Sales Engineer sees customer and RFQ-related metrics; Testing Engineer and Technician see assigned work and executions.",
+    "module": "Dashboard",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "What does the Dashboard show for role 6?",
+    "answer": "The Dashboard shows summary statistics relevant to your role: Admin and Lab Manager see full overview; Sales Engineer sees customer and RFQ-related metrics; Testing Engineer and Technician see assigned work and executions.",
+    "module": "Dashboard",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "What does the Dashboard show for role 7?",
+    "answer": "The Dashboard shows summary statistics relevant to your role: Admin and Lab Manager see full overview; Sales Engineer sees customer and RFQ-related metrics; Testing Engineer and Technician see assigned work and executions.",
+    "module": "Dashboard",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "What does the Dashboard show for role 8?",
+    "answer": "The Dashboard shows summary statistics relevant to your role: Admin and Lab Manager see full overview; Sales Engineer sees customer and RFQ-related metrics; Testing Engineer and Technician see assigned work and executions.",
+    "module": "Dashboard",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "What does the Dashboard show for role 9?",
+    "answer": "The Dashboard shows summary statistics relevant to your role: Admin and Lab Manager see full overview; Sales Engineer sees customer and RFQ-related metrics; Testing Engineer and Technician see assigned work and executions.",
+    "module": "Dashboard",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "What does the Dashboard show for role 10?",
+    "answer": "The Dashboard shows summary statistics relevant to your role: Admin and Lab Manager see full overview; Sales Engineer sees customer and RFQ-related metrics; Testing Engineer and Technician see assigned work and executions.",
+    "module": "Dashboard",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "What does the Dashboard show for role 11?",
+    "answer": "The Dashboard shows summary statistics relevant to your role: Admin and Lab Manager see full overview; Sales Engineer sees customer and RFQ-related metrics; Testing Engineer and Technician see assigned work and executions.",
+    "module": "Dashboard",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "What does the Dashboard show for role 12?",
+    "answer": "The Dashboard shows summary statistics relevant to your role: Admin and Lab Manager see full overview; Sales Engineer sees customer and RFQ-related metrics; Testing Engineer and Technician see assigned work and executions.",
+    "module": "Dashboard",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "What does the Dashboard show for role 13?",
+    "answer": "The Dashboard shows summary statistics relevant to your role: Admin and Lab Manager see full overview; Sales Engineer sees customer and RFQ-related metrics; Testing Engineer and Technician see assigned work and executions.",
+    "module": "Dashboard",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "What does the Dashboard show for role 14?",
+    "answer": "The Dashboard shows summary statistics relevant to your role: Admin and Lab Manager see full overview; Sales Engineer sees customer and RFQ-related metrics; Testing Engineer and Technician see assigned work and executions.",
+    "module": "Dashboard",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "Where do I edit organization details?",
+    "answer": "Go to Lab Management → Organization Details (Admin only). You can update lab name, registered office, top management, shift timings, compliance documents, SOPs, quality formats, and other organization-level data.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "Who can access Organization Details?",
+    "answer": "Only the Admin role can see and edit Organization Details in the sidebar. Other roles do not have this menu item.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I add top management entries?",
+    "answer": "In Organization Details, open the Top Management section. Add or edit entries with names and designations. Save changes.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I set shift timings?",
+    "answer": "In Organization Details, go to Shift Timings. Add or edit shifts with start and end times. These can be used for scheduling and compliance.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "Where do I upload compliance documents?",
+    "answer": "In Organization Details, use the Compliance Documents or similar section to upload and attach compliance files. Admin manages these.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I add or edit SOPs at organization level?",
+    "answer": "In Organization Details, find the SOPs section. Create or edit standard operating procedures, set version and approval status.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "What is the organization checklist?",
+    "answer": "The organization checklist helps ensure all required organization data (e.g. lab details, compliance, accreditations) is complete. Access it from Organization Details.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I update organization field 7?",
+    "answer": "Go to Lab Management → Organization Details (Admin only). Navigate to the relevant section (e.g. bank details, working schedule, infrastructure, accreditation) and edit. Save to apply.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I update organization field 8?",
+    "answer": "Go to Lab Management → Organization Details (Admin only). Navigate to the relevant section (e.g. bank details, working schedule, infrastructure, accreditation) and edit. Save to apply.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I update organization field 9?",
+    "answer": "Go to Lab Management → Organization Details (Admin only). Navigate to the relevant section (e.g. bank details, working schedule, infrastructure, accreditation) and edit. Save to apply.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I update organization field 10?",
+    "answer": "Go to Lab Management → Organization Details (Admin only). Navigate to the relevant section (e.g. bank details, working schedule, infrastructure, accreditation) and edit. Save to apply.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I update organization field 11?",
+    "answer": "Go to Lab Management → Organization Details (Admin only). Navigate to the relevant section (e.g. bank details, working schedule, infrastructure, accreditation) and edit. Save to apply.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I update organization field 12?",
+    "answer": "Go to Lab Management → Organization Details (Admin only). Navigate to the relevant section (e.g. bank details, working schedule, infrastructure, accreditation) and edit. Save to apply.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I update organization field 13?",
+    "answer": "Go to Lab Management → Organization Details (Admin only). Navigate to the relevant section (e.g. bank details, working schedule, infrastructure, accreditation) and edit. Save to apply.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I update organization field 14?",
+    "answer": "Go to Lab Management → Organization Details (Admin only). Navigate to the relevant section (e.g. bank details, working schedule, infrastructure, accreditation) and edit. Save to apply.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I update organization field 15?",
+    "answer": "Go to Lab Management → Organization Details (Admin only). Navigate to the relevant section (e.g. bank details, working schedule, infrastructure, accreditation) and edit. Save to apply.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I update organization field 16?",
+    "answer": "Go to Lab Management → Organization Details (Admin only). Navigate to the relevant section (e.g. bank details, working schedule, infrastructure, accreditation) and edit. Save to apply.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I update organization field 17?",
+    "answer": "Go to Lab Management → Organization Details (Admin only). Navigate to the relevant section (e.g. bank details, working schedule, infrastructure, accreditation) and edit. Save to apply.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I update organization field 18?",
+    "answer": "Go to Lab Management → Organization Details (Admin only). Navigate to the relevant section (e.g. bank details, working schedule, infrastructure, accreditation) and edit. Save to apply.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I update organization field 19?",
+    "answer": "Go to Lab Management → Organization Details (Admin only). Navigate to the relevant section (e.g. bank details, working schedule, infrastructure, accreditation) and edit. Save to apply.",
+    "module": "Organization",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "Where do I manage lab scope?",
+    "answer": "Go to Lab Management → Scope Management. You can configure global scope settings, ILC programmes, lab scopes, equipments, tests, facilities, reference materials, exclusions, and testing charges.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I add a scope test?",
+    "answer": "In Scope Management, open the scope tests section. Add a new test with name and relevant details. Save. Lab Manager or Admin typically manage scope.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add scope equipment?",
+    "answer": "In Scope Management, go to Scope Equipments. Add equipment with name, ID, and linkage to tests or standards as required.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "What are ILC programmes in scope?",
+    "answer": "ILC (Inter-Laboratory Comparison) programmes are configured under Scope Management. They define participation in comparison programmes for quality assurance.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I set testing charges in scope?",
+    "answer": "In Scope Management, open Testing Charges. Add or edit charge entries linked to tests or categories. Used for pricing and quotations.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "What are scope exclusions?",
+    "answer": "Scope exclusions define what the lab does not offer or is not accredited for. Configure them in Scope Management to avoid incorrect quoting.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I configure scope item 6?",
+    "answer": "Go to Lab Management → Scope Management. Select the relevant sub-section (global settings, lab scopes, facilities, reference materials, etc.) and add or edit entries. Save changes.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I configure scope item 7?",
+    "answer": "Go to Lab Management → Scope Management. Select the relevant sub-section (global settings, lab scopes, facilities, reference materials, etc.) and add or edit entries. Save changes.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I configure scope item 8?",
+    "answer": "Go to Lab Management → Scope Management. Select the relevant sub-section (global settings, lab scopes, facilities, reference materials, etc.) and add or edit entries. Save changes.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I configure scope item 9?",
+    "answer": "Go to Lab Management → Scope Management. Select the relevant sub-section (global settings, lab scopes, facilities, reference materials, etc.) and add or edit entries. Save changes.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I configure scope item 10?",
+    "answer": "Go to Lab Management → Scope Management. Select the relevant sub-section (global settings, lab scopes, facilities, reference materials, etc.) and add or edit entries. Save changes.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I configure scope item 11?",
+    "answer": "Go to Lab Management → Scope Management. Select the relevant sub-section (global settings, lab scopes, facilities, reference materials, etc.) and add or edit entries. Save changes.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I configure scope item 12?",
+    "answer": "Go to Lab Management → Scope Management. Select the relevant sub-section (global settings, lab scopes, facilities, reference materials, etc.) and add or edit entries. Save changes.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I configure scope item 13?",
+    "answer": "Go to Lab Management → Scope Management. Select the relevant sub-section (global settings, lab scopes, facilities, reference materials, etc.) and add or edit entries. Save changes.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I configure scope item 14?",
+    "answer": "Go to Lab Management → Scope Management. Select the relevant sub-section (global settings, lab scopes, facilities, reference materials, etc.) and add or edit entries. Save changes.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I configure scope item 15?",
+    "answer": "Go to Lab Management → Scope Management. Select the relevant sub-section (global settings, lab scopes, facilities, reference materials, etc.) and add or edit entries. Save changes.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I configure scope item 16?",
+    "answer": "Go to Lab Management → Scope Management. Select the relevant sub-section (global settings, lab scopes, facilities, reference materials, etc.) and add or edit entries. Save changes.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I configure scope item 17?",
+    "answer": "Go to Lab Management → Scope Management. Select the relevant sub-section (global settings, lab scopes, facilities, reference materials, etc.) and add or edit entries. Save changes.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I configure scope item 18?",
+    "answer": "Go to Lab Management → Scope Management. Select the relevant sub-section (global settings, lab scopes, facilities, reference materials, etc.) and add or edit entries. Save changes.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I configure scope item 19?",
+    "answer": "Go to Lab Management → Scope Management. Select the relevant sub-section (global settings, lab scopes, facilities, reference materials, etc.) and add or edit entries. Save changes.",
+    "module": "Scope Management",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add a new customer?",
+    "answer": "Go to Lab Management → Customers. Click Add Customer. Enter company name, email (required, unique), phone, contact person, and address. Save. Only one customer per email.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I search for a customer?",
+    "answer": "On the Customers page, use the search box. Search filters by company name, email, or contact person. Results update as you type (debounced).",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "What if I get 'customer with this email already exists'?",
+    "answer": "Each customer must have a unique email. Use a different email or find the existing customer and link your RFQ or project to them instead of creating a duplicate.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I edit a customer?",
+    "answer": "Go to Customers, find the customer in the list, and open their record. Edit company name, phone, contact person, or address. Email can typically not be changed to avoid breaking links. Save.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "Can I delete a customer?",
+    "answer": "Customer delete is typically soft delete (is_deleted). Only Admin or Lab Manager may delete. Deleting may affect linked projects and RFQs; check before deleting.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "Where do I see all customers?",
+    "answer": "Lab Management → Customers. The list shows company name, email, contact person, and status. Use search to filter.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 6?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 7?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 8?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 9?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 10?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 11?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 12?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 13?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 14?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 15?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 16?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 17?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 18?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 19?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 20?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 21?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 22?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 23?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I link a customer to a project 24?",
+    "answer": "When creating or editing a project, select the customer (client) from the dropdown. The dropdown lists all active customers.",
+    "module": "Customers",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How can I upload an RFQ form using Excel?",
+    "answer": "Step 1: Go to Lab Management → RFQs. Step 2: Click 'Upload RFQ (Excel)'. Step 3: Click 'Download Excel template'. Step 4: Fill row 2: company, contact, email, phone, project title, testing type, deadline (YYYY-MM-DD), urgent. Step 5: From row 6 add test name, standard, quantity per row. Step 6: Save as .xlsx and upload. Step 7: Fix any validation errors and re-upload. On success the RFQ appears in the list.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "Where do I download the RFQ Excel template?",
+    "answer": "On the RFQs page click 'Upload RFQ (Excel)' to open the modal, then click 'Download Excel template'. The file has the correct layout for upload.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "What Excel format is required for RFQ upload?",
+    "answer": "Row 2: A=Company, B=Contact, C=Email, D=Phone, E=Project Title, F=Testing Type, G=Deadline (YYYY-MM-DD), H=Urgent. From row 6: A=Test Name, B=Standard, C=Quantity. File must be .xlsx, max 2MB.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "Why did my RFQ upload show validation errors?",
+    "answer": "Check: required fields (company, contact, email, project title), valid email, deadline after today, sample_quantity > 0, and that sum of test item quantities matches sample_quantity. Fix the Excel and re-upload.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I create an RFQ manually?",
+    "answer": "Go to RFQs → Add RFQ. Select Customer, enter Product and Received Date. Save. Status will be pending.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "Who can delete an RFQ?",
+    "answer": "Only Admin can delete an RFQ. Delete is soft delete; the record is retained for audit.",
+    "module": "RFQs",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "What happens after successful RFQ Excel upload?",
+    "answer": "The system finds or creates a customer by email, creates an RFQ row with product and received date, and the RFQ appears in the list. You can then create estimations or projects.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "What is the max file size for RFQ upload?",
+    "answer": "2 MB. Only .xlsx files are accepted.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I fix 'deadline must be after today' in RFQ?",
+    "answer": "In Excel set cell G2 to a future date in YYYY-MM-DD. For urgent RFQs the deadline must be within 3 days of today.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How many test items can I add in RFQ Excel?",
+    "answer": "Up to 200 rows from row 6. Each row: test name, standard, quantity. The sum of quantities is used as sample_quantity.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "What does Incomplete status mean on an RFQ?",
+    "answer": "The upload was parsed but failed validation. Fix the Excel using the error list and re-upload, or create the RFQ manually.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I view all RFQs?",
+    "answer": "Go to Lab Management → RFQs. The list shows customer name, product, received date, and status.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 12?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 13?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 14?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 15?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 16?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 17?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 18?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 19?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 20?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 21?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 22?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 23?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 24?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 25?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 26?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 27?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 28?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 29?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 30?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 31?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 32?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 33?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use RFQ feature 34?",
+    "answer": "Use the RFQs page to create RFQs manually (Add RFQ) or upload via Excel (Upload RFQ). Ensure at least one filter or required field is set. Contact Admin if you do not see the RFQs menu.",
+    "module": "RFQs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I create an estimation?",
+    "answer": "Go to Lab Management → Estimations. Click Create or Add. Link to RFQ or project if required, add test items with quantities and pricing. Save. Sales Engineer can create; Lab Manager reviews.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "Who can review estimations?",
+    "answer": "Lab Manager can review estimations (approve or reject). Go to Estimations, open the estimation, and use the Review action.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "Where do I see my estimations?",
+    "answer": "Lab Management → Estimations. The list shows estimations with status. Testing Engineer and Technician do not see the Estimations tab.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I add test types to an estimation?",
+    "answer": "When creating or editing an estimation, add estimation test items: select test type, quantity, and unit price or total. Save.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 4?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 5?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 6?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 7?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 8?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 9?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 10?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 11?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 12?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 13?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 14?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 15?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 16?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 17?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 18?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 19?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 20?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 21?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 22?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 23?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage estimation workflow 24?",
+    "answer": "Create estimations from the Estimations page; Lab Manager reviews and approves or rejects. Use the review endpoint or UI to set status. Export or attach to project as needed.",
+    "module": "Estimations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I create a new project?",
+    "answer": "Go to Lab Management → Projects. Click Add or Create Project. Enter name, select client (customer), code if needed, status, and description. Save.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I assign a project to a customer?",
+    "answer": "When creating or editing a project, select the customer from the client dropdown. The project is then linked to that customer.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "Where do I see all projects?",
+    "answer": "Lab Management → Projects. Use the list and search or filter by client or status.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I view project details?",
+    "answer": "Click a project in the Projects list to open the project detail page. You see client, status, samples, test plans, and related data.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "Who can delete a project?",
+    "answer": "Only Admin can delete a project in most configurations. Delete is typically soft delete.",
+    "module": "Projects",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 5?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 6?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 7?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 8?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 9?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 10?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 11?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 12?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 13?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 14?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 15?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 16?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 17?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 18?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 19?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 20?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 21?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 22?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 23?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 24?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 25?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 26?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 27?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 28?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage project lifecycle 29?",
+    "answer": "Create project from Projects, link to customer. Add samples and test plans as needed. Use status (e.g. pending, in progress, completed) to track. Lab Manager can assign; Testing Engineer sees assigned projects.",
+    "module": "Projects",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add a sample?",
+    "answer": "Go to Lab Management → Samples. Click Add Sample. Enter sample details and link to project if required. Save.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "Where do I see samples assigned to me?",
+    "answer": "Lab Management → Samples. If you are a Testing Engineer or Technician, filter or view 'assigned to me' to see your samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I link a sample to a project?",
+    "answer": "When creating or editing a sample, select the project. The sample is then associated with that project.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage sample 3?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 4?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 5?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 6?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 7?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 8?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 9?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 10?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 11?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 12?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 13?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 14?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 15?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 16?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 17?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 18?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 19?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 20?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 21?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 22?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 23?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage sample 24?",
+    "answer": "Use the Samples page to add, edit, and view samples. Link samples to projects. Technicians and Testing Engineers can update status or usage for assigned samples.",
+    "module": "Samples",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I create a test plan?",
+    "answer": "Go to Lab Management → Test Plans. Click Create. Link to project, add test parameters or template, and save. Testing Engineer can create; Lab Manager approves.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "Who can approve a test plan?",
+    "answer": "Lab Manager can approve test plans. Open the test plan and use the Approve action.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I link a test plan to a project?",
+    "answer": "When creating the test plan, select the project. The test plan is then associated with that project.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 3?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 4?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 5?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 6?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 7?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 8?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 9?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 10?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 11?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 12?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 13?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 14?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 15?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 16?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 17?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 18?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 19?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 20?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 21?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 22?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 23?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I use test plan feature 24?",
+    "answer": "Create test plans from Test Plans, link to project. Use templates or parameters as configured. Lab Manager approves. Then create test executions from the plan.",
+    "module": "Test Plans",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I start a test execution?",
+    "answer": "Go to Test Executions. Create an execution linked to a test plan, or open an existing one and use Start. Status will change to in progress.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I complete a test execution?",
+    "answer": "Open the test execution and use the Complete action. You may need to record results first. Technician or Testing Engineer can update status.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "Where do I see test executions for a test plan?",
+    "answer": "Open the test plan and view its executions, or go to Test Executions and filter by test plan ID.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 3?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 4?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 5?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 6?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 7?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 8?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 9?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 10?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 11?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 12?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 13?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 14?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 15?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 16?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 17?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 18?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 19?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 20?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 21?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 22?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 23?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage test execution 24?",
+    "answer": "Use Test Executions to create, start, and complete executions. Filter by test plan or status. Record results in Test Results linked to the execution.",
+    "module": "Test Executions",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I submit a test result?",
+    "answer": "Go to Test Results. Create a result linked to a test execution, or open an execution and add results. Enter values and submit. Testing Engineer can submit; Lab Manager approves.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "Who can approve test results?",
+    "answer": "Lab Manager can review and approve test results. Open the result and use the Review or Approve action.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "Where do I see test results for an execution?",
+    "answer": "Open the test execution and view linked results, or go to Test Results and filter by execution ID.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 3?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 4?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 5?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 6?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 7?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 8?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 9?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 10?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 11?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 12?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 13?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 14?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 15?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 16?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 17?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 18?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 19?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 20?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 21?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 22?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 23?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record or review test result 24?",
+    "answer": "Record results in Test Results linked to the execution. Lab Manager approves. Results are used for TRFs and reporting.",
+    "module": "Test Results",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I generate a TRF?",
+    "answer": "Go to Lab Management → TRFs. Create a new TRF or generate from a test execution/result. Fill in required fields and save. Testing Engineer can generate TRFs.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "What is a TRF?",
+    "answer": "TRF stands for Test Report Form. It is the formal report document for test results, used for delivery to customers and compliance.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 2?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 3?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 4?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 5?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 6?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 7?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 8?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 9?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 10?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 11?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 12?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 13?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 14?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 15?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 16?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 17?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 18?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage TRF 19?",
+    "answer": "Use the TRFs page to create, edit, and view test report forms. Generate from test results when supported. Export or print as needed.",
+    "module": "TRFs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I upload a document?",
+    "answer": "Go to Lab Management → Documents. Use Upload or Add. Select the file (allowed types and size limits apply). Save. Document is stored and listed.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "Where do I find uploaded documents?",
+    "answer": "Lab Management → Documents. The list shows all documents you have access to. Use search or filters if available.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I download a document?",
+    "answer": "Open the Documents list, click the document, and use Download or Open. The file is served from the backend.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 3?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 4?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 5?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 6?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 7?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 8?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 9?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 10?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 11?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 12?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 13?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 14?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 15?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 16?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 17?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 18?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I manage documents 19?",
+    "answer": "Upload, list, and download documents from the Documents page. Permissions follow your role. Admin may delete if supported.",
+    "module": "Documents",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I generate a report?",
+    "answer": "Go to Lab Management → Reports. Create a new report or select type (e.g. project summary, test report). Choose parameters and generate. Download when ready.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "Where do I see generated reports?",
+    "answer": "Lab Management → Reports. The list shows past reports. Click to download. Lab Manager has full access; Sales Engineer may have limited report types.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 2?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 3?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 4?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 5?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 6?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 7?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 8?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 9?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 10?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 11?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 12?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 13?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 14?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 15?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 16?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 17?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 18?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "How do I use reports 19?",
+    "answer": "Use the Reports page to create and download reports. Report types and data depend on your role. Export for audit or customer as needed.",
+    "module": "Reports",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer"
+    ]
+  },
+  {
+    "question": "Where do I manage audits?",
+    "answer": "Go to Lab Management → Audits. Only Admin and Lab Manager see this tab. Create audits, record findings, and link to CAPA if needed.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I create an audit?",
+    "answer": "In Audits, click Create. Enter audit type, date, scope, and findings. Save. Lab Manager typically manages audits.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 2?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 3?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 4?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 5?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 6?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 7?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 8?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 9?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 10?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 11?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 12?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 13?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 14?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 15?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 16?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 17?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 18?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I handle audit 19?",
+    "answer": "Use the Audits section to create, edit, and track internal or external audits. Record findings and close with CAPA where required.",
+    "module": "Audits",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I create an NCR?",
+    "answer": "Go to Lab Management → NCRs. Click Create. Enter description, category, and assign for investigation. Lab Manager or Admin review and may link CAPA.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "What is an NCR?",
+    "answer": "NCR is Non-Conformance Report. It records a deviation or failure. CAPA (Corrective and Preventive Action) may be required to close it.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I close an NCR?",
+    "answer": "Open the NCR and use the Close or similar action. Add closure notes and link CAPA if applicable. Lab Manager typically closes.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 3?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 4?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 5?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 6?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 7?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 8?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 9?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 10?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 11?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 12?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 13?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 14?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 15?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 16?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 17?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 18?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I manage NCR 19?",
+    "answer": "Create NCRs from the NCRs page. Assign for investigation, add root cause and corrective action. Close when resolved. Lab Manager reviews.",
+    "module": "NCRs",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "Where do I manage certifications?",
+    "answer": "Go to Lab Management → Certifications. Add or edit certification records (e.g. accreditation, scope). Lab Manager or Admin manage.",
+    "module": "Certifications",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add or edit certification 1?",
+    "answer": "In Certifications, create or edit a certification entry. Enter name, body, scope, and expiry. Save. Used for compliance and scope display.",
+    "module": "Certifications",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add or edit certification 2?",
+    "answer": "In Certifications, create or edit a certification entry. Enter name, body, scope, and expiry. Save. Used for compliance and scope display.",
+    "module": "Certifications",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add or edit certification 3?",
+    "answer": "In Certifications, create or edit a certification entry. Enter name, body, scope, and expiry. Save. Used for compliance and scope display.",
+    "module": "Certifications",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add or edit certification 4?",
+    "answer": "In Certifications, create or edit a certification entry. Enter name, body, scope, and expiry. Save. Used for compliance and scope display.",
+    "module": "Certifications",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add or edit certification 5?",
+    "answer": "In Certifications, create or edit a certification entry. Enter name, body, scope, and expiry. Save. Used for compliance and scope display.",
+    "module": "Certifications",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add or edit certification 6?",
+    "answer": "In Certifications, create or edit a certification entry. Enter name, body, scope, and expiry. Save. Used for compliance and scope display.",
+    "module": "Certifications",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add or edit certification 7?",
+    "answer": "In Certifications, create or edit a certification entry. Enter name, body, scope, and expiry. Save. Used for compliance and scope display.",
+    "module": "Certifications",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add or edit certification 8?",
+    "answer": "In Certifications, create or edit a certification entry. Enter name, body, scope, and expiry. Save. Used for compliance and scope display.",
+    "module": "Certifications",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add or edit certification 9?",
+    "answer": "In Certifications, create or edit a certification entry. Enter name, body, scope, and expiry. Save. Used for compliance and scope display.",
+    "module": "Certifications",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add or edit certification 10?",
+    "answer": "In Certifications, create or edit a certification entry. Enter name, body, scope, and expiry. Save. Used for compliance and scope display.",
+    "module": "Certifications",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add or edit certification 11?",
+    "answer": "In Certifications, create or edit a certification entry. Enter name, body, scope, and expiry. Save. Used for compliance and scope display.",
+    "module": "Certifications",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add or edit certification 12?",
+    "answer": "In Certifications, create or edit a certification entry. Enter name, body, scope, and expiry. Save. Used for compliance and scope display.",
+    "module": "Certifications",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add or edit certification 13?",
+    "answer": "In Certifications, create or edit a certification entry. Enter name, body, scope, and expiry. Save. Used for compliance and scope display.",
+    "module": "Certifications",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add or edit certification 14?",
+    "answer": "In Certifications, create or edit a certification entry. Enter name, body, scope, and expiry. Save. Used for compliance and scope display.",
+    "module": "Certifications",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I add a calendar event?",
+    "answer": "Go to Lab Management → Calendar. Create a new event: set title, date/time, type, and optional reminders. Save.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "Where do I see the lab calendar?",
+    "answer": "Lab Management → Calendar. You see events and can filter by type or date. All roles with calendar access can view.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 2?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 3?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 4?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 5?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 6?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 7?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 8?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 9?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 10?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 11?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 12?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 13?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 14?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 15?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 16?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 17?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 18?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use calendar feature 19?",
+    "answer": "Use Calendar to create events, set reminders, and view schedule. Event types can be configured. Useful for deadlines and meetings.",
+    "module": "Calendar",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I add a new instrument to inventory?",
+    "answer": "Go to Inventory → Instruments (or Inventory Management). Click Add Instrument. Enter name, asset ID, location, calibration due date. Save. Admin or Lab Manager can add.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "Where do I record calibration due dates?",
+    "answer": "Inventory → Calibrations. Add or edit calibration records and set due dates per instrument. Alerts appear when due.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I deactivate an instrument?",
+    "answer": "Open the instrument in Inventory → Instruments. Use the Deactivate action. It stays in records but is excluded from active lists. Admin only in many setups.",
+    "module": "Inventory",
+    "role": [
+      "Admin"
+    ]
+  },
+  {
+    "question": "How do I track consumables?",
+    "answer": "Inventory → Consumables. Set minimum stock levels; update usage when you consume. Technician can update usage; Lab Manager manages master data.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I record an inventory transaction?",
+    "answer": "Inventory → Transactions (or Inventory Transactions). Create a transaction: type (receipt, issue, transfer, adjustment), item, quantity, and reference. Save.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I link a calibration to an instrument?",
+    "answer": "In Inventory → Calibrations, create a calibration and select the instrument. Enter certificate details and next due date.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 6?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 7?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 8?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 9?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 10?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 11?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 12?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 13?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 14?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 15?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 16?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 17?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 18?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 19?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 20?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 21?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 22?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 23?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 24?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 25?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 26?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 27?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 28?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 29?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 30?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 31?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 32?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 33?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I manage inventory item 34?",
+    "answer": "Use Inventory Management: Instruments, Consumables, Calibrations, and Transactions. Add, edit, and track usage. Deactivate instruments via Admin if needed.",
+    "module": "Inventory",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I create an SOP in QA?",
+    "answer": "Go to Quality Assurance → SOPs. Create a new SOP with title, version, and content. Submit for approval. Lab Manager or Admin approves.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "Where do I find approved SOPs?",
+    "answer": "Quality Assurance → SOPs. Filter by status Approved to see current approved documents.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Testing Engineer"
+    ]
+  },
+  {
+    "question": "How do I record a QC check result?",
+    "answer": "Quality Assurance → QC Checks. Open the check and record the result (pass/fail, values). Save for traceability.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I create an NC-CAPA?",
+    "answer": "In Quality Assurance → NC-CAPA, create a new record. Describe the non-conformance and corrective/preventive action. Assign and close when done.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I lock or approve a QA document?",
+    "answer": "Open the document in QA (e.g. QC document or SOP). Use Lock or Approve. Only users with approval rights (Lab Manager, Admin) can approve.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 5?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 6?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 7?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 8?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 9?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 10?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 11?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 12?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 13?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 14?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 15?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 16?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 17?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 18?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 19?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 20?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 21?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 22?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 23?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 24?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 25?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 26?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 27?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 28?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 29?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 30?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 31?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 32?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 33?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I use QA feature 34?",
+    "answer": "Use Quality Assurance for SOPs, QC documents, QC checks, NC-CAPA, and audits. Create, approve, and track. Sales Engineer and Technician may have limited QA access.",
+    "module": "Quality Assurance",
+    "role": [
+      "Admin",
+      "Lab Manager"
+    ]
+  },
+  {
+    "question": "How do I get lab recommendations?",
+    "answer": "Go to Lab Management → Lab Recommendations. Enter at least one filter: test name, standard, domain, state, or city. Click Recommend. Results show labs ranked by relevance score.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "What is the Lab Recommendations page?",
+    "answer": "It searches and recommends labs from a separate lab database (LAB_ENGINE_DATABASE_URL). You can search by test, standard, domain, state, city and get ranked lab list.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "Why does Lab Recommendations show not configured?",
+    "answer": "The lab recommendation engine requires LAB_ENGINE_DATABASE_URL to be set in the backend. If missing, the page shows 503 and 'engine not configured'. Contact Admin.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I search for labs by test name?",
+    "answer": "On Lab Recommendations, enter a test name (or partial) in the test name field. Click Search or Recommend. Results list labs that offer that test.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I filter labs by location?",
+    "answer": "Use the State and City dropdowns (loaded from the locations API). Select state and optionally city, then Recommend or Search.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 5?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 6?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 7?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 8?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 9?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 10?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 11?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 12?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 13?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 14?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 15?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 16?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 17?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 18?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 19?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 20?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 21?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 22?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 23?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  },
+  {
+    "question": "How do I use lab recommendations 24?",
+    "answer": "Use filters (test name, standard, domain, state, city), then Recommend for ranked results or Search for flat list. Open a lab to see details and capabilities.",
+    "module": "Lab Recommendations",
+    "role": [
+      "Admin",
+      "Lab Manager",
+      "Sales Engineer",
+      "Testing Engineer",
+      "Technician"
+    ]
+  }
+]

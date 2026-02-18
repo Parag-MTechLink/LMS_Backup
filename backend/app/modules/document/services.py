@@ -2,7 +2,7 @@ import os
 import shutil
 from sqlalchemy.orm import Session
 from fastapi import UploadFile
-from document.models import Document
+from app.modules.document.models import Document
 
 UPLOAD_DIR = "uploads/documents"
 os.makedirs(UPLOAD_DIR, exist_ok=True)

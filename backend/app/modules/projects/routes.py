@@ -4,9 +4,13 @@ API routes for Projects and Customers
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
 
 from app.core.database import get_db
+from app.dependencies.auth_dependency import get_current_user, require_roles
+from app.models.user_model import User
+from app.services.rbac_service import log_audit
 from . import crud, schemas
 
 
@@ -37,7 +41,14 @@ def get_customer(customer_id: int, db: Session = Depends(get_db)):
 @router.post("/customers", response_model=schemas.CustomerResponse, status_code=201, tags=["Customers"])
 def create_customer(customer: schemas.CustomerCreate, db: Session = Depends(get_db)):
     """Create a new customer"""
-    return crud.create_customer(db, customer)
+    try:
+        return crud.create_customer(db, customer)
+    except IntegrityError as e:
+        db.rollback()
+        msg = str(e.orig) if getattr(e, "orig", None) else str(e)
+        if "ix_customers_email" in msg or "email" in msg.lower():
+            raise HTTPException(status_code=409, detail="A customer with this email already exists.")
+        raise HTTPException(status_code=409, detail="A customer with this data already exists.")
 
 
 @router.put("/customers/{customer_id}", response_model=schemas.CustomerResponse, tags=["Customers"])
@@ -54,11 +65,21 @@ def update_customer(
 
 
 @router.delete("/customers/{customer_id}", status_code=204, tags=["Customers"])
-def delete_customer(customer_id: int, db: Session = Depends(get_db)):
-    """Delete a customer"""
+def delete_customer(
+    customer_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("Admin")),
+):
+    """Delete a customer (Admin only). Soft delete; audit logged."""
     success = crud.delete_customer(db, customer_id)
     if not success:
         raise HTTPException(status_code=404, detail="Customer not found")
+    log_audit(
+        db, current_user.id, "customer.delete",
+        resource_type="customer", resource_id=str(customer_id),
+        details={"role": current_user.role},
+    )
+    db.commit()
     return None
 
 
@@ -108,9 +129,19 @@ def update_project(
 
 
 @router.delete("/projects/{project_id}", status_code=204, tags=["Projects"])
-def delete_project(project_id: int, db: Session = Depends(get_db)):
-    """Delete a project"""
+def delete_project(
+    project_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("Admin")),
+):
+    """Delete a project (Admin only). Soft delete; audit logged."""
     success = crud.delete_project(db, project_id)
     if not success:
         raise HTTPException(status_code=404, detail="Project not found")
+    log_audit(
+        db, current_user.id, "project.delete",
+        resource_type="project", resource_id=str(project_id),
+        details={"role": current_user.role},
+    )
+    db.commit()
     return None

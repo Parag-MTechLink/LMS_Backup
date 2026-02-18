@@ -28,7 +28,6 @@ def create_sample(
     sample: schema.SampleCreate,
     db: Session = Depends(get_db)
 ):
-    print("🔥 Incoming sample:", sample.dict())
     return services.create_sample(db, sample)
 
 @router.get("/{sample_id}", response_model=schema.SampleResponse)

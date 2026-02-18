@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { Users, Plus, Search, ExternalLink } from 'lucide-react'
@@ -7,21 +7,27 @@ import toast from 'react-hot-toast'
 import Modal from '../../../components/labManagement/Modal'
 import CreateCustomerForm from '../../../components/labManagement/forms/CreateCustomerForm'
 import CustomerProfileModal from '../../../components/labManagement/modals/CustomerProfileModal'
+import ConfirmDeleteModal from '../../../components/labManagement/ConfirmDeleteModal'
+import { useDebounce } from '../../../hooks/useDebounce'
+import RouteSkeleton from '../../../components/RouteSkeleton'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
+import { Trash2 } from 'lucide-react'
 
 function Customers() {
   const navigate = useNavigate()
+  const { user } = useLabManagementAuth()
+  const isAdmin = user?.role === 'Admin'
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
-  useEffect(() => {
-    loadCustomers()
-  }, [])
-
-  const loadCustomers = async () => {
+  const loadCustomers = useCallback(async () => {
     try {
       setLoading(true)
       const data = await customersService.getAll()
@@ -31,22 +37,42 @@ function Customers() {
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  useEffect(() => {
+    loadCustomers()
+  }, [loadCustomers])
+
+  const filteredCustomers = useMemo(() => {
+    return customers.filter(customer =>
+      !debouncedSearchTerm ||
+      customer.companyName?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      customer.email?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    )
+  }, [customers, debouncedSearchTerm])
+
+  const handleDeleteClick = (e, customer) => {
+    e.stopPropagation()
+    setDeleteTarget(customer)
   }
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      await customersService.delete(deleteTarget.id)
+      toast.success('Customer deleted successfully')
+      setDeleteTarget(null)
+      loadCustomers()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to delete customer')
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-          <p className="mt-4 text-gray-600">Loading customers...</p>
-        </div>
-      </div>
-    )
+    return <RouteSkeleton />
   }
 
   return (
@@ -159,6 +185,15 @@ function Customers() {
                       >
                         View Profile
                       </button>
+                      {isAdmin && (
+                        <button
+                          onClick={(e) => handleDeleteClick(e, customer)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete customer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </motion.tr>
@@ -197,6 +232,16 @@ function Customers() {
           customer={selectedCustomer}
         />
       </Modal>
+
+      <ConfirmDeleteModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete customer"
+        message="Are you sure you want to delete this customer? This action cannot be undone."
+        entityName={deleteTarget ? deleteTarget.companyName : ''}
+        loading={deleting}
+      />
     </div>
   )
 }

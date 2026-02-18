@@ -2,15 +2,28 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { rfqsService, customersService } from '../../../services/labManagementApi'
+import { getApiErrorMessage } from '../../../utils/apiError'
 import toast, { Toaster } from 'react-hot-toast'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, FileSpreadsheet, Trash2, Download } from 'lucide-react'
+import RouteSkeleton from '../../../components/RouteSkeleton'
+import ConfirmDeleteModal from '../../../components/labManagement/ConfirmDeleteModal'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 
 function RFQs() {
   const navigate = useNavigate()
+  const { user } = useLabManagementAuth()
+  const isAdmin = user?.role === 'Admin'
   const [rfqs, setRfqs] = useState([])
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [uploadFile, setUploadFile] = useState(null)
+  const [uploadError, setUploadError] = useState(null)
+  const [uploadMissing, setUploadMissing] = useState([])
+  const [uploading, setUploading] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
   const [formData, setFormData] = useState({
     customerId: 0,
     product: '',
@@ -49,6 +62,37 @@ function RFQs() {
     }
   }
 
+  const handleUploadSubmit = async () => {
+    if (!uploadFile) {
+      toast.error('Please select an Excel file (.xlsx)')
+      return
+    }
+    setUploading(true)
+    setUploadError(null)
+    setUploadMissing([])
+    try {
+      const res = await rfqsService.uploadExcel(uploadFile)
+      const errList = res.errors ?? res.missing_fields ?? []
+      if (res.status === 'Incomplete' && errList.length) {
+        setUploadMissing(errList)
+        setUploadError(res.message || 'Validation failed. Please fix errors.')
+      } else {
+        toast.success(res.message || 'RFQ submitted successfully.')
+        setShowUploadModal(false)
+        setUploadFile(null)
+        setUploadMissing([])
+        setUploadError(null)
+        loadData()
+      }
+    } catch (error) {
+      const msg = getApiErrorMessage(error)
+      setUploadError(msg)
+      toast.error('Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const getStatusColor = (status) => {
     const statusLower = status.toLowerCase()
     if (statusLower === 'pending') return 'from-yellow-400 to-orange-500'
@@ -57,15 +101,28 @@ function RFQs() {
     return 'from-blue-400 to-cyan-500'
   }
 
+  const handleDeleteClick = (e, rfq) => {
+    e.stopPropagation()
+    setDeleteTarget(rfq)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      await rfqsService.delete(deleteTarget.id)
+      toast.success('RFQ deleted successfully')
+      setDeleteTarget(null)
+      loadData()
+    } catch (err) {
+      toast.error(getApiErrorMessage(err) || 'Failed to delete RFQ')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-          <p className="mt-4 text-gray-600">Loading RFQs...</p>
-        </div>
-      </div>
-    )
+    return <RouteSkeleton />
   }
 
   return (
@@ -77,13 +134,22 @@ function RFQs() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">RFQs</h1>
           <p className="text-gray-600">Request for Quotations management</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center space-x-2"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Create RFQ</span>
-        </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <button
+            onClick={() => setShowModal(true)}
+            className="px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center space-x-2"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Create RFQ</span>
+          </button>
+          <button
+            onClick={() => { setShowUploadModal(true); setUploadError(null); setUploadMissing([]); setUploadFile(null); }}
+            className="px-6 py-3 border-2 border-primary text-primary font-semibold rounded-xl hover:bg-primary/10 transition-all duration-200 flex items-center justify-center space-x-2"
+          >
+            <FileSpreadsheet className="w-5 h-5" />
+            <span>Upload RFQ (Excel)</span>
+          </button>
+        </div>
       </div>
 
       {/* RFQs Table */}
@@ -147,7 +213,6 @@ function RFQs() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button 
                         onClick={() => {
-                          // Navigate to estimations filtered by this RFQ
                           navigate(`/lab/management/estimations?rfqId=${rfq.id}`)
                         }}
                         className="text-primary hover:text-primary-dark transition-colors mr-3"
@@ -156,13 +221,21 @@ function RFQs() {
                       </button>
                       <button 
                         onClick={() => {
-                          // Navigate to create estimation from this RFQ
                           navigate(`/lab/management/estimations?createFromRfq=${rfq.id}`)
                         }}
-                        className="text-green-600 hover:text-green-800 transition-colors"
+                        className="text-green-600 hover:text-green-800 transition-colors mr-3"
                       >
                         Create Estimation
                       </button>
+                      {isAdmin && (
+                        <button
+                          onClick={(e) => handleDeleteClick(e, rfq)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex"
+                          title="Delete RFQ"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </td>
                   </motion.tr>
                 ))
@@ -270,6 +343,88 @@ function RFQs() {
           </motion.div>
         </div>
       )}
+
+      {/* Upload RFQ (Excel) Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200"
+          >
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Upload RFQ (Excel)</h2>
+                <button
+                  onClick={() => { setShowUploadModal(false); setUploadFile(null); setUploadError(null); setUploadMissing([]); }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-600">Upload a .xlsx file. Row 2: company, contact, email, phone, project title, testing type, deadline, urgent; from row 6: test name, standard, quantity.</p>
+              <button
+                type="button"
+                onClick={() => rfqsService.downloadTemplate().catch(() => toast.error('Failed to download template'))}
+                className="flex items-center gap-2 text-sm text-primary hover:underline font-medium"
+              >
+                <Download className="w-4 h-4" />
+                Download Excel template
+              </button>
+              <input
+                type="file"
+                accept=".xlsx"
+                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-medium"
+              />
+              {uploadError && (
+                <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-800">
+                  {uploadError}
+                </div>
+              )}
+              {uploadMissing?.length > 0 && (
+                <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-900">
+                  <p className="font-medium mb-1">Missing or invalid fields:</p>
+                  <ul className="list-disc list-inside">
+                    {uploadMissing.map((f, i) => (
+                      <li key={i}>{f}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowUploadModal(false); setUploadFile(null); setUploadError(null); setUploadMissing([]); }}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleUploadSubmit}
+                  disabled={!uploadFile || uploading}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                >
+                  {uploading ? 'Uploading...' : 'Upload'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      <ConfirmDeleteModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete RFQ"
+        message="Are you sure you want to delete this RFQ? This action cannot be undone."
+        entityName={deleteTarget ? `${deleteTarget.product} (${deleteTarget.customerName})` : ''}
+        loading={deleting}
+      />
     </div>
   )
 }

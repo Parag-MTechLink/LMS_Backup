@@ -7,6 +7,9 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from app.core.database import get_db
+from app.dependencies.auth_dependency import require_roles
+from app.models.user_model import User
+from app.services.rbac_service import log_audit
 from . import crud, schemas
 
 
@@ -54,11 +57,17 @@ def update_test_plan(test_plan_id: int, test_plan: schemas.TestPlanUpdate, db: S
 
 
 @router.delete("/test-plans/{test_plan_id}", status_code=204, tags=["Test Plans"])
-def delete_test_plan(test_plan_id: int, db: Session = Depends(get_db)):
-    """Delete a test plan"""
+def delete_test_plan(
+    test_plan_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("Admin")),
+):
+    """Delete a test plan (Admin only). Audit logged."""
     success = crud.delete_test_plan(db, test_plan_id)
     if not success:
         raise HTTPException(status_code=404, detail="Test plan not found")
+    log_audit(db, current_user.id, "test_plan.delete", "test_plan", str(test_plan_id), details={"role": current_user.role})
+    db.commit()
     return None
 
 
@@ -129,11 +138,17 @@ def update_test_execution(execution_id: int, execution: schemas.TestExecutionUpd
 
 
 @router.delete("/test-executions/{execution_id}", status_code=204, tags=["Test Executions"])
-def delete_test_execution(execution_id: int, db: Session = Depends(get_db)):
-    """Delete a test execution"""
+def delete_test_execution(
+    execution_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("Admin")),
+):
+    """Delete a test execution (Admin only). Audit logged."""
     success = crud.delete_test_execution(db, execution_id)
     if not success:
         raise HTTPException(status_code=404, detail="Test execution not found")
+    log_audit(db, current_user.id, "test_execution.delete", "test_execution", str(execution_id), details={"role": current_user.role})
+    db.commit()
     return None
 
 
@@ -204,11 +219,17 @@ def update_test_result(result_id: int, result: schemas.TestResultUpdate, db: Ses
 
 
 @router.delete("/test-results/{result_id}", status_code=204, tags=["Test Results"])
-def delete_test_result(result_id: int, db: Session = Depends(get_db)):
-    """Delete a test result"""
+def delete_test_result(
+    result_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("Admin")),
+):
+    """Delete a test result (Admin only). Audit logged."""
     success = crud.delete_test_result(db, result_id)
     if not success:
         raise HTTPException(status_code=404, detail="Test result not found")
+    log_audit(db, current_user.id, "test_result.delete", "test_result", str(result_id), details={"role": current_user.role})
+    db.commit()
     return None
 
 

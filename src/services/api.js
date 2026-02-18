@@ -1,25 +1,22 @@
 /**
  * API Configuration
- * Axios instance with base URL and interceptors
+ * Axios instance with base URL and interceptors. Error messages via getApiErrorMessage.
  */
 import axios from 'axios';
+import { API_BASE_URL_DEFAULT, API_TIMEOUT_MS } from '../constants';
+import { getApiErrorMessage } from '../utils/apiError';
 
-// API Base URL - change this for production
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || API_BASE_URL_DEFAULT;
 
-// Create axios instance
 const api = axios.create({
     baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    timeout: 30000, // 30 seconds
+    headers: { 'Content-Type': 'application/json' },
+    timeout: API_TIMEOUT_MS,
 });
 
 // Request interceptor
 api.interceptors.request.use(
     (config) => {
-        // Add authentication token if available
         const token = localStorage.getItem('authToken');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -49,40 +46,17 @@ api.interceptors.response.use(
         return response.data;
     },
     (error) => {
-        // Handle errors
-        let message = error.message || 'An error occurred';
-
-        // Handle FastAPI validation errors (422)
-        if (error.response?.data?.detail) {
-            const detail = error.response.data.detail;
-
-            // If detail is an array of validation errors
-            if (Array.isArray(detail)) {
-                message = detail.map(err => {
-                    const field = err.loc?.join('.') || 'unknown field';
-                    return `${field}: ${err.msg}`;
-                }).join(', ');
-            } else if (typeof detail === 'string') {
-                message = detail;
-            } else {
-                message = JSON.stringify(detail);
-            }
+        const message = getApiErrorMessage(error);
+        if (import.meta.env.DEV) {
+            console.error('❌ API Error:', {
+                url: error.config?.url,
+                status: error.response?.status,
+                message,
+            });
         }
-
-        console.error('❌ API Error:', {
-            url: error.config?.url,
-            status: error.response?.status,
-            message,
-            fullError: error.response?.data
-        });
-
-        // Handle specific error codes
         if (error.response?.status === 401) {
-            // Unauthorized - redirect to login
             localStorage.removeItem('authToken');
-            // window.location.href = '/login';
         }
-
         return Promise.reject(new Error(message));
     }
 );

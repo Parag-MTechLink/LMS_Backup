@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
 
 const LabDataContext = createContext()
 
@@ -250,12 +250,12 @@ export const LabDataProvider = ({ children }) => {
     saveToStorage('techlink_scope_data', scopeData)
   }, [scopeData])
 
-  // Lab Request functions
-  const updateRequest = (id, updates) => {
-    setLabRequests(labRequests.map(r => r.id === id ? { ...r, ...updates } : r))
-  }
+  // Lab Request functions (stable callbacks to reduce re-renders)
+  const updateRequest = useCallback((id, updates) => {
+    setLabRequests(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r))
+  }, [])
 
-  const assignRequest = (requestId, technicianId) => {
+  const assignRequest = useCallback((requestId, technicianId) => {
     const technician = technicians.find(t => t.id === technicianId)
     if (!technician) return
 
@@ -267,13 +267,13 @@ export const LabDataProvider = ({ children }) => {
 
     // Update technician status if needed
     if (technician.status === 'Available') {
-      setTechnicians(technicians.map(t => 
+      setTechnicians(prev => prev.map(t =>
         t.id === technicianId ? { ...t, status: 'Busy' } : t
       ))
     }
-  }
+  }, [technicians, updateRequest])
 
-  const updateRequestStatus = (id, newStatus, additionalData = {}) => {
+  const updateRequestStatus = useCallback((id, newStatus, additionalData = {}) => {
     const updates = { status: newStatus, ...additionalData }
     
     if (newStatus === 'Completed') {
@@ -286,42 +286,33 @@ export const LabDataProvider = ({ children }) => {
     }
 
     updateRequest(id, updates)
-  }
+  }, [updateRequest])
 
-  const updateRequestProgress = (id, progress) => {
+  const updateRequestProgress = useCallback((id, progress) => {
     updateRequest(id, { progress: Math.min(100, Math.max(0, progress)) })
-  }
+  }, [updateRequest])
 
   // Schedule functions
-  const addScheduleItem = (item) => {
-    const newItem = {
-      ...item,
-      id: `SCH-${String(schedule.length + 1).padStart(3, '0')}`,
-    }
-    setSchedule([...schedule, newItem])
+  const addScheduleItem = useCallback((item) => {
+    const newItem = { ...item, id: `SCH-${String(schedule.length + 1).padStart(3, '0')}` }
+    setSchedule(prev => [...prev, newItem])
     return newItem
-  }
+  }, [schedule])
 
-  const updateScheduleItem = (id, updates) => {
-    setSchedule(schedule.map(s => s.id === id ? { ...s, ...updates } : s))
-  }
+  const updateScheduleItem = useCallback((id, updates) => {
+    setSchedule(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
+  }, [])
 
-  const deleteScheduleItem = (id) => {
-    setSchedule(schedule.filter(s => s.id !== id))
-  }
+  const deleteScheduleItem = useCallback((id) => {
+    setSchedule(prev => prev.filter(s => s.id !== id))
+  }, [])
 
   // Organization data functions
-  const updateOrganizationData = (data) => {
-    setOrganizationData(data)
-  }
+  const updateOrganizationData = useCallback((data) => setOrganizationData(data), [])
+  const updateScopeData = useCallback((data) => setScopeData(data), [])
 
-  // Scope data functions
-  const updateScopeData = (data) => {
-    setScopeData(data)
-  }
-
-  // Statistics
-  const getStats = () => {
+  // Statistics (memoized computation)
+  const getStats = useCallback(() => {
     const pending = labRequests.filter(r => r.status === 'Pending').length
     const inProgress = labRequests.filter(r => r.status === 'In Progress').length
     const completedThisWeek = labRequests.filter(r => {
@@ -349,9 +340,9 @@ export const LabDataProvider = ({ children }) => {
       completedThisWeek,
       avgTurnaround: avgTurnaround.toFixed(1) + 'd',
     }
-  }
+  }, [labRequests])
 
-  const value = {
+  const value = useMemo(() => ({
     labRequests,
     technicians,
     schedule,
@@ -370,7 +361,12 @@ export const LabDataProvider = ({ children }) => {
     updateOrganizationData,
     updateScopeData,
     getStats,
-  }
+  }), [
+    labRequests, technicians, schedule, organizationData, scopeData,
+    updateRequest, assignRequest, updateRequestStatus, updateRequestProgress,
+    addScheduleItem, updateScheduleItem, deleteScheduleItem,
+    updateOrganizationData, updateScopeData, getStats,
+  ])
 
   return <LabDataContext.Provider value={value}>{children}</LabDataContext.Provider>
 }

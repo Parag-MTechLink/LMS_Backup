@@ -36,6 +36,7 @@ import {
   testResultsService
 } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
+import RouteSkeleton from '../../../components/RouteSkeleton'
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area, RadialBarChart, RadialBar } from 'recharts'
 
 function LabManagementDashboard() {
@@ -274,14 +275,7 @@ function LabManagementDashboard() {
   ]
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    )
+    return <RouteSkeleton />
   }
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']

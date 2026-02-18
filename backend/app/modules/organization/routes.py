@@ -154,7 +154,6 @@ async def update_compliance_documents(
     db: Session = Depends(get_db)
 ):
     """Update compliance documents (Step 5)"""
-    print(f"DEBUG: Received compliance documents data: {data.model_dump()}")
     organization = services.OrganizationService.update_compliance_documents(db, organization_id, data)
     return serialize_organization(organization)
 

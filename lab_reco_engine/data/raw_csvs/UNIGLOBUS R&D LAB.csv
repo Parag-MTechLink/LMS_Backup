@@ -1,8 +1,0 @@
-0,1,2,3,4
-S.No,Discipline / Group,Materials or Products tested,"Component, parameter or characteristic tested / Specic Test Performed /Tests or type of testsperformed",Test Method Specification against which tests areperformed and / or thetechniques / equipmentused
-Permanent Testing,,,,
-1,"ELECTRICAL- LAMPS,LUMINARIES &ACCESSORIES",D.C. or A.C. Supplied Electronic Control Gear for LEDModules,Circuit Power Factor,IS 16104 (Clause No. 9)
-2,"ELECTRICAL- LAMPS,LUMINARIES &ACCESSORIES",D.C. or A.C. Supplied Electronic Control Gear for LEDModules,Output Current,IS 16104 (Clause No. 7)
-3,"ELECTRICAL- LAMPS,LUMINARIES &ACCESSORIES",D.C. or A.C. Supplied Electronic Control Gear for LEDModules,Output Voltage,IS 16104 (Clause No. 7)
-4,"ELECTRICAL- LAMPS,LUMINARIES &ACCESSORIES",D.C. or A.C. Supplied Electronic Control Gear for LEDModules,Supply Current,IS 16104 (Clause No. 10)
-5,"ELECTRICAL- LAMPS,LUMINARIES &ACCESSORIES",D.C. or A.C. Supplied Electronic Control Gear for LEDModules,Total Circuit Power,IS 16104 (Clause No. 8)

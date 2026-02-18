@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import {
   Target,
@@ -22,6 +22,7 @@ import Card from '../../../components/labManagement/Card'
 import toast from 'react-hot-toast'
 import { useLabData } from '../../../contexts/LabDataContext'
 import scopeManagementService from '../../../services/scopeManagementService'
+import RouteSkeleton from '../../../components/RouteSkeleton'
 
 const scopeSections = [
   { id: 'add-scope', name: 'Add Scope', icon: Target },
@@ -121,14 +122,56 @@ export default function ScopeManagement() {
   const [testingCharges, setTestingCharges] = useState(scopeData.testingCharges)
   const [completeTestingCharge, setCompleteTestingCharge] = useState(scopeData.completeTestingCharge)
 
+  const [loading, setLoading] = useState(true)
+  const fetchStartedRef = useRef(false)
 
-  // Fetch data on mount
+  // Fetch data on mount (single run; ref avoids duplicate toasts in Strict Mode)
   useEffect(() => {
-    fetchData()
+    if (fetchStartedRef.current) return
+    fetchStartedRef.current = true
+
+    let cancelled = false
+    const load = async () => {
+      try {
+        setLoading(true)
+        const data = await scopeManagementService.getAllData()
+        if (cancelled) return
+
+        // Global Settings
+        if (data.global_settings) {
+          setInternalAuditFrequency(data.global_settings.internal_audit_frequency || '')
+          setLastAuditDate(data.global_settings.last_audit_date || '')
+          setManagementReviewFrequency(data.global_settings.management_review_frequency || '')
+          setLastReviewDate(data.global_settings.last_review_date || '')
+          setCompleteTestingCharge(data.global_settings.complete_testing_charge || '')
+        }
+
+        // Arrays
+        if (data.ilc_programmes) setIlcProgrammes(data.ilc_programmes)
+        if (data.scopes) setScopes(data.scopes)
+        if (data.equipments) setEquipments(data.equipments)
+        if (data.scope_tests) setScopeTests(data.scope_tests)
+        if (data.facilities_available) setFacilitiesAvailable(data.facilities_available)
+        if (data.facilities_not_available) setFacilitiesNotAvailable(data.facilities_not_available)
+        if (data.reference_materials) setReferenceMaterials(data.reference_materials)
+        if (data.exclusions) setExclusions(data.exclusions)
+        if (data.testing_charges) setTestingCharges(data.testing_charges)
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Error fetching scope data:", error)
+          toast.error("Failed to load scope data", { id: 'scope-load-error' })
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
   }, [])
 
   const fetchData = async () => {
     try {
+      setLoading(true)
       const data = await scopeManagementService.getAllData()
 
       // Global Settings
@@ -150,10 +193,11 @@ export default function ScopeManagement() {
       if (data.reference_materials) setReferenceMaterials(data.reference_materials)
       if (data.exclusions) setExclusions(data.exclusions)
       if (data.testing_charges) setTestingCharges(data.testing_charges)
-
     } catch (error) {
       console.error("Error fetching scope data:", error)
-      toast.error("Failed to load scope data")
+      toast.error("Failed to load scope data", { id: 'scope-load-error' })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -198,6 +242,10 @@ export default function ScopeManagement() {
     completeTestingCharge,
     updateScopeData
   ])
+
+  if (loading) {
+    return <RouteSkeleton />
+  }
 
   // ILC/PT Functions
   const addILCProgramme = () => {

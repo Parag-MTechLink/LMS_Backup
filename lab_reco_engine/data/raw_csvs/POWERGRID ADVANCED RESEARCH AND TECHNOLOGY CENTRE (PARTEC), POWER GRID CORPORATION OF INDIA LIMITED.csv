@@ -1,5 +1,0 @@
-0,1,2,3,4
-S.No,Discipline / Group,Materials or Products tested,"Component, parameter or characteristic tested / Specic Test Performed /Tests or type of testsperformed",Test Method Specification against which tests areperformed and / or thetechniques / equipmentused
-Permanent Testing,,,,
-1,ELECTRICAL-SWITCHGEAR &PROTECTIVEEQUIPMENT,Intelligent Electronic Device (IED),Conformance Testing on IEDs,UCAIug Test Procedures &IEC 61850 - 10 Edition 2and relevant partsreferred in the Test Procedures
-2,ELECTRICAL-SWITCHGEAR &PROTECTIVEEQUIPMENT,Phasor Measurement Unit (PMU),Testing of Phasor Measurement Unitperformance,"IEEE Synchrophasor Measurement Test Suite Specification (TSS) -Version 3 and IEC/IEEE60255-118-1, Edition 1.0"

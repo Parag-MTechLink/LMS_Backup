@@ -1,8 +1,0 @@
-0,1,2,3,4
-S.No,Discipline / Group,Materials or Products tested,"Component, parameter or characteristic tested / Specic Test Performed /Tests or type of testsperformed",Test Method Specification against which tests areperformed and / or thetechniques / equipmentused
-Permanent Testing,,,,
-1,ELECTRICAL- DOMESTICELECTRICAL APPLIANCES,Washing Machine (Semi Automatic and Top Load Fully Automatic),Evaluation of Energy Consumption,"IEC 60456, (Clause no. 9.2.4)"
-2,ELECTRICAL- DOMESTICELECTRICAL APPLIANCES,Washing Machine (Semi Automatic and Top Load Fully Automatic),Evaluation of Rinsing Performance,"IEC 60456, (Clause no. 9.5)"
-3,ELECTRICAL- DOMESTICELECTRICAL APPLIANCES,Washing Machine (Semi Automatic and Top Load Fully Automatic),Evaluation of Washing Performance,"IEC 60456, (Clause no. 9.3)"
-4,ELECTRICAL- DOMESTICELECTRICAL APPLIANCES,Washing Machine (Semi Automatic and Top Load Fully Automatic),Evaluation of Water Consumption,"IEC 60456, (Clause no. 9.2.2)"
-5,ELECTRICAL- DOMESTICELECTRICAL APPLIANCES,Washing Machine (Semi Automatic and Top Load Fully Automatic),Evaluation of Water Extraction Performance,"IEC 60456, (Clause no. 9.4)"

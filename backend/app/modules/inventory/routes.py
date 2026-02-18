@@ -7,6 +7,9 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from app.core.database import get_db
+from app.dependencies.auth_dependency import require_roles
+from app.models.user_model import User
+from app.services.rbac_service import log_audit
 from . import crud, schemas
 
 
@@ -56,11 +59,17 @@ def update_instrument(
 
 
 @router.delete("/instruments/{instrument_id}", status_code=204, tags=["Instruments"])
-def delete_instrument(instrument_id: int, db: Session = Depends(get_db)):
-    """Delete an instrument"""
+def delete_instrument(
+    instrument_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("Admin")),
+):
+    """Delete an instrument (Admin only). Audit logged."""
     success = crud.delete_instrument(db, instrument_id)
     if not success:
         raise HTTPException(status_code=404, detail="Instrument not found")
+    log_audit(db, current_user.id, "instrument.delete", "instrument", str(instrument_id), details={"role": current_user.role})
+    db.commit()
     return None
 
 
@@ -118,11 +127,17 @@ def update_consumable(
 
 
 @router.delete("/consumables/{consumable_id}", status_code=204, tags=["Consumables"])
-def delete_consumable(consumable_id: int, db: Session = Depends(get_db)):
-    """Delete a consumable"""
+def delete_consumable(
+    consumable_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("Admin")),
+):
+    """Delete a consumable (Admin only). Audit logged."""
     success = crud.delete_consumable(db, consumable_id)
     if not success:
         raise HTTPException(status_code=404, detail="Consumable not found")
+    log_audit(db, current_user.id, "consumable.delete", "consumable", str(consumable_id), details={"role": current_user.role})
+    db.commit()
     return None
 
 
@@ -168,11 +183,17 @@ def update_calibration(
 
 
 @router.delete("/calibrations/{calibration_id}", status_code=204, tags=["Calibrations"])
-def delete_calibration(calibration_id: int, db: Session = Depends(get_db)):
-    """Delete a calibration"""
+def delete_calibration(
+    calibration_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("Admin")),
+):
+    """Delete a calibration (Admin only). Audit logged."""
     success = crud.delete_calibration(db, calibration_id)
     if not success:
         raise HTTPException(status_code=404, detail="Calibration not found")
+    log_audit(db, current_user.id, "calibration.delete", "calibration", str(calibration_id), details={"role": current_user.role})
+    db.commit()
     return None
 
 

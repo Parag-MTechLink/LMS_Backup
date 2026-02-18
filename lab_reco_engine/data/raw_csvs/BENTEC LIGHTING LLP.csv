@@ -1,9 +1,0 @@
-0,1,2,3,4
-S.No,Discipline / Group,Materials or Products tested,"Component, parameter or characteristic tested / Specic Test Performed /Tests or type of testsperformed",Test Method Specification against which tests areperformed and / or thetechniques / equipmentused
-Permanent Testing,,,,
-1,ELECTRICAL-ENVIRONMENTALTEST FACILITY,Electrical and Electronic Product,Degrees of Protectionagainst Access to Hazardous Parts andagainst Solid Foreign Objects Indicated by the First Characteristic Numeral (IP6 X),IS/IEC 60529 (Table 5 & 7)
-2,ELECTRICAL-ENVIRONMENTALTEST FACILITY,Electrical and Electronic Product,Degrees of Protectionagainst Ingress of Water Indicated by the Second Characteristic Numeral(IPX5),IS/IEC 60529 (Table 8)
-3,ELECTRICAL-ENVIRONMENTALTEST FACILITY,Electrical and Electronic Product,Degrees of Protectionagainst Ingress of Water Indicated by the Second Characteristic Numeral(IPX6),IS/IEC 60529 (Table 8)
-4,ELECTRICAL-ENVIRONMENTALTEST FACILITY,Electrical and Electronic Product,Degrees of Protectionagainst Ingress of Waterindicated by the Second Characteristic Numeral(IPX8),IS/IEC 60529 (Table 8)
-5,ELECTRICAL-ENVIRONMENTALTEST FACILITY,Electrical and Electronic Product,Degrees of Protectionagainst Ingress of Water Indicated by the Second Characteristic Numeral(IPX7),IS/IEC 60529 (Table 8)
-6,ELECTRICAL-ENVIRONMENTALTEST FACILITY,Electrical and Electronic Product,Degrees of Protection Provided by Enclosuresfor Electrical Equipmentagainst External Mechanical Impacts (IKcode) (IK 06 to IK10),IS 60068-2-75

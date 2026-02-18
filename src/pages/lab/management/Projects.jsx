@@ -1,28 +1,32 @@
 import { motion } from 'framer-motion'
-import { FolderKanban, Plus, Search, Filter, ExternalLink } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { FolderKanban, Plus, Search, ExternalLink, Trash2 } from 'lucide-react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { projectsService, customersService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Modal from '../../../components/labManagement/Modal'
 import CreateProjectForm from '../../../components/labManagement/forms/CreateProjectForm'
+import ConfirmDeleteModal from '../../../components/labManagement/ConfirmDeleteModal'
+import { useDebounce } from '../../../hooks/useDebounce'
+import RouteSkeleton from '../../../components/RouteSkeleton'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 
 function Projects() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { user } = useLabManagementAuth()
+  const isAdmin = user?.role === 'Admin'
   const [projects, setProjects] = useState([])
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [selectedCustomer, setSelectedCustomer] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
-  useEffect(() => {
-    loadProjects()
-    loadCustomers()
-  }, [])
-
-  const loadProjects = async () => {
+  const loadProjects = useCallback(async () => {
     try {
       setLoading(true)
       const data = await projectsService.getAll()
@@ -32,36 +36,57 @@ function Projects() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const loadCustomers = async () => {
+  const loadCustomers = useCallback(async () => {
     try {
       const data = await customersService.getAll()
       setCustomers(data)
     } catch (error) {
       console.error('Failed to load customers:', error)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    loadProjects()
+    loadCustomers()
+  }, [loadProjects, loadCustomers])
 
   const customerId = searchParams.get('customerId')
 
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.clientName?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCustomer = !customerId || project.clientId?.toString() === customerId
-    const matchesFilter = !selectedCustomer || project.clientId?.toString() === selectedCustomer
-    return matchesSearch && matchesCustomer && matchesFilter
-  })
+  const filteredProjects = useMemo(() => {
+    return projects.filter(project => {
+      const matchesSearch = !debouncedSearchTerm ||
+        project.name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        project.clientName?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+      const matchesCustomer = !customerId || project.clientId?.toString() === customerId
+      const matchesFilter = !selectedCustomer || project.clientId?.toString() === selectedCustomer
+      return matchesSearch && matchesCustomer && matchesFilter
+    })
+  }, [projects, debouncedSearchTerm, customerId, selectedCustomer])
+
+  const handleDeleteClick = (e, project) => {
+    e.stopPropagation()
+    setDeleteTarget(project)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      await projectsService.delete(deleteTarget.id)
+      toast.success('Project deleted successfully')
+      setDeleteTarget(null)
+      loadProjects()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to delete project')
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-          <p className="mt-4 text-gray-600">Loading projects...</p>
-        </div>
-      </div>
-    )
+    return <RouteSkeleton />
   }
 
   return (
@@ -124,16 +149,27 @@ function Projects() {
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
                 <FolderKanban className="w-6 h-6 text-primary" />
               </div>
-              <span
-                className={`px-3 py-1 text-xs font-medium rounded-full ${project.status === 'active'
-                  ? 'text-blue-700 bg-blue-50'
-                  : project.status === 'completed'
-                    ? 'text-green-700 bg-green-50'
-                    : 'text-yellow-700 bg-yellow-50'
-                  }`}
-              >
-                {project.status}
-              </span>
+              <div className="flex items-center gap-2">
+                {isAdmin && (
+                  <button
+                    onClick={(e) => handleDeleteClick(e, project)}
+                    className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete project"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+                <span
+                  className={`px-3 py-1 text-xs font-medium rounded-full ${project.status === 'active'
+                    ? 'text-blue-700 bg-blue-50'
+                    : project.status === 'completed'
+                      ? 'text-green-700 bg-green-50'
+                      : 'text-yellow-700 bg-yellow-50'
+                    }`}
+                >
+                  {project.status}
+                </span>
+              </div>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">{project.name}</h3>
             <p className="text-sm text-gray-600 mb-4">{project.clientName}</p>
@@ -182,6 +218,16 @@ function Projects() {
           onCancel={() => setShowCreateModal(false)}
         />
       </Modal>
+
+      <ConfirmDeleteModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete project"
+        message="Are you sure you want to delete this project? This action cannot be undone."
+        entityName={deleteTarget ? deleteTarget.name : ''}
+        loading={deleting}
+      />
     </div>
   )
 }

@@ -40,7 +40,7 @@ def get_customer(db: Session, customer_id: int) -> Optional[Customer]:
 
 def create_customer(db: Session, customer: CustomerCreate) -> Customer:
     """Create a new customer"""
-    db_customer = Customer(**customer.dict(by_alias=False))
+    db_customer = Customer(**customer.model_dump(by_alias=False))
     db.add(db_customer)
     db.commit()
     db.refresh(db_customer)
@@ -53,7 +53,7 @@ def update_customer(db: Session, customer_id: int, customer: CustomerUpdate) -> 
     if not db_customer:
         return None
     
-    update_data = customer.dict(exclude_unset=True, by_alias=False)
+    update_data = customer.model_dump(exclude_unset=True, by_alias=False)
     for field, value in update_data.items():
         setattr(db_customer, field, value)
     
@@ -113,7 +113,7 @@ def create_project(db: Session, project: ProjectCreate) -> Project:
     client = get_customer(db, project.client_id)
     client_name = client.company_name if client else None
     
-    project_data = project.dict(by_alias=False)
+    project_data = project.model_dump(by_alias=False)
     db_project = Project(**project_data, client_name=client_name)
     db.add(db_project)
     db.commit()
@@ -127,7 +127,7 @@ def update_project(db: Session, project_id: int, project: ProjectUpdate) -> Opti
     if not db_project:
         return None
     
-    update_data = project.dict(exclude_unset=True, by_alias=False)
+    update_data = project.model_dump(exclude_unset=True, by_alias=False)
     
     # Update client_name if client_id changed
     if 'client_id' in update_data:

@@ -1,11 +1,15 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
+from app.dependencies.auth_dependency import require_roles
+from app.models.user_model import User
+from app.services.rbac_service import log_audit
 from app.modules.rfqs.models import RFQ
 from app.modules.projects.models import Customer
 from app.modules.rfqs.schemas import RFQCreate
 
 router = APIRouter(prefix="/rfqs", tags=["RFQs"])
+
 
 def get_db():
     db = SessionLocal()
@@ -15,7 +19,7 @@ def get_db():
         db.close()
 
 
-# 🔹 GET ALL RFQs
+# 🔹 GET ALL RFQs (exclude soft-deleted)
 @router.get("")
 def get_rfqs(db: Session = Depends(get_db)):
     rfqs = (
@@ -28,6 +32,7 @@ def get_rfqs(db: Session = Depends(get_db)):
             RFQ.status,
         )
         .join(Customer, RFQ.customerId == Customer.id)
+        .filter(Customer.is_deleted == False, RFQ.is_deleted == False)
         .all()
     )
 
@@ -74,7 +79,7 @@ def create_rfq(data: RFQCreate, db: Session = Depends(get_db)):
 # 🔹 GET RFQ BY ID
 @router.get("/{id}")
 def get_rfq(id: int, db: Session = Depends(get_db)):
-    rfq = db.query(RFQ).filter(RFQ.id == id).first()
+    rfq = db.query(RFQ).filter(RFQ.id == id, RFQ.is_deleted == False).first()
     if not rfq:
         return None
         
@@ -88,3 +93,23 @@ def get_rfq(id: int, db: Session = Depends(get_db)):
         "receivedDate": rfq.receivedDate,
         "status": rfq.status,
     }
+
+
+# 🔹 DELETE RFQ (Admin only, soft delete, audit logged)
+@router.delete("/{id}", status_code=204)
+def delete_rfq(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("Admin")),
+):
+    rfq = db.query(RFQ).filter(RFQ.id == id, RFQ.is_deleted == False).first()
+    if not rfq:
+        raise HTTPException(status_code=404, detail="RFQ not found")
+    rfq.is_deleted = True
+    log_audit(
+        db, current_user.id, "rfq.delete",
+        resource_type="rfq", resource_id=str(id),
+        details={"role": current_user.role},
+    )
+    db.commit()
+    return None

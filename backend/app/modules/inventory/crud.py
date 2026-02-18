@@ -80,7 +80,7 @@ def get_instrument(db: Session, instrument_id: int) -> Optional[Instrument]:
 
 def create_instrument(db: Session, instrument: InstrumentCreate) -> Instrument:
     """Create a new instrument"""
-    db_instrument = Instrument(**instrument.dict(by_alias=False))
+    db_instrument = Instrument(**instrument.model_dump(by_alias=False))
     db.add(db_instrument)
     db.commit()
     db.refresh(db_instrument)
@@ -93,7 +93,7 @@ def update_instrument(db: Session, instrument_id: int, instrument: InstrumentUpd
     if not db_instrument:
         return None
     
-    update_data = instrument.dict(exclude_unset=True, by_alias=False)
+    update_data = instrument.model_dump(exclude_unset=True, by_alias=False)
     for field, value in update_data.items():
         setattr(db_instrument, field, value)
     
@@ -157,7 +157,7 @@ def get_consumable(db: Session, consumable_id: int) -> Optional[Consumable]:
 
 def create_consumable(db: Session, consumable: ConsumableCreate) -> Consumable:
     """Create a new consumable"""
-    db_consumable = Consumable(**consumable.dict(by_alias=False))
+    db_consumable = Consumable(**consumable.model_dump(by_alias=False))
     db_consumable.status = calculate_consumable_status(db_consumable)
     db.add(db_consumable)
     db.commit()
@@ -171,7 +171,7 @@ def update_consumable(db: Session, consumable_id: int, consumable: ConsumableUpd
     if not db_consumable:
         return None
     
-    update_data = consumable.dict(exclude_unset=True, by_alias=False)
+    update_data = consumable.model_dump(exclude_unset=True, by_alias=False)
     for field, value in update_data.items():
         setattr(db_consumable, field, value)
     
@@ -240,7 +240,7 @@ def create_calibration(db: Session, calibration: CalibrationCreate) -> Calibrati
     instrument = get_instrument(db, calibration.instrument_id)
     instrument_name = instrument.name if instrument else None
     
-    calibration_data = calibration.dict(by_alias=False)
+    calibration_data = calibration.model_dump(by_alias=False)
     db_calibration = Calibration(**calibration_data, instrument_name=instrument_name)
     db_calibration.status = calculate_calibration_status(db_calibration)
     db.add(db_calibration)
@@ -255,7 +255,7 @@ def update_calibration(db: Session, calibration_id: int, calibration: Calibratio
     if not db_calibration:
         return None
     
-    update_data = calibration.dict(exclude_unset=True, by_alias=False)
+    update_data = calibration.model_dump(exclude_unset=True, by_alias=False)
     
     # Update instrument_name if instrument_id changed
     if 'instrument_id' in update_data:
@@ -317,7 +317,7 @@ def get_transaction(db: Session, transaction_id: int) -> Optional[InventoryTrans
 
 def create_transaction(db: Session, transaction: TransactionCreate) -> InventoryTransaction:
     """Create a new transaction"""
-    db_transaction = InventoryTransaction(**transaction.dict(by_alias=False))
+    db_transaction = InventoryTransaction(**transaction.model_dump(by_alias=False))
     db.add(db_transaction)
     db.commit()
     db.refresh(db_transaction)

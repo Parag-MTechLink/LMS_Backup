@@ -7,7 +7,13 @@ import { LabDataProvider } from './contexts/LabDataContext'
 import { LabManagementAuthProvider, useLabManagementAuth } from './contexts/LabManagementAuthContext'
 import LabManagementLayout from './layouts/LabManagementLayout'
 import ErrorBoundary from './components/ErrorBoundary'
-import { ChatbotWidget } from './components/chatbot'
+import RouteSkeleton from './components/RouteSkeleton'
+
+const ChatbotWidget = lazy(() => import('./components/chatbot').then(m => ({ default: m.ChatbotWidget })))
+
+const Landing = lazy(() => import('./pages/Landing'))
+const Login = lazy(() => import('./pages/Login'))
+const Signup = lazy(() => import('./pages/Signup'))
 
 // Lazy load lab management pages for better performance
 const LabManagementDashboard = lazy(() => import('./pages/lab/management/Dashboard'))
@@ -46,15 +52,8 @@ const QADocumentControl = lazy(() => import('./pages/lab/management/QADocumentCo
 const QAAReports = lazy(() => import('./pages/lab/management/QAAReports'))
 const Payment = lazy(() => import('./pages/lab/management/Payment'))
 
-// Loading component
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="text-center">
-      <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-      <p className="mt-4 text-gray-600">Loading...</p>
-    </div>
-  </div>
-)
+// Non-blocking skeleton for lazy routes (faster perceived load)
+const RouteFallback = () => <RouteSkeleton />
 
 function AnimatedRoutes() {
   const location = useLocation()
@@ -80,60 +79,91 @@ function AnimatedRoutes() {
     duration: 0.4,
   }
 
+  const { isAuthenticated, loading } = useLabManagementAuth()
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
+      </div>
+    )
+  }
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        {/* Redirect root to dashboard */}
-        <Route path="/" element={<Navigate to="/lab/management/dashboard" replace />} />
+        {/* Public: landing — redirect to dashboard if authenticated */}
+        <Route
+          path="/"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/lab/management/dashboard" replace />
+            ) : (
+              <Suspense fallback={<RouteFallback />}><Landing /></Suspense>
+            )
+          }
+        />
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/lab/management/dashboard" replace /> : <Suspense fallback={<RouteFallback />}><Login /></Suspense>} />
+        <Route path="/signup" element={isAuthenticated ? <Navigate to="/lab/management/dashboard" replace /> : <Suspense fallback={<RouteFallback />}><Signup /></Suspense>} />
 
-        {/* Lab Management System */}
-        <Route path="/lab/management" element={<LabManagementLayout />}>
-          <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><LabManagementDashboard /></Suspense>} />
-          <Route path="organization" element={<Suspense fallback={<PageLoader />}><LabManagementOrganizationDetails /></Suspense>} />
-          <Route path="scope-management" element={<Suspense fallback={<PageLoader />}><LabManagementScopeManagement /></Suspense>} />
-          <Route path="customers" element={<Suspense fallback={<PageLoader />}><LabManagementCustomers /></Suspense>} />
-          <Route path="rfqs" element={<Suspense fallback={<PageLoader />}><LabManagementRFQs /></Suspense>} />
-          <Route path="estimations" element={<Suspense fallback={<PageLoader />}><LabManagementEstimations /></Suspense>} />
-          <Route path="projects" element={<Suspense fallback={<PageLoader />}><LabManagementProjects /></Suspense>} />
-          <Route path="projects/:id" element={<Suspense fallback={<PageLoader />}><ProjectDetail /></Suspense>} />
-          <Route path="test-plans" element={<Suspense fallback={<PageLoader />}><LabManagementTestPlans /></Suspense>} />
-          <Route path="test-plans/:id" element={<Suspense fallback={<PageLoader />}><PlaceholderPage title="Test Plan Details" description="Detailed test plan information" /></Suspense>} />
-          <Route path="test-executions" element={<Suspense fallback={<PageLoader />}><LabManagementTestExecutions /></Suspense>} />
-          <Route path="test-executions/:id" element={<Suspense fallback={<PageLoader />}><PlaceholderPage title="Test Execution Details" description="Detailed test execution information" /></Suspense>} />
-          <Route path="test-results" element={<Suspense fallback={<PageLoader />}><LabManagementTestResults /></Suspense>} />
-          <Route path="test-results/:id" element={<Suspense fallback={<PageLoader />}><PlaceholderPage title="Test Result Details" description="Detailed test result information" /></Suspense>} />
-          <Route path="samples" element={<Suspense fallback={<PageLoader />}><LabManagementSamples /></Suspense>} />
-          <Route path="samples/:id" element={<Suspense fallback={<PageLoader />}><PlaceholderPage title="Sample Details" description="Detailed sample information" /></Suspense>} />
-          <Route path="trfs" element={<Suspense fallback={<PageLoader />}><LabManagementTRFs /></Suspense>} />
-          <Route path="trfs/:id" element={<Suspense fallback={<PageLoader />}><PlaceholderPage title="TRF Details" description="Detailed TRF information" /></Suspense>} />
-          <Route path="documents" element={<Suspense fallback={<PageLoader />}><LabManagementDocuments /></Suspense>} />
-          <Route path="documents/:id" element={<Suspense fallback={<PageLoader />}><PlaceholderPage title="Document Details" description="Detailed document information" /></Suspense>} />
-          <Route path="reports" element={<Suspense fallback={<PageLoader />}><LabManagementReports /></Suspense>} />
-          <Route path="audits" element={<Suspense fallback={<PageLoader />}><LabManagementAudits /></Suspense>} />
-          <Route path="ncrs" element={<Suspense fallback={<PageLoader />}><LabManagementNCRs /></Suspense>} />
-          <Route path="certifications" element={<Suspense fallback={<PageLoader />}><LabManagementCertifications /></Suspense>} />
-          <Route path="calendar" element={<Suspense fallback={<PageLoader />}><LabManagementCalendar /></Suspense>} />
-          <Route path="lab-recommendations" element={<Suspense fallback={<PageLoader />}><LabManagementRecommendations /></Suspense>} />
+        {/* Protected: Lab Management — redirect to login if not authenticated */}
+        <Route
+          path="/lab/management"
+          element={
+            isAuthenticated ? (
+              <LabManagementLayout />
+            ) : (
+              <Navigate to="/login" replace state={{ from: location.pathname }} />
+            )
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<Suspense fallback={<RouteFallback />}><LabManagementDashboard /></Suspense>} />
+          <Route path="organization" element={<Suspense fallback={<RouteFallback />}><LabManagementOrganizationDetails /></Suspense>} />
+          <Route path="scope-management" element={<Suspense fallback={<RouteFallback />}><LabManagementScopeManagement /></Suspense>} />
+          <Route path="customers" element={<Suspense fallback={<RouteFallback />}><LabManagementCustomers /></Suspense>} />
+          <Route path="rfqs" element={<Suspense fallback={<RouteFallback />}><LabManagementRFQs /></Suspense>} />
+          <Route path="estimations" element={<Suspense fallback={<RouteFallback />}><LabManagementEstimations /></Suspense>} />
+          <Route path="projects" element={<Suspense fallback={<RouteFallback />}><LabManagementProjects /></Suspense>} />
+          <Route path="projects/:id" element={<Suspense fallback={<RouteFallback />}><ProjectDetail /></Suspense>} />
+          <Route path="test-plans" element={<Suspense fallback={<RouteFallback />}><LabManagementTestPlans /></Suspense>} />
+          <Route path="test-plans/:id" element={<Suspense fallback={<RouteFallback />}><PlaceholderPage title="Test Plan Details" description="Detailed test plan information" /></Suspense>} />
+          <Route path="test-executions" element={<Suspense fallback={<RouteFallback />}><LabManagementTestExecutions /></Suspense>} />
+          <Route path="test-executions/:id" element={<Suspense fallback={<RouteFallback />}><PlaceholderPage title="Test Execution Details" description="Detailed test execution information" /></Suspense>} />
+          <Route path="test-results" element={<Suspense fallback={<RouteFallback />}><LabManagementTestResults /></Suspense>} />
+          <Route path="test-results/:id" element={<Suspense fallback={<RouteFallback />}><PlaceholderPage title="Test Result Details" description="Detailed test result information" /></Suspense>} />
+          <Route path="samples" element={<Suspense fallback={<RouteFallback />}><LabManagementSamples /></Suspense>} />
+          <Route path="samples/:id" element={<Suspense fallback={<RouteFallback />}><PlaceholderPage title="Sample Details" description="Detailed sample information" /></Suspense>} />
+          <Route path="trfs" element={<Suspense fallback={<RouteFallback />}><LabManagementTRFs /></Suspense>} />
+          <Route path="trfs/:id" element={<Suspense fallback={<RouteFallback />}><PlaceholderPage title="TRF Details" description="Detailed TRF information" /></Suspense>} />
+          <Route path="documents" element={<Suspense fallback={<RouteFallback />}><LabManagementDocuments /></Suspense>} />
+          <Route path="documents/:id" element={<Suspense fallback={<RouteFallback />}><PlaceholderPage title="Document Details" description="Detailed document information" /></Suspense>} />
+          <Route path="reports" element={<Suspense fallback={<RouteFallback />}><LabManagementReports /></Suspense>} />
+          <Route path="audits" element={<Suspense fallback={<RouteFallback />}><LabManagementAudits /></Suspense>} />
+          <Route path="ncrs" element={<Suspense fallback={<RouteFallback />}><LabManagementNCRs /></Suspense>} />
+          <Route path="certifications" element={<Suspense fallback={<RouteFallback />}><LabManagementCertifications /></Suspense>} />
+          <Route path="calendar" element={<Suspense fallback={<RouteFallback />}><LabManagementCalendar /></Suspense>} />
+          <Route path="lab-recommendations" element={<Suspense fallback={<RouteFallback />}><LabManagementRecommendations /></Suspense>} />
 
           {/* Inventory Management */}
-          <Route path="inventory" element={<Suspense fallback={<PageLoader />}><Inventory /></Suspense>} />
-          <Route path="inventory/instruments" element={<Suspense fallback={<PageLoader />}><InventoryInstruments /></Suspense>} />
-          <Route path="inventory/calibration" element={<Suspense fallback={<PageLoader />}><InventoryCalibration /></Suspense>} />
-          <Route path="inventory/consumables" element={<Suspense fallback={<PageLoader />}><InventoryConsumables /></Suspense>} />
-          <Route path="inventory/transactions" element={<Suspense fallback={<PageLoader />}><InventoryTransactions /></Suspense>} />
-          <Route path="inventory/reports" element={<Suspense fallback={<PageLoader />}><InventoryReports /></Suspense>} />
-          <Route path="qa" element={<Suspense fallback={<PageLoader />}><QualityAssurance /></Suspense>} />
-          <Route path="qa/sop" element={<Suspense fallback={<PageLoader />}><QASOPManagement /></Suspense>} />
-          <Route path="qa/qc" element={<Suspense fallback={<PageLoader />}><QAQCChecks /></Suspense>} />
-          <Route path="qa/audit" element={<Suspense fallback={<PageLoader />}><QAAuditCompliance /></Suspense>} />
-          <Route path="qa/nc-capa" element={<Suspense fallback={<PageLoader />}><QANCCAPA /></Suspense>} />
-          <Route path="qa/documents" element={<Suspense fallback={<PageLoader />}><QADocumentControl /></Suspense>} />
-          <Route path="qa/reports" element={<Suspense fallback={<PageLoader />}><QAAReports /></Suspense>} />
-          <Route path="payment" element={<Suspense fallback={<PageLoader />}><Payment /></Suspense>} />
+          <Route path="inventory" element={<Suspense fallback={<RouteFallback />}><Inventory /></Suspense>} />
+          <Route path="inventory/instruments" element={<Suspense fallback={<RouteFallback />}><InventoryInstruments /></Suspense>} />
+          <Route path="inventory/calibration" element={<Suspense fallback={<RouteFallback />}><InventoryCalibration /></Suspense>} />
+          <Route path="inventory/consumables" element={<Suspense fallback={<RouteFallback />}><InventoryConsumables /></Suspense>} />
+          <Route path="inventory/transactions" element={<Suspense fallback={<RouteFallback />}><InventoryTransactions /></Suspense>} />
+          <Route path="inventory/reports" element={<Suspense fallback={<RouteFallback />}><InventoryReports /></Suspense>} />
+          <Route path="qa" element={<Suspense fallback={<RouteFallback />}><QualityAssurance /></Suspense>} />
+          <Route path="qa/sop" element={<Suspense fallback={<RouteFallback />}><QASOPManagement /></Suspense>} />
+          <Route path="qa/qc" element={<Suspense fallback={<RouteFallback />}><QAQCChecks /></Suspense>} />
+          <Route path="qa/audit" element={<Suspense fallback={<RouteFallback />}><QAAuditCompliance /></Suspense>} />
+          <Route path="qa/nc-capa" element={<Suspense fallback={<RouteFallback />}><QANCCAPA /></Suspense>} />
+          <Route path="qa/documents" element={<Suspense fallback={<RouteFallback />}><QADocumentControl /></Suspense>} />
+          <Route path="qa/reports" element={<Suspense fallback={<RouteFallback />}><QAAReports /></Suspense>} />
+          <Route path="payment" element={<Suspense fallback={<RouteFallback />}><Payment /></Suspense>} />
         </Route>
 
-        {/* Catch all - redirect to dashboard */}
-        <Route path="*" element={<Navigate to="/lab/management/dashboard" replace />} />
+        {/* Catch all: if authenticated go to dashboard, else landing */}
+        <Route path="*" element={<Navigate to={isAuthenticated ? "/lab/management/dashboard" : "/"} replace />} />
       </Routes>
     </AnimatePresence>
   )
@@ -144,9 +174,9 @@ function AppContent() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  // Chatbot configuration
+  // Chatbot configuration (use same backend as rest of app unless overridden)
   const chatbotConfig = {
-    apiUrl: import.meta.env.VITE_CHATBOT_API_URL || 'http://localhost:8000/api/v1/chat',
+    apiUrl: import.meta.env.VITE_CHATBOT_API_URL || `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/v1/chat`,
     theme: 'light',
     position: 'bottom-right',
     enabled: import.meta.env.VITE_CHATBOT_ENABLED !== 'false',
@@ -188,6 +218,9 @@ function AppContent() {
     // Could show toast notification here
   }
 
+  const isPublicPage = ['/', '/login', '/signup'].includes(location.pathname)
+  const showChatbot = !isPublicPage && chatbotConfig.enabled
+
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-grow">
@@ -200,14 +233,18 @@ function AppContent() {
         }}
       />
 
-      {/* Chatbot Widget - Plugged in */}
-      <ChatbotWidget
-        apiUrl={chatbotConfig.apiUrl}
-        config={chatbotConfig}
-        context={chatbotContext}
-        onAction={handleChatbotAction}
-        onError={handleChatbotError}
-      />
+      {/* Chatbot Widget - only on authenticated app (not landing, login, signup) */}
+      {showChatbot && (
+        <Suspense fallback={null}>
+          <ChatbotWidget
+            apiUrl={chatbotConfig.apiUrl}
+            config={chatbotConfig}
+            context={chatbotContext}
+            onAction={handleChatbotAction}
+            onError={handleChatbotError}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }

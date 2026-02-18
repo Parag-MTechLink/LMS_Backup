@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import toast, { Toaster } from 'react-hot-toast'
 import { estimationsService, rfqsService } from '../../../services/labManagementApi'
+import { formatCurrencyINR } from '../../../utils/currency'
 import { Plus, X, Trash2, ExternalLink } from 'lucide-react'
 
 function Estimations() {
@@ -191,7 +192,7 @@ function Estimations() {
             <div>
               <p className="text-sm text-gray-600 mb-1">Total Value</p>
               <p className="text-2xl font-bold text-gray-900">
-                ₹{estimations.reduce((sum, e) => sum + (e.totalCost || 0), 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                {formatCurrencyINR(estimations.reduce((sum, e) => sum + (e.totalCost || 0), 0))}
               </p>
             </div>
             <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -283,7 +284,7 @@ function Estimations() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-900">
-                        ₹{estimation.totalCost?.toLocaleString('en-IN', { maximumFractionDigits: 2 }) || '0.00'}
+                        {formatCurrencyINR(estimation.totalCost)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -422,7 +423,7 @@ function Estimations() {
                             <option value={0}>Select Test Type</option>
                             {testTypes.map((tt) => (
                               <option key={tt.id} value={tt.id}>
-                                {tt.name} (₹{tt.defaultRate}/hr)
+                                {tt.name} ({formatCurrencyINR(tt.defaultRate)}/hr)
                               </option>
                             ))}
                           </select>
@@ -474,7 +475,7 @@ function Estimations() {
                         </div>
                       </div>
                       <div className="text-sm text-gray-600 pt-2 border-t border-gray-100">
-                        Cost: ₹{calculateTestCost(item).toFixed(2)}
+                        Cost: {formatCurrencyINR(calculateTestCost(item))}
                       </div>
                     </div>
                   ))}
@@ -493,7 +494,7 @@ function Estimations() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal:</span>
-                    <span className="font-semibold">₹{calculateSubtotal().toFixed(2)}</span>
+                    <span className="font-semibold">{formatCurrencyINR(calculateSubtotal())}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total Hours:</span>
@@ -526,7 +527,7 @@ function Estimations() {
                   <div className="pt-2 border-t border-green-200 mt-2">
                     <div className="flex justify-between">
                       <span className="text-gray-700 font-semibold">Total Cost:</span>
-                      <span className="text-lg font-bold text-green-700">₹{calculateTotal().toFixed(2)}</span>
+                      <span className="text-lg font-bold text-green-700">{formatCurrencyINR(calculateTotal())}</span>
                     </div>
                   </div>
                 </div>

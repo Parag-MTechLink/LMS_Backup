@@ -8,8 +8,10 @@ if (!API_URL && import.meta.env.PROD) {
   throw new Error('Missing required environment variable: VITE_API_URL')
 }
 
-// Fallback to localhost only in development
-const API_BASE_URL = API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '')
+// Dev: default to backend on 127.0.0.1:8000 (matches uvicorn; avoid localhost IPv6 issues). Override with VITE_API_URL.
+// Prod: VITE_API_URL is required
+const DEV_DEFAULT_BACKEND = 'http://127.0.0.1:8000'
+const API_BASE_URL = API_URL || (import.meta.env.DEV ? DEV_DEFAULT_BACKEND : '')
 
 class ApiService {
   constructor() {
@@ -60,9 +62,13 @@ class ApiService {
             localStorage.removeItem('labManagementAccessToken')
             localStorage.removeItem('labManagementRefreshToken')
             localStorage.removeItem('labManagementUser')
-            window.location.href = '/'
+            window.location.href = '/login'
             return Promise.reject(refreshError)
           }
+        } else if (error.response?.status === 401) {
+          localStorage.removeItem('labManagementAccessToken')
+          localStorage.removeItem('labManagementUser')
+          window.location.href = '/login'
         }
 
         return Promise.reject(error)
@@ -78,9 +84,17 @@ class ApiService {
     }
   }
 
+  /** In-flight GET requests: same URL returns same promise (deduplication) */
+  _getPromises = new Map()
+
   async get(url, config = {}) {
-    const response = await this.client.get(url, config)
-    return response.data
+    const key = url + (config.params ? JSON.stringify(config.params) : '')
+    const inFlight = this._getPromises.get(key)
+    if (inFlight) return inFlight
+    const promise = this.client.get(url, config).then((r) => r.data)
+    this._getPromises.set(key, promise)
+    promise.finally(() => this._getPromises.delete(key))
+    return promise
   }
 
   async post(url, data, config = {}) {
@@ -109,13 +123,15 @@ export const apiService = new ApiService()
 // Mock data services for now - can be replaced with real API calls
 const mockDelay = (ms = 50) => new Promise(resolve => setTimeout(resolve, ms))
 
-// Simple cache mechanism
+// Simple cache mechanism (stale-while-revalidate: return stale if within TTL)
 const cache = new Map()
-const CACHE_TTL = 30000 // 30 seconds
+const CACHE_TTL = 30000 // 30 seconds default
+const CACHE_TTL_LONG = 5 * 60 * 1000 // 5 min for dashboard/stats
+const CACHE_TTL_USER = 2 * 60 * 1000 // 2 min for user profile
 
-const getCached = (key) => {
+const getCached = (key, ttlMs = CACHE_TTL) => {
   const cached = cache.get(key)
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+  if (cached && Date.now() - cached.timestamp < ttlMs) {
     return cached.data
   }
   return null
@@ -135,6 +151,35 @@ const clearCache = (pattern) => {
   } else {
     cache.clear()
   }
+}
+
+// Auth Service (JWT). me() cached to avoid refetch on every nav; clear with clearCache('auth:')
+export const authService = {
+  login: (email, password) =>
+    apiService.post('/api/v1/auth/login', { email, password }),
+  signup: (data) =>
+    apiService.post('/api/v1/auth/signup', data),
+  me: async () => {
+    const cached = getCached('auth:me', CACHE_TTL_USER)
+    if (cached) return cached
+    const data = await apiService.get('/api/v1/auth/me')
+    setCached('auth:me', data)
+    return data
+  },
+}
+
+// Lab recommendations (engine under /api/v1/labs; requires LAB_ENGINE_DATABASE_URL on backend)
+export const labsService = {
+  health: () => apiService.get('/api/v1/labs/health'),
+  getDomains: () => apiService.get('/api/v1/labs/domains'),
+  getLocations: () => apiService.get('/api/v1/labs/locations'),
+  getStatistics: () => apiService.get('/api/v1/labs/statistics'),
+  searchLabsByName: (params) => apiService.get('/api/v1/labs/by-name', { params }),
+  getRecommendations: (body) => apiService.post('/api/v1/labs/recommend', body),
+  searchLabs: (params) => apiService.get('/api/v1/labs/search', { params }),
+  getLabDetails: (labId) => apiService.get(`/api/v1/labs/${labId}`),
+  searchTests: (params) => apiService.get('/api/v1/labs/tests/search', { params }),
+  searchStandards: (params) => apiService.get('/api/v1/labs/standards/search', { params }),
 }
 
 // Customers Service
@@ -176,6 +221,26 @@ export const rfqsService = {
   create: async (data) => {
     clearCache('rfqs:')
     return await apiService.post('/api/v1/rfqs', data)
+  },
+  /** Upload RFQ from Excel (.xlsx). Returns { status, missing_fields? } or { status, message, request_id?, rfq_id? }. */
+  uploadExcel: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return await apiService.post('/api/v1/rfq/upload', formData)
+  },
+  /** Download RFQ Excel template (triggers file download in browser). */
+  downloadTemplate: async () => {
+    const res = await apiService.client.get('/api/v1/rfq/template', { responseType: 'blob' })
+    const url = URL.createObjectURL(res.data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'rfq_upload_template.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
+  },
+  delete: async (id) => {
+    clearCache('rfqs:')
+    return await apiService.delete(`/api/v1/rfqs/${id}`)
   },
 }
 
@@ -241,11 +306,11 @@ export const projectsService = {
   },
 }
 
-// Dashboard Service
+// Dashboard Service (longer cache to avoid refetch on every nav)
 export const dashboardService = {
   getSummary: async () => {
     const cacheKey = 'dashboard:summary'
-    const cached = getCached(cacheKey)
+    const cached = getCached(cacheKey, CACHE_TTL_LONG)
     if (cached) return cached
 
     await mockDelay()

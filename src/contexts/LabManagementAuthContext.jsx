@@ -1,4 +1,8 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { authService, clearCache } from '../services/labManagementApi'
+
+const STORAGE_TOKEN = 'labManagementAccessToken'
+const STORAGE_USER = 'labManagementUser'
 
 const AuthContext = createContext(undefined)
 
@@ -6,65 +10,88 @@ export function LabManagementAuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    // Check for stored auth
-    const token = localStorage.getItem('labManagementAccessToken')
-    const storedUser = localStorage.getItem('labManagementUser')
-    
+  const loadUser = useCallback(() => {
+    const token = localStorage.getItem(STORAGE_TOKEN)
+    const storedUser = localStorage.getItem(STORAGE_USER)
     if (token && storedUser) {
       try {
         setUser(JSON.parse(storedUser))
-      } catch (error) {
-        localStorage.removeItem('labManagementAccessToken')
-        localStorage.removeItem('labManagementUser')
+      } catch {
+        localStorage.removeItem(STORAGE_TOKEN)
+        localStorage.removeItem(STORAGE_USER)
+        setUser(null)
       }
     } else {
-      // For demo, set a default user
-      const defaultUser = {
-        id: 1,
-        name: 'Lab User',
-        email: 'lab@techlink.com',
-        role: 'engineer'
-      }
-      setUser(defaultUser)
-      localStorage.setItem('labManagementUser', JSON.stringify(defaultUser))
+      setUser(null)
     }
-    
-    setLoading(false)
   }, [])
 
-  const login = async (email, password) => {
-    // Mock login - in real app, call API
-    const user = {
-      id: 1,
-      name: 'Lab User',
-      email: email,
-      role: 'engineer'
+  useEffect(() => {
+    const token = localStorage.getItem(STORAGE_TOKEN)
+    if (!token) {
+      setUser(null)
+      setLoading(false)
+      return
     }
-    setUser(user)
-    localStorage.setItem('labManagementAccessToken', 'mock-token')
-    localStorage.setItem('labManagementUser', JSON.stringify(user))
+    authService
+      .me()
+      .then((data) => {
+        const u = {
+          id: data.id,
+          email: data.email,
+          full_name: data.full_name,
+          name: data.full_name,
+          role: data.role,
+          is_active: data.is_active,
+        }
+        setUser(u)
+        localStorage.setItem(STORAGE_USER, JSON.stringify(u))
+      })
+      .catch(() => {
+        localStorage.removeItem(STORAGE_TOKEN)
+        localStorage.removeItem(STORAGE_USER)
+        setUser(null)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    const onStorage = () => loadUser()
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [loadUser])
+
+  const login = async (email, password) => {
+    const res = await authService.login(email, password)
+    localStorage.setItem(STORAGE_TOKEN, res.access_token)
+    const u = {
+      id: res.user.id,
+      email: res.user.email,
+      full_name: res.user.full_name,
+      name: res.user.full_name,
+      role: res.user.role,
+    }
+    localStorage.setItem(STORAGE_USER, JSON.stringify(u))
+    setUser(u)
   }
 
   const logout = () => {
     setUser(null)
-    localStorage.removeItem('labManagementAccessToken')
-    localStorage.removeItem('labManagementUser')
+    localStorage.removeItem(STORAGE_TOKEN)
+    localStorage.removeItem(STORAGE_USER)
+    clearCache('auth:')
   }
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        loading,
-        login,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  )
+  const value = {
+    user,
+    isAuthenticated: !!user,
+    loading,
+    login,
+    logout,
+    refreshUser: loadUser,
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useLabManagementAuth() {

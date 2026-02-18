@@ -4,7 +4,7 @@ import {
   LayoutDashboard,
   Users,
   FileText,
-  DollarSign,
+  IndianRupee,
   FolderKanban,
   FlaskConical,
   TestTube,
@@ -29,18 +29,19 @@ import {
   Building2,
   Target,
   Calendar,
-  TrendingUp
+  TrendingUp,
 } from 'lucide-react'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { useLabManagementAuth } from '../contexts/LabManagementAuthContext'
 import logo from '../assets/techlink-logo.svg'
 
-const navigation = [
+const allNavItems = [
   { name: 'Dashboard', href: '/lab/management/dashboard', icon: LayoutDashboard },
-  { name: 'Organization Details', href: '/lab/management/organization', icon: Building2 },
+  { name: 'Organization Details', href: '/lab/management/organization', icon: Building2, roles: ['Admin'] },
   { name: 'Scope Management', href: '/lab/management/scope-management', icon: Target },
   { name: 'Customers', href: '/lab/management/customers', icon: Users },
   { name: 'RFQs', href: '/lab/management/rfqs', icon: FileText },
-  { name: 'Estimations', href: '/lab/management/estimations', icon: DollarSign },
+  { name: 'Estimations', href: '/lab/management/estimations', icon: IndianRupee, hideForRoles: ['Testing Engineer', 'Technician'] },
   { name: 'Projects', href: '/lab/management/projects', icon: FolderKanban },
   { name: 'Samples', href: '/lab/management/samples', icon: Package },
   { name: 'Test Plans', href: '/lab/management/test-plans', icon: FlaskConical },
@@ -49,14 +50,23 @@ const navigation = [
   { name: 'TRFs', href: '/lab/management/trfs', icon: FileCheck },
   { name: 'Documents', href: '/lab/management/documents', icon: FolderOpen },
   { name: 'Reports', href: '/lab/management/reports', icon: FileBarChart },
-  { name: 'Audits', href: '/lab/management/audits', icon: ClipboardCheck },
+  { name: 'Audits', href: '/lab/management/audits', icon: ClipboardCheck, hideForRoles: ['Testing Engineer', 'Technician', 'Sales Engineer'] },
   { name: 'NCRs', href: '/lab/management/ncrs', icon: AlertTriangle },
   { name: 'Certifications', href: '/lab/management/certifications', icon: Shield },
   { name: 'Calendar', href: '/lab/management/calendar', icon: Calendar },
-  { name: 'Inventory Management', href: '/lab/management/inventory', icon: Package },
-  { name: 'Quality Assurance', href: '/lab/management/qa', icon: Shield },
+  { name: 'Inventory Management', href: '/lab/management/inventory', icon: Package, hideForRoles: ['Sales Engineer'] },
+  { name: 'Quality Assurance', href: '/lab/management/qa', icon: Shield, hideForRoles: ['Sales Engineer', 'Technician'] },
   { name: 'Lab Recommendations', href: '/lab/management/lab-recommendations', icon: TrendingUp },
 ]
+
+function getNavigationForRole(role) {
+  if (!role) return allNavItems
+  return allNavItems.filter((item) => {
+    if (item.roles && !item.roles.includes(role)) return false
+    if (item.hideForRoles && item.hideForRoles.includes(role)) return false
+    return true
+  })
+}
 
 function LabManagementLayout() {
   const location = useLocation()
@@ -65,9 +75,11 @@ function LabManagementLayout() {
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const navigate = useNavigate()
   const notificationRef = useRef(null)
+  const { user, logout } = useLabManagementAuth()
+  const displayName = user?.full_name || user?.name || user?.email || 'User'
+  const displayRole = user?.role || ''
 
-  // Mock user - in real app, get from context
-  const user = { name: 'Lab User', role: 'engineer' }
+  const navItems = useMemo(() => getNavigationForRole(displayRole), [displayRole])
 
   // Mock notifications
   const notifications = [
@@ -90,14 +102,18 @@ function LabManagementLayout() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleSearch = (e) => {
-    e.preventDefault()
-    if (searchTerm.trim()) {
-      // Navigate to projects with search
-      navigate(`/lab/management/projects?search=${encodeURIComponent(searchTerm)}`)
+  const handleSearchNavigate = useCallback((term) => {
+    if (term && term.trim()) {
+      navigate(`/lab/management/projects?search=${encodeURIComponent(term.trim())}`)
       setSearchTerm('')
     }
-  }
+  }, [navigate])
+
+  const handleSearch = useCallback((e) => {
+    e.preventDefault()
+    handleSearchNavigate(searchTerm)
+  }, [searchTerm, handleSearchNavigate])
+
 
   const getInitials = (name) => {
     if (!name) return 'U'
@@ -143,7 +159,7 @@ function LabManagementLayout() {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-            {navigation.map((item) => {
+            {navItems.map((item) => {
               const isActive = location.pathname === item.href ||
                 location.pathname.startsWith(item.href + '/')
               return (
@@ -178,18 +194,16 @@ function LabManagementLayout() {
           <div className="p-6 border-t border-gray-200 bg-gray-50">
             <div className="flex items-center space-x-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white text-sm font-semibold">
-                <span>{getInitials(user?.name)}</span>
+                <span>{getInitials(displayName)}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{user?.name || 'User'}</p>
-                <p className="text-xs text-gray-500 truncate capitalize">{user?.role || 'Role'}</p>
+                <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
+                <p className="text-xs text-gray-500 truncate capitalize">{displayRole || 'Role'}</p>
               </div>
               <button
                 onClick={() => {
-                  // Logout functionality
-                  localStorage.removeItem('labManagementAccessToken')
-                  localStorage.removeItem('labManagementUser')
-                  window.location.href = '/'
+                  logout()
+                  navigate('/')
                 }}
                 className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition-colors duration-200 hover:border-primary hover:text-primary"
                 title="Logout"

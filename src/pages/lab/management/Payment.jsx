@@ -5,6 +5,7 @@ import { CreditCard, CheckCircle, XCircle, ArrowLeft, Building2 } from 'lucide-r
 import Button from '../../../components/labManagement/Button'
 import Card from '../../../components/labManagement/Card'
 import toast from 'react-hot-toast'
+import { formatCurrencyINR } from '../../../utils/currency'
 
 const REGISTRATION_FEE = 5000
 
@@ -74,7 +75,7 @@ export default function Payment() {
                             </div>
                             <div className="flex justify-between mb-2">
                                 <span className="text-gray-600">Amount Paid:</span>
-                                <span className="font-semibold">₹{REGISTRATION_FEE.toLocaleString()}</span>
+                                <span className="font-semibold">{formatCurrencyINR(REGISTRATION_FEE)}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-600">Payment Method:</span>
@@ -208,7 +209,7 @@ export default function Payment() {
                                 ) : (
                                     <>
                                         <CreditCard className="w-5 h-5 mr-2" />
-                                        Pay ₹{REGISTRATION_FEE.toLocaleString()}
+                                        Pay {formatCurrencyINR(REGISTRATION_FEE)}
                                     </>
                                 )}
                             </Button>
@@ -227,18 +228,18 @@ export default function Payment() {
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Registration Fee:</span>
-                                    <span className="font-medium text-gray-900">₹{REGISTRATION_FEE.toLocaleString()}</span>
+                                    <span className="font-medium text-gray-900">{formatCurrencyINR(REGISTRATION_FEE)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Processing Fee:</span>
-                                    <span className="font-medium text-gray-900">₹0</span>
+                                    <span className="font-medium text-gray-900">{formatCurrencyINR(0)}</span>
                                 </div>
                             </div>
 
                             <div className="border-t border-gray-200 pt-3">
                                 <div className="flex justify-between">
                                     <span className="text-base font-semibold text-gray-900">Total Amount:</span>
-                                    <span className="text-xl font-bold text-primary">₹{REGISTRATION_FEE.toLocaleString()}</span>
+                                    <span className="text-xl font-bold text-primary">{formatCurrencyINR(REGISTRATION_FEE)}</span>
                                 </div>
                             </div>
 

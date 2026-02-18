@@ -1,7 +1,0 @@
-0,1,2,3,4
-S.No,Discipline / Group,Materials or Products tested,"Component, parameteror characteristic tested/ Specic Test Performed / Tests ortype of testsperformed",Test Method Specification againstwhich tests areperformed and / or thetechniques /equipment used
-Site Testing,,,,
-1,ELECTRICAL- CABLES& WIRES,Power Cables,Insulation Resistance,IS 10810 (Part 43) (Cl.8.0)
-2,ELECTRICAL-SWITCHGEAR &PROTECTIVEEQUIPMENT,Circuit Breakers/ Vacuum Circuit Breakers,Insulation Resistance,"IS/IEC 60898-1 (Cl. 9.7.2),IEC 62271-100"
-3,ELECTRICAL-SWITCHGEAR &PROTECTIVEEQUIPMENT,Electromagnetic & Numerical Relays,Tripping Characteristics,IEC 60255-151 (Cl. 4.4.1)
-4,ELECTRICAL-SWITCHGEAR &PROTECTIVEEQUIPMENT,Individual Earth Pits,Earth Resistance Testingfor Earth Pits,IS 3043 (Cl. 41.1) (Fall of Potential Method)
