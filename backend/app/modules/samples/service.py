@@ -2,8 +2,29 @@ from sqlalchemy.orm import Session
 from app.modules.samples.models import Sample
 from app.modules.samples.schema import SampleCreate
 
+
 def create_sample(db: Session, sample: SampleCreate):
-    db_sample = Sample(**sample.dict())
+    """
+    Create a new sample.
+
+    If projectId is provided but projectName is not, look up the project and
+    denormalize its name into Sample.projectName so the UI can display it
+    without an extra join.
+    """
+    project_name = sample.projectName
+    if sample.projectId and not project_name:
+        try:
+            from app.modules.projects.crud import get_project
+
+            project = get_project(db, sample.projectId)
+            if project:
+                project_name = project.name
+        except Exception:
+            # If projects module changes or is unavailable, fall back gracefully
+            pass
+
+    sample_data = sample.dict(exclude={"projectName"})
+    db_sample = Sample(**sample_data, projectName=project_name)
     db.add(db_sample)
     db.commit()
     db.refresh(db_sample)

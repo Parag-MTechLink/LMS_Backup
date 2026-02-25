@@ -24,9 +24,11 @@ const LabManagementProjects = lazy(() => import('./pages/lab/management/Projects
 const LabManagementRFQs = lazy(() => import('./pages/lab/management/RFQs'))
 const LabManagementEstimations = lazy(() => import('./pages/lab/management/Estimations'))
 const LabManagementTestPlans = lazy(() => import('./pages/lab/management/TestPlans'))
+const LabManagementTestPlanDetails = lazy(() => import('./pages/lab/management/TestPlanDetails'))
 const LabManagementTestExecutions = lazy(() => import('./pages/lab/management/TestExecutions'))
 const LabManagementTestResults = lazy(() => import('./pages/lab/management/TestResults'))
 const LabManagementSamples = lazy(() => import('./pages/lab/management/Samples'))
+const LabManagementSampleDetails = lazy(() => import('./pages/lab/management/SampleDetails'))
 const LabManagementTRFs = lazy(() => import('./pages/lab/management/TRFs'))
 const LabManagementDocuments = lazy(() => import('./pages/lab/management/Documents'))
 const LabManagementReports = lazy(() => import('./pages/lab/management/Reports'))
@@ -127,13 +129,13 @@ function AnimatedRoutes() {
           <Route path="projects" element={<Suspense fallback={<RouteFallback />}><LabManagementProjects /></Suspense>} />
           <Route path="projects/:id" element={<Suspense fallback={<RouteFallback />}><ProjectDetail /></Suspense>} />
           <Route path="test-plans" element={<Suspense fallback={<RouteFallback />}><LabManagementTestPlans /></Suspense>} />
-          <Route path="test-plans/:id" element={<Suspense fallback={<RouteFallback />}><PlaceholderPage title="Test Plan Details" description="Detailed test plan information" /></Suspense>} />
+          <Route path="test-plans/:id" element={<Suspense fallback={<RouteFallback />}><LabManagementTestPlanDetails /></Suspense>} />
           <Route path="test-executions" element={<Suspense fallback={<RouteFallback />}><LabManagementTestExecutions /></Suspense>} />
           <Route path="test-executions/:id" element={<Suspense fallback={<RouteFallback />}><PlaceholderPage title="Test Execution Details" description="Detailed test execution information" /></Suspense>} />
           <Route path="test-results" element={<Suspense fallback={<RouteFallback />}><LabManagementTestResults /></Suspense>} />
           <Route path="test-results/:id" element={<Suspense fallback={<RouteFallback />}><PlaceholderPage title="Test Result Details" description="Detailed test result information" /></Suspense>} />
           <Route path="samples" element={<Suspense fallback={<RouteFallback />}><LabManagementSamples /></Suspense>} />
-          <Route path="samples/:id" element={<Suspense fallback={<RouteFallback />}><PlaceholderPage title="Sample Details" description="Detailed sample information" /></Suspense>} />
+          <Route path="samples/:id" element={<Suspense fallback={<RouteFallback />}><LabManagementSampleDetails /></Suspense>} />
           <Route path="trfs" element={<Suspense fallback={<RouteFallback />}><LabManagementTRFs /></Suspense>} />
           <Route path="trfs/:id" element={<Suspense fallback={<RouteFallback />}><PlaceholderPage title="TRF Details" description="Detailed TRF information" /></Suspense>} />
           <Route path="documents" element={<Suspense fallback={<RouteFallback />}><LabManagementDocuments /></Suspense>} />

@@ -5,6 +5,7 @@ import { TrendingUp, Search, FlaskConical, Loader2, MapPin, BarChart3, FileText,
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { labsService } from '../../../services/labManagementApi'
 import { getApiErrorMessage } from '../../../utils/apiError'
+import { LabMap } from '../../../components/labManagement/LabMap'
 
 const TABS = [
   { id: 'recommendations', label: 'Recommendations', icon: TrendingUp },
@@ -368,59 +369,98 @@ export default function LabRecommendationsPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden"
+          className="grid gap-6 lg:grid-cols-2"
         >
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Lab</th>
-                  {mode === 'recommend' && (
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Relevance</th>
-                  )}
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Location</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">Test / Standard</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
-                {results.map((row) => (
-                  <tr
-                    key={`${row.lab_id}-${row.test_name || ''}-${row.standard_code || ''}`}
-                    className="hover:bg-slate-50"
-                  >
-                    <td className="px-6 py-4">
-                      <span className="font-medium text-slate-900">{row.lab_name}</span>
-                    </td>
+          {/* List panel */}
+          <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">
+                      Lab
+                    </th>
                     {mode === 'recommend' && (
-                      <td className="px-6 py-4 text-slate-600">
-                        {row.relevance_score != null ? row.relevance_score : '—'}
-                      </td>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">
+                        Relevance
+                      </th>
                     )}
-                    <td className="px-6 py-4 text-sm text-slate-600">
-                      {(row.city || row.state) ? (
-                        <span className="inline-flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                          {[row.city, row.state].filter(Boolean).join(', ')}
-                        </span>
-                      ) : '—'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
-                      {row.test_name || row.sample_tests?.[0] || '—'} / {row.standard_code || row.sample_standards?.[0] || '—'}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => openLabDetail(row.lab_id)}
-                        className="text-indigo-600 hover:text-indigo-800 font-medium text-sm"
-                      >
-                        Details
-                      </button>
-                    </td>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">
+                      Location
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-600">
+                      Test / Standard
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-600">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-200 bg-white">
+                  {results.map((row) => (
+                    <tr
+                      key={`${row.lab_id}-${row.test_name || ''}-${row.standard_code || ''}`}
+                      className={`hover:bg-slate-50 ${
+                        selectedLab === row.lab_id ? 'bg-indigo-50/40' : ''
+                      }`}
+                    >
+                      <td className="px-6 py-4">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedLab(row.lab_id)}
+                          className="text-left font-medium text-slate-900 hover:text-indigo-700"
+                        >
+                          {row.lab_name}
+                        </button>
+                        {row.prime_address && (
+                          <div className="mt-1 text-xs text-slate-500 line-clamp-2">
+                            {row.prime_address}
+                          </div>
+                        )}
+                      </td>
+                      {mode === 'recommend' && (
+                        <td className="px-6 py-4 text-slate-600">
+                          {row.relevance_score != null ? row.relevance_score : '—'}
+                        </td>
+                      )}
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        {(row.city || row.state) ? (
+                          <span className="inline-flex items-center gap-1">
+                            <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                            {[row.city, row.state].filter(Boolean).join(', ')}
+                          </span>
+                        ) : '—'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        {row.test_name || row.sample_tests?.[0] || '—'} /{' '}
+                        {row.standard_code || row.sample_standards?.[0] || '—'}
+                      </td>
+                      <td className="px-6 py-4 text-right space-x-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedLab(row.lab_id)
+                            openLabDetail(row.lab_id)
+                          }}
+                          className="text-indigo-600 hover:text-indigo-800 font-medium text-sm"
+                        >
+                          Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Map panel */}
+          <div className="h-[400px] lg:h-[600px] rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <LabMap
+              labs={results}
+              selectedLabId={selectedLab}
+              onSelectLab={setSelectedLab}
+            />
           </div>
         </motion.div>
       )}

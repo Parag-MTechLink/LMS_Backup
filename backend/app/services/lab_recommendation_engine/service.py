@@ -75,6 +75,11 @@ class LabRecommendationService:
                     l.lab_name,
                     l.state,
                     l.city,
+                    l.prime_address,
+                    l.group_name,
+                    l.sub_group_name,
+                    l.latitude,
+                    l.longitude,
                     t.test_name,
                     s.standard_code,
                     s.full_code,
@@ -138,6 +143,11 @@ class LabRecommendationService:
                         l.lab_name,
                         l.state,
                         l.city,
+                        l.prime_address,
+                        l.group_name,
+                        l.sub_group_name,
+                        l.latitude,
+                        l.longitude,
                         COUNT(DISTINCT lc.test_id) AS matching_tests,
                         COUNT(DISTINCT lc.standard_id) AS matching_standards,
                         COUNT(DISTINCT lc.domain_id) AS matching_domains,
@@ -150,13 +160,27 @@ class LabRecommendationService:
                     JOIN standards s ON s.standard_id = lc.standard_id
                     JOIN domains d ON d.domain_id = lc.domain_id
                     WHERE {' AND '.join(conditions)}
-                    GROUP BY l.lab_id, l.lab_name, l.state, l.city
+                    GROUP BY
+                        l.lab_id,
+                        l.lab_name,
+                        l.state,
+                        l.city,
+                        l.prime_address,
+                        l.group_name,
+                        l.sub_group_name,
+                        l.latitude,
+                        l.longitude
                 )
                 SELECT
                     lab_id,
                     lab_name,
                     state,
                     city,
+                    prime_address,
+                    group_name,
+                    sub_group_name,
+                    latitude,
+                    longitude,
                     matching_tests,
                     matching_standards,
                     matching_domains,
@@ -186,7 +210,19 @@ class LabRecommendationService:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             cur.execute(
                 """
-                SELECT lab_id, lab_name, created_at, updated_at, state, city, scope_url
+                SELECT
+                    lab_id,
+                    lab_name,
+                    created_at,
+                    updated_at,
+                    state,
+                    city,
+                    scope_url,
+                    prime_address,
+                    group_name,
+                    sub_group_name,
+                    latitude,
+                    longitude
                 FROM labs
                 WHERE lab_id = %s AND deleted_at IS NULL
                 """,
