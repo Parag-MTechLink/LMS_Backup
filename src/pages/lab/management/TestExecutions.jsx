@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, Search, Play, CheckCircle, Clock, User, ExternalLink } from 'lucide-react'
+import { Plus, Search, Play, Clock, User, ExternalLink } from 'lucide-react'
 import { testExecutionsService } from '../../../services/labManagementApi'
 import { testPlansService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
@@ -49,20 +49,11 @@ function TestExecutions() {
       setLoading(true)
       if (testPlanId) {
         const data = await testExecutionsService.getByTestPlan(parseInt(testPlanId))
-        setExecutions(data)
+        setExecutions(Array.isArray(data) ? data : [])
         setSelectedPlan(testPlanId)
       } else {
-        const allPlans = await testPlansService.getAll()
-        const allExecutions = []
-        for (const plan of allPlans) {
-          try {
-            const execs = await testExecutionsService.getByTestPlan(plan.id)
-            allExecutions.push(...execs)
-          } catch (error) {
-            // Ignore errors for plans without executions
-          }
-        }
-        setExecutions(allExecutions)
+        const data = await testExecutionsService.getAll()
+        setExecutions(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       toast.error('Failed to load test executions')
@@ -71,21 +62,28 @@ function TestExecutions() {
     }
   }
 
+
   const getStatusColor = (status) => {
-    const colors = {
-      completed: 'success',
-      passed: 'success',
-      'meet compliance': 'success',
-      'doesn\'t meet compliance': 'danger'
-    }
-    return colors[status?.toLowerCase()] || 'default'
+    const statusLower = status?.toLowerCase() || ''
+    if (['completed', 'passed', 'meet compliance', 'success'].includes(statusLower)) return 'success'
+    if (['failed', "doesn't meet compliance", 'danger'].includes(statusLower)) return 'danger'
+    if (['pending', 'waiting'].includes(statusLower)) return 'warning'
+    if (['inprogress', 'running', 'active'].includes(statusLower.replace(/\s+/g, ''))) return 'info'
+    return 'default'
+  }
+
+  const parseExecName = (exec) => {
+    const m = exec.notes?.match(/^\[([^\]]+)\]/)
+    return m ? m[1].trim() : null
   }
 
   const filteredExecutions = executions.filter(exec => {
-    const matchesSearch = exec.id?.toString().includes(searchTerm.toLowerCase())
+    const execName = parseExecName(exec) ?? ''
+    const matchesSearch = !searchTerm ||
+      exec.id?.toString().includes(searchTerm.toLowerCase()) ||
+      execName.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesPlan = selectedPlan === 'all' || exec.testPlanId?.toString() === selectedPlan
     const matchesStatus = selectedStatus === 'all' || exec.status?.toLowerCase() === selectedStatus.toLowerCase()
-    // Also filter by testPlanId from URL if present
     const matchesUrlPlan = !testPlanId || exec.testPlanId?.toString() === testPlanId
     return matchesSearch && matchesPlan && matchesStatus && matchesUrlPlan
   })
@@ -153,8 +151,12 @@ function TestExecutions() {
             className="px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="all">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="inprogress">In Progress</option>
             <option value="completed">Completed</option>
+            <option value="failed">Failed</option>
             <option value="passed">Passed</option>
+            <option value="cancelled">Cancelled</option>
             <option value="meet compliance">Meet Compliance</option>
             <option value="doesn't meet compliance">Doesn't Meet Compliance</option>
           </select>
@@ -174,99 +176,109 @@ function TestExecutions() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredExecutions.map((execution, index) => (
-            <motion.div
-              key={execution.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ y: -4 }}
-            >
-              <Card
-                hover
-                className="cursor-pointer h-full flex flex-col"
-                onClick={() => navigate(`/lab/management/test-executions/${execution.id}`)}
+          {filteredExecutions.map((execution, index) => {
+            const execName = parseExecName(execution)
+            const openDetail = () => {
+              setSelectedExecution(execution)
+              setShowSampleModal(true)
+            }
+            return (
+              <motion.div
+                key={execution.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                whileHover={{ y: -4 }}
               >
-                {execution.testPlanId && (
-                  <div className="mb-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        navigate(`/lab/management/test-plans/${execution.testPlanId}`)
-                      }}
-                      className="text-xs text-primary hover:underline flex items-center gap-1"
-                    >
-                      View Test Plan
-                      <ExternalLink className="w-3 h-3" />
-                    </button>
-                  </div>
-                )}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg">
-                    <Play className="w-6 h-6 text-white" />
-                  </div>
-                  <Badge variant={getStatusColor(execution.status)}>
-                    {execution.status}
-                  </Badge>
-                </div>
-
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Execution #{execution.id}
-                </h3>
-
-                <div className="mt-auto space-y-2">
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Clock className="w-4 h-4 mr-2" />
-                    {new Date(execution.executionDate).toLocaleDateString()}
-                  </div>
-
-                  {execution.executedByName && (
-                    <div className="flex items-center text-sm text-gray-500">
-                      <User className="w-4 h-4 mr-2" />
-                      {execution.executedByName}
-                    </div>
-                  )}
-
-                  {(execution.status?.toLowerCase() === 'completed' || execution.status?.toLowerCase() === 'passed' || execution.status?.toLowerCase() === 'meet compliance') && (
-                    <div className="flex items-center text-sm text-green-600 mt-2">
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      {execution.status}
-                    </div>
-                  )}
-
-
-
-                  <div className="mt-3 pt-3 border-t border-gray-200 flex gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setSelectedExecution(execution)
-                        setShowSampleModal(true)
-                      }}
-                      className="flex-1 text-xs text-gray-600 hover:text-gray-900 hover:underline text-center"
-                    >
-                      View Details
-                    </button>
-                    {(execution.status?.toLowerCase() === 'completed' || execution.status?.toLowerCase() === 'passed' || execution.status?.toLowerCase() === 'meet compliance' || execution.status?.toLowerCase() === 'doesn\'t meet compliance') && (
+                <Card hover className="cursor-pointer h-full flex flex-col" onClick={openDetail}>
+                  {/* Link to parent test plan */}
+                  {execution.testPlanId && (
+                    <div className="mb-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
-                          navigate(`/lab/management/test-results?executionId=${execution.id}`)
+                          navigate(`/lab/management/test-plans/${execution.testPlanId}`)
                         }}
-                        className="flex-1 text-xs text-primary hover:underline text-center"
+                        className="text-xs text-primary hover:underline flex items-center gap-1"
                       >
-                        View Results →
+                        View Test Plan
+                        <ExternalLink className="w-3 h-3" />
                       </button>
-                    )}
+                    </div>
+                  )}
+
+                  {/* Icon + status badge */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg">
+                      <Play className="w-6 h-6 text-white" />
+                    </div>
+                    <Badge variant={getStatusColor(execution.status)}>
+                      {execution.status}
+                    </Badge>
                   </div>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
+
+                  {/* Title */}
+                  <h3 className="text-xl font-bold text-gray-900 mb-0.5">
+                    {execName ?? `Execution #${execution.executionNumber ?? execution.id}`}
+                  </h3>
+                  {execName && (
+                    <p className="text-xs text-gray-400 mb-2">#{execution.executionNumber ?? execution.id}</p>
+                  )}
+
+                  {/* Meta */}
+                  <div className="mt-auto space-y-1.5">
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+                      <span>
+                        {execution.startTime
+                          ? new Date(execution.startTime).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                          : execution.createdAt
+                            ? new Date(execution.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                            : 'No date'}
+                        {execution.endTime && (
+                          <> – {new Date(execution.endTime).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</>
+                        )}
+                      </span>
+                    </div>
+
+                    {execution.executedByName && (
+                      <div className="flex items-center text-sm text-gray-500">
+                        <User className="w-4 h-4 mr-2" />
+                        {execution.executedByName}
+                      </div>
+                    )}
+
+                    {/* Footer actions */}
+                    <div className="mt-3 pt-3 border-t border-gray-200 flex gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); openDetail() }}
+                        className="flex-1 text-xs text-gray-600 hover:text-gray-900 hover:underline text-center"
+                      >
+                        View Details
+                      </button>
+                      {['completed', 'passed', 'meet compliance', "doesn't meet compliance"].includes(
+                        execution.status?.toLowerCase()
+                      ) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              navigate(`/lab/management/test-results?executionId=${execution.id}`)
+                            }}
+                            className="flex-1 text-xs text-primary hover:underline text-center"
+                          >
+                            View Results →
+                          </button>
+                        )}
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            )
+          })}
         </div>
       )}
 
-      {/* Create Modal */}
+      {/* Create Execution Modal */}
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -283,17 +295,18 @@ function TestExecutions() {
         />
       </Modal>
 
-      {/* Sample Execution Modal */}
+      {/* Execution Detail / Edit Modal */}
       <Modal
         isOpen={showSampleModal}
         onClose={() => setShowSampleModal(false)}
-        title="Test Execution Details"
+        title="Edit Test Execution"
         size="lg"
       >
         <SampleTestExecutionModal
           isOpen={showSampleModal}
           onClose={() => setShowSampleModal(false)}
           execution={selectedExecution}
+          onUpdated={() => loadExecutions()}
         />
       </Modal>
     </div>

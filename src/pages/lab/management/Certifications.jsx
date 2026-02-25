@@ -47,7 +47,7 @@ function Certifications() {
 
   const filteredCertifications = certifications.filter(cert => {
     const matchesSearch = cert.certificateNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         cert.standard?.toLowerCase().includes(searchTerm.toLowerCase())
+      cert.standard?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = selectedStatus === 'all' || cert.status === selectedStatus
     return matchesSearch && matchesStatus
   })
@@ -133,9 +133,7 @@ function Certifications() {
               whileHover={{ y: -4 }}
             >
               <Card
-                hover
-                className="cursor-pointer h-full flex flex-col"
-                onClick={() => navigate(`/lab/management/certifications/${cert.id}`)}
+                className="h-full flex flex-col"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg">
@@ -145,17 +143,17 @@ function Certifications() {
                     {cert.status}
                   </Badge>
                 </div>
-                
+
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
                   {cert.certificateNumber || `CERT-${cert.id}`}
                 </h3>
-                
+
                 {cert.standard && (
                   <p className="text-sm text-gray-600 mb-4">
                     Standard: {cert.standard}
                   </p>
                 )}
-                
+
                 <div className="mt-auto space-y-2">
                   {cert.issueDate && (
                     <div className="flex items-center text-sm text-gray-500">
@@ -163,14 +161,14 @@ function Certifications() {
                       Issued: {new Date(cert.issueDate).toLocaleDateString()}
                     </div>
                   )}
-                  
+
                   {cert.expiryDate && (
                     <div className="flex items-center text-sm text-gray-500">
                       <Calendar className="w-4 h-4 mr-2" />
                       Expires: {new Date(cert.expiryDate).toLocaleDateString()}
                     </div>
                   )}
-                  
+
                   {cert.status === 'Active' && (
                     <div className="flex items-center text-sm text-green-600 mt-2">
                       <CheckCircle className="w-4 h-4 mr-2" />

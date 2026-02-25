@@ -209,25 +209,29 @@ export const LabDataProvider = ({ children }) => {
   const [organizationData, setOrganizationData] = useState(() => loadFromStorage('techlink_organization_data', null))
 
   // Scope Management data state
-  const [scopeData, setScopeData] = useState(() => loadFromStorage('techlink_scope_data', {
-    ilcProgrammes: [],
-    internalAuditFrequency: '',
-    lastAuditDate: '',
-    managementReviewFrequency: '',
-    lastReviewDate: '',
-    scopes: [],
-    equipments: [],
-    scopeTests: [],
-    facilitiesAvailable: [],
-    facilitiesNotAvailable: [],
-    allFacilitiesAvailable: false,
-    referenceMaterials: [],
-    referenceMaterialNA: false,
-    exclusions: [],
-    exclusionNA: false,
-    testingCharges: [],
-    completeTestingCharge: ''
-  }))
+  const [scopeData, setScopeData] = useState(() => {
+    const data = loadFromStorage('techlink_scope_data', {
+      ilcProgrammes: [],
+      internalAuditFrequency: '',
+      lastAuditDate: '',
+      managementReviewFrequency: '',
+      lastReviewDate: '',
+      scopes: [],
+      equipments: [],
+      scopeTests: [],
+      facilitiesAvailable: [],
+      facilitiesNotAvailable: [],
+      allFacilitiesAvailable: false,
+      referenceMaterials: [],
+      referenceMaterialNA: false,
+      exclusions: [],
+      exclusionNA: false,
+      testingCharges: [],
+      completeTestingCharge: ''
+    })
+    console.log('LabDataContext: initializing scopeData', data);
+    return data;
+  })
 
   // Save to localStorage whenever state changes
   useEffect(() => {
@@ -275,7 +279,7 @@ export const LabDataProvider = ({ children }) => {
 
   const updateRequestStatus = useCallback((id, newStatus, additionalData = {}) => {
     const updates = { status: newStatus, ...additionalData }
-    
+
     if (newStatus === 'Completed') {
       updates.progress = 100
       updates.completedAt = new Date().toISOString().split('T')[0]
@@ -309,7 +313,10 @@ export const LabDataProvider = ({ children }) => {
 
   // Organization data functions
   const updateOrganizationData = useCallback((data) => setOrganizationData(data), [])
-  const updateScopeData = useCallback((data) => setScopeData(data), [])
+  const updateScopeData = useCallback((data) => {
+    console.log('LabDataContext: updateScopeData called', data);
+    setScopeData(data);
+  }, [])
 
   // Statistics (memoized computation)
   const getStats = useCallback(() => {
@@ -327,11 +334,11 @@ export const LabDataProvider = ({ children }) => {
     const completedRequests = labRequests.filter(r => r.status === 'Completed' && r.completedAt && r.date)
     const avgTurnaround = completedRequests.length > 0
       ? completedRequests.reduce((sum, r) => {
-          const start = new Date(r.date)
-          const end = new Date(r.completedAt)
-          const days = (end - start) / (1000 * 60 * 60 * 24)
-          return sum + days
-        }, 0) / completedRequests.length
+        const start = new Date(r.date)
+        const end = new Date(r.completedAt)
+        const days = (end - start) / (1000 * 60 * 60 * 24)
+        return sum + days
+      }, 0) / completedRequests.length
       : 0
 
     return {

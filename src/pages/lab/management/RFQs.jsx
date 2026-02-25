@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { rfqsService, customersService } from '../../../services/labManagementApi'
 import { getApiErrorMessage } from '../../../utils/apiError'
 import toast, { Toaster } from 'react-hot-toast'
-import { Plus, X, FileSpreadsheet, Trash2, Download } from 'lucide-react'
+import { Plus, X, FileSpreadsheet, Trash2, Download, User, Mail, Phone, Package, Calendar, AlertCircle, CheckCircle, Clock, Eye, ChevronDown } from 'lucide-react'
 import RouteSkeleton from '../../../components/RouteSkeleton'
 import ConfirmDeleteModal from '../../../components/labManagement/ConfirmDeleteModal'
 import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
@@ -24,6 +24,14 @@ function RFQs() {
   const [uploading, setUploading] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  // View Details modal
+  const [viewRfq, setViewRfq] = useState(null)
+  const [viewDetails, setViewDetails] = useState(null)
+  const [viewLoading, setViewLoading] = useState(false)
+  // Status change inside view modal
+  const [rfqStatus, setRfqStatus] = useState('')
+  const [rfqComment, setRfqComment] = useState('')
+  const [savingRfqStatus, setSavingRfqStatus] = useState(false)
   const [formData, setFormData] = useState({
     customerId: 0,
     product: '',
@@ -93,12 +101,55 @@ function RFQs() {
     }
   }
 
+  const handleViewClick = async (rfq) => {
+    setViewRfq(rfq)
+    setViewDetails(null)
+    setRfqStatus(rfq.status ?? 'pending')
+    setRfqComment('')
+    setViewLoading(true)
+    try {
+      const details = await rfqsService.getById(rfq.id)
+      setViewDetails(details)
+      setRfqStatus(details?.status ?? rfq.status ?? 'pending')
+    } catch {
+      // Fallback: show what we already have from the list
+      setViewDetails(rfq)
+    } finally {
+      setViewLoading(false)
+    }
+  }
+
+  const handleSaveRfqStatus = async () => {
+    if (!viewRfq) return
+    setSavingRfqStatus(true)
+    try {
+      await rfqsService.updateStatus(viewRfq.id, rfqStatus)
+      toast.success('Status updated successfully')
+      setRfqs(prev => prev.map(r => r.id === viewRfq.id ? { ...r, status: rfqStatus } : r))
+      setViewRfq(prev => prev ? { ...prev, status: rfqStatus } : prev)
+      setViewDetails(prev => prev ? { ...prev, status: rfqStatus } : prev)
+      setRfqComment('')
+    } catch {
+      toast.error('Failed to update status')
+    } finally {
+      setSavingRfqStatus(false)
+    }
+  }
+
   const getStatusColor = (status) => {
-    const statusLower = status.toLowerCase()
+    const statusLower = status?.toLowerCase() ?? ''
     if (statusLower === 'pending') return 'from-yellow-400 to-orange-500'
     if (statusLower === 'approved') return 'from-green-400 to-emerald-500'
     if (statusLower === 'rejected') return 'from-red-400 to-pink-500'
+    if (statusLower === 'pending review') return 'from-blue-400 to-cyan-500'
     return 'from-blue-400 to-cyan-500'
+  }
+
+  const getStatusIcon = (status) => {
+    const s = status?.toLowerCase() ?? ''
+    if (s === 'approved') return <CheckCircle className="w-4 h-4" />
+    if (s === 'rejected') return <AlertCircle className="w-4 h-4" />
+    return <Clock className="w-4 h-4" />
   }
 
   const handleDeleteClick = (e, rfq) => {
@@ -124,6 +175,9 @@ function RFQs() {
   if (loading) {
     return <RouteSkeleton />
   }
+
+  // Resolve display data (prefer detailed fetch, fall back to list row)
+  const displayRfq = viewDetails ?? viewRfq
 
   return (
     <div className="space-y-6">
@@ -198,10 +252,10 @@ function RFQs() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-600">
-                        {new Date(rfq.receivedDate).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'short', 
-                          day: 'numeric' 
+                        {new Date(rfq.receivedDate).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
                         })}
                       </div>
                     </td>
@@ -211,15 +265,13 @@ function RFQs() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button 
-                        onClick={() => {
-                          navigate(`/lab/management/estimations?rfqId=${rfq.id}`)
-                        }}
+                      <button
+                        onClick={() => handleViewClick(rfq)}
                         className="text-primary hover:text-primary-dark transition-colors mr-3"
                       >
                         View
                       </button>
-                      <button 
+                      <button
                         onClick={() => {
                           navigate(`/lab/management/estimations?createFromRfq=${rfq.id}`)
                         }}
@@ -256,6 +308,256 @@ function RFQs() {
           </table>
         </div>
       </div>
+
+      {/* ── View RFQ Details Modal ── */}
+      {viewRfq && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-200 max-h-[90vh] overflow-y-auto"
+          >
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-primary/5 to-primary/10 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-md">
+                    <Eye className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">RFQ Details</h2>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      ID: <span className="font-mono">{viewRfq.id}</span>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setViewRfq(null); setViewDetails(null); }}
+                  className="p-2 hover:bg-white/70 rounded-xl transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            {viewLoading ? (
+              <div className="p-10 flex flex-col items-center justify-center gap-3 text-gray-400">
+                <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                <span className="text-sm">Loading details…</span>
+              </div>
+            ) : (
+              <div className="p-6 space-y-6">
+                {/* Status badge */}
+                <div className="flex items-center gap-2">
+                  <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full bg-gradient-to-r ${getStatusColor(displayRfq?.status ?? viewRfq.status)} text-white shadow-sm`}>
+                    {getStatusIcon(displayRfq?.status ?? viewRfq.status)}
+                    {displayRfq?.status ?? viewRfq.status}
+                  </span>
+                </div>
+
+                {/* Info grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Customer */}
+                  <div className="bg-gray-50 rounded-xl p-4 flex gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Customer</p>
+                      <p className="text-sm font-semibold text-gray-900 mt-0.5 truncate">
+                        {displayRfq?.customerName ?? displayRfq?.company_name ?? viewRfq.customerName}
+                      </p>
+                      {displayRfq?.contact_person && (
+                        <p className="text-xs text-gray-500 mt-0.5">{displayRfq.contact_person}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Product */}
+                  <div className="bg-gray-50 rounded-xl p-4 flex gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <Package className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Product / Project</p>
+                      <p className="text-sm font-semibold text-gray-900 mt-0.5 truncate">
+                        {displayRfq?.product ?? displayRfq?.project_type ?? viewRfq.product}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Email */}
+                  {displayRfq?.email && (
+                    <div className="bg-gray-50 rounded-xl p-4 flex gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+                        <Mail className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Email</p>
+                        <p className="text-sm font-semibold text-gray-900 mt-0.5 truncate">{displayRfq.email}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Phone */}
+                  {displayRfq?.phone && (
+                    <div className="bg-gray-50 rounded-xl p-4 flex gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+                        <Phone className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Phone</p>
+                        <p className="text-sm font-semibold text-gray-900 mt-0.5">{displayRfq.phone}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Received Date */}
+                  <div className="bg-gray-50 rounded-xl p-4 flex gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+                      <Calendar className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Received Date</p>
+                      <p className="text-sm font-semibold text-gray-900 mt-0.5">
+                        {new Date(displayRfq?.receivedDate ?? viewRfq.receivedDate).toLocaleDateString('en-US', {
+                          year: 'numeric', month: 'long', day: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Deadline */}
+                  {displayRfq?.deadline && (
+                    <div className="bg-gray-50 rounded-xl p-4 flex gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+                        <Calendar className="w-4 h-4 text-red-500" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Deadline</p>
+                        <p className="text-sm font-semibold text-gray-900 mt-0.5">
+                          {new Date(displayRfq.deadline).toLocaleDateString('en-US', {
+                            year: 'numeric', month: 'long', day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Sample / Test Details */}
+                {displayRfq?.sample_details && Array.isArray(displayRfq.sample_details) && displayRfq.sample_details.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                        {displayRfq.sample_details.length}
+                      </span>
+                      Test / Sample Items
+                    </h3>
+                    <div className="overflow-hidden rounded-xl border border-gray-200">
+                      <table className="min-w-full divide-y divide-gray-100">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">#</th>
+                            <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Test Name</th>
+                            <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Standard</th>
+                            <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Qty</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 bg-white">
+                          {displayRfq.sample_details.map((item, i) => (
+                            <tr key={i} className="hover:bg-primary/5 transition-colors">
+                              <td className="px-4 py-2.5 text-xs text-gray-400">{i + 1}</td>
+                              <td className="px-4 py-2.5 text-sm text-gray-900 font-medium">{item.test_name ?? item.name ?? '—'}</td>
+                              <td className="px-4 py-2.5 text-sm text-gray-600">{item.standard ?? '—'}</td>
+                              <td className="px-4 py-2.5 text-sm text-gray-600 text-right">{item.quantity ?? '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Missing fields warning */}
+                {displayRfq?.missing_fields?.length > 0 && (
+                  <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 flex gap-3">
+                    <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-amber-800 mb-1">Missing / Invalid Fields</p>
+                      <ul className="list-disc list-inside text-sm text-amber-700 space-y-0.5">
+                        {displayRfq.missing_fields.map((f, i) => <li key={i}>{f}</li>)}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Status Change ── */}
+                <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+                  <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                    Change Status
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { value: 'pending', label: 'Pending', border: 'border-yellow-200 bg-yellow-50 text-yellow-800' },
+                      { value: 'pending review', label: 'Pending Review', border: 'border-blue-200 bg-blue-50 text-blue-800' },
+                      { value: 'approved', label: 'Approved', border: 'border-green-200 bg-green-50 text-green-800' },
+                      { value: 'rejected', label: 'Rejected', border: 'border-red-200 bg-red-50 text-red-800' },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setRfqStatus(opt.value)}
+                        className={`px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all duration-150
+                          ${rfqStatus === opt.value
+                            ? 'ring-2 ring-offset-1 ring-primary border-primary bg-primary/10 text-primary'
+                            : `${opt.border} hover:opacity-80`
+                          }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={rfqComment}
+                    onChange={e => setRfqComment(e.target.value)}
+                    placeholder="Optional comment"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all"
+                  />
+                  <button
+                    onClick={handleSaveRfqStatus}
+                    disabled={savingRfqStatus || rfqStatus === (displayRfq?.status ?? viewRfq?.status ?? '')}
+                    className="w-full py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold rounded-xl shadow hover:shadow-md hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-150"
+                  >
+                    {savingRfqStatus ? 'Saving…' : 'Save Status'}
+                  </button>
+                </div>
+
+                {/* Footer actions */}
+                <div className="flex gap-3 pt-2 border-t border-gray-100">
+                  <button
+                    onClick={() => { setViewRfq(null); setViewDetails(null); }}
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => {
+                      setViewRfq(null)
+                      setViewDetails(null)
+                      navigate(`/lab/management/estimations?createFromRfq=${viewRfq.id}`)
+                    }}
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
+                  >
+                    Create Estimation
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      )}
 
       {/* Create RFQ Modal */}
       {showModal && (

@@ -7,7 +7,6 @@ import {
   FolderOpen,
   FileText,
   Download,
-  Eye,
 } from 'lucide-react'
 import { documentsService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
@@ -190,11 +189,7 @@ function Documents() {
               whileHover={{ y: -4 }}
             >
               <Card
-                hover
-                className="cursor-pointer h-full flex flex-col"
-                onClick={() =>
-                  navigate(`/lab/management/documents/${doc.id}`)
-                }
+                className="h-full flex flex-col"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg">
@@ -217,16 +212,6 @@ function Documents() {
                 )}
 
                 <div className="mt-auto flex items-center gap-2 pt-4 border-t border-gray-200">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleView(doc)
-                    }}
-                    className="flex-1 px-3 py-2 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Eye className="w-4 h-4" />
-                    View
-                  </button>
 
                   <button
                     onClick={(e) => {

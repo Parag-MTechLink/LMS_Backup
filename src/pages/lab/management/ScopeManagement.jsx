@@ -51,6 +51,7 @@ const fieldOfTestingOptions = [
 const maintenanceTypeOptions = ['Internal', 'External', 'Both']
 
 export default function ScopeManagement() {
+  console.log('ScopeManagement: rendering');
   const { scopeData, updateScopeData } = useLabData()
 
   const [activeSection, setActiveSection] = useState('add-scope')
@@ -123,19 +124,20 @@ export default function ScopeManagement() {
   const [completeTestingCharge, setCompleteTestingCharge] = useState(scopeData.completeTestingCharge)
 
   const [loading, setLoading] = useState(true)
-  const fetchStartedRef = useRef(false)
 
-  // Fetch data on mount (single run; ref avoids duplicate toasts in Strict Mode)
+  // Fetch data on mount
   useEffect(() => {
-    if (fetchStartedRef.current) return
-    fetchStartedRef.current = true
-
     let cancelled = false
     const load = async () => {
       try {
         setLoading(true)
+        console.log('ScopeManagement: calling getAllData');
         const data = await scopeManagementService.getAllData()
-        if (cancelled) return
+        console.log('ScopeManagement: getAllData returned', data);
+        if (cancelled) {
+          console.log('ScopeManagement: fetch cancelled, returning');
+          return
+        }
 
         // Global Settings
         if (data.global_settings) {
@@ -162,48 +164,23 @@ export default function ScopeManagement() {
           toast.error("Failed to load scope data", { id: 'scope-load-error' })
         }
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!cancelled) {
+          console.log('ScopeManagement: setting loading to false');
+          setLoading(false)
+        }
       }
     }
     load()
-    return () => { cancelled = true }
-  }, [])
-
-  const fetchData = async () => {
-    try {
-      setLoading(true)
-      const data = await scopeManagementService.getAllData()
-
-      // Global Settings
-      if (data.global_settings) {
-        setInternalAuditFrequency(data.global_settings.internal_audit_frequency || '')
-        setLastAuditDate(data.global_settings.last_audit_date || '')
-        setManagementReviewFrequency(data.global_settings.management_review_frequency || '')
-        setLastReviewDate(data.global_settings.last_review_date || '')
-        setCompleteTestingCharge(data.global_settings.complete_testing_charge || '')
-      }
-
-      // Arrays
-      if (data.ilc_programmes) setIlcProgrammes(data.ilc_programmes)
-      if (data.scopes) setScopes(data.scopes)
-      if (data.equipments) setEquipments(data.equipments)
-      if (data.scope_tests) setScopeTests(data.scope_tests)
-      if (data.facilities_available) setFacilitiesAvailable(data.facilities_available)
-      if (data.facilities_not_available) setFacilitiesNotAvailable(data.facilities_not_available)
-      if (data.reference_materials) setReferenceMaterials(data.reference_materials)
-      if (data.exclusions) setExclusions(data.exclusions)
-      if (data.testing_charges) setTestingCharges(data.testing_charges)
-    } catch (error) {
-      console.error("Error fetching scope data:", error)
-      toast.error("Failed to load scope data", { id: 'scope-load-error' })
-    } finally {
-      setLoading(false)
+    return () => {
+      console.log('ScopeManagement: useEffect cleanup, cancelling fetch');
+      cancelled = true
     }
-  }
+  }, [])
 
   // Update Context (Optional: reduce frequency or keep as is if context is needed elsewhere)
   useEffect(() => {
-    updateScopeData({
+    console.log('ScopeManagement: updating context scopeData');
+    const newData = {
       ilcProgrammes,
       internalAuditFrequency,
       lastAuditDate,
@@ -221,7 +198,14 @@ export default function ScopeManagement() {
       exclusionNA,
       testingCharges,
       completeTestingCharge
-    })
+    };
+
+    // Prevent loop: only update if something actually changed from what we have in context
+    // Deep comparison is expensive, so we just check if any local state has been moved from its initial value
+    // or if the component just finished loading.
+    if (!loading) {
+      updateScopeData(newData)
+    }
   }, [
     ilcProgrammes,
     internalAuditFrequency,
@@ -240,7 +224,8 @@ export default function ScopeManagement() {
     exclusionNA,
     testingCharges,
     completeTestingCharge,
-    updateScopeData
+    updateScopeData,
+    loading
   ])
 
   if (loading) {

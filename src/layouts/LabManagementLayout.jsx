@@ -38,7 +38,7 @@ import logo from '../assets/techlink-logo.svg'
 const allNavItems = [
   { name: 'Dashboard', href: '/lab/management/dashboard', icon: LayoutDashboard },
   { name: 'Organization Details', href: '/lab/management/organization', icon: Building2, roles: ['Admin'] },
-  { name: 'Scope Management', href: '/lab/management/scope-management', icon: Target },
+  // { name: 'Scope Management', href: '/lab/management/scope-management', icon: Target },
   { name: 'Customers', href: '/lab/management/customers', icon: Users },
   { name: 'RFQs', href: '/lab/management/rfqs', icon: FileText },
   { name: 'Estimations', href: '/lab/management/estimations', icon: IndianRupee, hideForRoles: ['Testing Engineer', 'Technician'] },

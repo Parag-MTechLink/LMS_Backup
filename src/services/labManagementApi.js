@@ -10,7 +10,7 @@ if (!API_URL && import.meta.env.PROD) {
 
 // Dev: default to backend on 127.0.0.1:8000 (matches uvicorn; avoid localhost IPv6 issues). Override with VITE_API_URL.
 // Prod: VITE_API_URL is required
-const DEV_DEFAULT_BACKEND = 'http://127.0.0.1:8000'
+const DEV_DEFAULT_BACKEND = 'http://127.0.0.1:8001'
 const API_BASE_URL = API_URL || (import.meta.env.DEV ? DEV_DEFAULT_BACKEND : '')
 
 class ApiService {

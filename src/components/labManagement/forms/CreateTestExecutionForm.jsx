@@ -8,8 +8,10 @@ import Input from '../Input'
 export default function CreateTestExecutionForm({ testPlanId, onSuccess, onCancel }) {
   const [formData, setFormData] = useState({
     testPlanId: testPlanId || 0,
-    executionDate: new Date().toISOString().split('T')[0],
-    notes: ''
+    name: '',
+    startTime: '',
+    endTime: '',
+    notes: '',
   })
   const [testPlans, setTestPlans] = useState([])
   const [loading, setLoading] = useState(false)
@@ -35,15 +37,27 @@ export default function CreateTestExecutionForm({ testPlanId, onSuccess, onCance
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     if (!formData.testPlanId) {
       toast.error('Please select a test plan')
       return
     }
 
+    // Encode the execution name as a tag at the front of notes for later display
+    const notesStr = formData.name
+      ? `[${formData.name}]${formData.notes ? ' ' + formData.notes : ''}`
+      : formData.notes || undefined
+
+    const payload = {
+      testPlanId: formData.testPlanId,
+      notes: notesStr,
+      startTime: formData.startTime ? new Date(formData.startTime).toISOString() : undefined,
+      endTime: formData.endTime ? new Date(formData.endTime).toISOString() : undefined,
+    }
+
     try {
       setLoading(true)
-      await testExecutionsService.create(formData)
+      await testExecutionsService.create(payload)
       toast.success('Test execution created successfully!')
       onSuccess()
     } catch (error) {
@@ -53,8 +67,12 @@ export default function CreateTestExecutionForm({ testPlanId, onSuccess, onCance
     }
   }
 
+  const inputClass =
+    'w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Test Plan selector (only when no testPlanId is pre-set) */}
       {!testPlanId && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -66,11 +84,11 @@ export default function CreateTestExecutionForm({ testPlanId, onSuccess, onCance
             <select
               value={formData.testPlanId}
               onChange={(e) => setFormData({ ...formData, testPlanId: parseInt(e.target.value) })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+              className={inputClass}
               required
             >
               <option value={0}>Select a test plan</option>
-              {testPlans.map(plan => (
+              {testPlans.map((plan) => (
                 <option key={plan.id} value={plan.id}>
                   {plan.name} - {plan.testType}
                 </option>
@@ -80,41 +98,54 @@ export default function CreateTestExecutionForm({ testPlanId, onSuccess, onCance
         </div>
       )}
 
+      {/* Execution Name */}
       <Input
-        label="Execution Date"
-        type="date"
-        value={formData.executionDate}
-        onChange={(e) => setFormData({ ...formData, executionDate: e.target.value })}
-        required
+        label="Execution Name"
+        value={formData.name}
+        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        placeholder="e.g. EMC Run #1 (optional)"
       />
 
+      {/* Start Date & Time */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Notes
-        </label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Start Date & Time</label>
+        <input
+          type="datetime-local"
+          value={formData.startTime}
+          onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+          className={inputClass}
+        />
+      </div>
+
+      {/* End Date & Time */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">End Date & Time</label>
+        <input
+          type="datetime-local"
+          value={formData.endTime}
+          onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+          className={inputClass}
+        />
+      </div>
+
+      {/* Notes */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
         <textarea
           value={formData.notes}
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           placeholder="Additional notes about the execution"
           rows={3}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+          className={`${inputClass} resize-none`}
         />
       </div>
 
-      <div className="flex gap-3 pt-4">
-        <Button
-          type="button"
-          onClick={onCancel}
-          variant="outline"
-          className="flex-1"
-        >
+      {/* Actions */}
+      <div className="flex gap-3 pt-2">
+        <Button type="button" onClick={onCancel} variant="outline" className="flex-1">
           Cancel
         </Button>
-        <Button
-          type="submit"
-          isLoading={loading}
-          className="flex-1"
-        >
+        <Button type="submit" isLoading={loading} className="flex-1">
           Create Execution
         </Button>
       </div>

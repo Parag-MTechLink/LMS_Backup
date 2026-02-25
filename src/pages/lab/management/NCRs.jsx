@@ -47,7 +47,7 @@ function NCRs() {
 
   const filteredNCRs = ncrs.filter(ncr => {
     const matchesSearch = ncr.ncrNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ncr.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      ncr.description?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = selectedStatus === 'all' || ncr.status === selectedStatus
     return matchesSearch && matchesStatus
   })
@@ -133,9 +133,7 @@ function NCRs() {
               whileHover={{ y: -4 }}
             >
               <Card
-                hover
-                className="cursor-pointer h-full flex flex-col"
-                onClick={() => navigate(`/lab/management/ncrs/${ncr.id}`)}
+                className="h-full flex flex-col"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
@@ -145,17 +143,17 @@ function NCRs() {
                     {ncr.status}
                   </Badge>
                 </div>
-                
+
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
                   {ncr.ncrNumber || `NCR-${ncr.id}`}
                 </h3>
-                
+
                 {ncr.description && (
                   <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                     {ncr.description}
                   </p>
                 )}
-                
+
                 <div className="mt-auto space-y-2">
                   {ncr.createdAt && (
                     <div className="flex items-center text-sm text-gray-500">
@@ -163,7 +161,7 @@ function NCRs() {
                       {new Date(ncr.createdAt).toLocaleDateString()}
                     </div>
                   )}
-                  
+
                   {ncr.raisedBy && (
                     <div className="flex items-center text-sm text-gray-500">
                       <User className="w-4 h-4 mr-2" />

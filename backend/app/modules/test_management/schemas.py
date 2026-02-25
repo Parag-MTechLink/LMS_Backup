@@ -109,6 +109,8 @@ class TestExecutionBase(BaseModel):
     test_plan_id: int = Field(..., alias="testPlanId")
     executed_by_id: Optional[int] = Field(None, alias="executedById")
     executed_by_name: Optional[str] = Field(None, alias="executedByName")
+    start_time: Optional[datetime] = Field(None, alias="startTime")
+    end_time: Optional[datetime] = Field(None, alias="endTime")
     environment_conditions: Optional[Dict[str, Any]] = Field(None, alias="environmentConditions")
     instruments_used: Optional[List[int]] = Field(None, alias="instrumentsUsed")
     notes: Optional[str] = None

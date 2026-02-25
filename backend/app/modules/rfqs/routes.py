@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.dependencies.auth_dependency import require_roles
@@ -7,6 +8,10 @@ from app.services.rbac_service import log_audit
 from app.modules.rfqs.models import RFQ
 from app.modules.projects.models import Customer
 from app.modules.rfqs.schemas import RFQCreate
+
+
+class RFQStatusUpdate(BaseModel):
+    status: str
 
 router = APIRouter(prefix="/rfqs", tags=["RFQs"])
 
@@ -93,6 +98,17 @@ def get_rfq(id: int, db: Session = Depends(get_db)):
         "receivedDate": rfq.receivedDate,
         "status": rfq.status,
     }
+
+
+# 🔹 UPDATE RFQ STATUS
+@router.patch("/{id}/status")
+def update_rfq_status(id: int, body: RFQStatusUpdate, db: Session = Depends(get_db)):
+    rfq = db.query(RFQ).filter(RFQ.id == id, RFQ.is_deleted == False).first()
+    if not rfq:
+        raise HTTPException(status_code=404, detail="RFQ not found")
+    rfq.status = body.status
+    db.commit()
+    return {"success": True, "status": rfq.status}
 
 
 # 🔹 DELETE RFQ (Admin only, soft delete, audit logged)

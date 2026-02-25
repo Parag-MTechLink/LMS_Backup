@@ -1,25 +1,82 @@
-import React from 'react'
-import { User, Mail, Phone, MapPin, Building, Calendar, FileText, ArrowUpRight } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Mail, Phone, MapPin, FileText, Loader2 } from 'lucide-react'
 import Button from '../Button'
 import Badge from '../Badge'
+import { projectsService, rfqsService, estimationsService } from '../../../services/labManagementApi'
+import { formatCurrencyINR } from '../../../utils/currency'
 
 function CustomerProfileModal({ isOpen, onClose, customer }) {
+    const [loading, setLoading] = useState(true)
+    const [stats, setStats] = useState({
+        totalProjects: 0,
+        activeProjects: 0,
+        totalSpent: 0
+    })
+
+    useEffect(() => {
+        if (isOpen && customer?.id) {
+            loadCustomerStats()
+        }
+    }, [isOpen, customer?.id])
+
+    const loadCustomerStats = async () => {
+        try {
+            setLoading(true)
+            // Fetch relevant data
+            const [projects, allRfqs, allEstimations] = await Promise.all([
+                projectsService.getAll(customer.id),
+                rfqsService.getAll(),
+                estimationsService.getAll()
+            ])
+
+            // 1. Projects are already filtered by clientId in the API call
+            const customerProjects = projects
+
+            // 2. Filter RFQs for this customer
+            const customerRfqs = allRfqs.filter(r =>
+                r.customerId?.toString() === customer.id.toString() ||
+                r.customerName?.toLowerCase() === customer.companyName?.toLowerCase()
+            )
+            const customerRfqIds = customerRfqs.map(r => r.id)
+
+            // 3. Filter Estimations for this customer's RFQs
+            const customerEstimations = allEstimations.filter(e =>
+                customerRfqIds.includes(e.rfqId) ||
+                e.rfqCustomerName?.toLowerCase() === customer.companyName?.toLowerCase()
+            )
+
+            // 4. Calculate Stats
+            const activeProjectsCount = customerProjects.filter(p =>
+                !['completed', 'cancelled', 'rejected', 'closed'].includes(p.status?.toLowerCase())
+            ).length
+
+            const totalSpentAmount = customerEstimations.reduce((sum, e) => sum + (e.totalCost || 0), 0)
+
+            setStats({
+                totalProjects: customerProjects.length,
+                activeProjects: activeProjectsCount,
+                totalSpent: totalSpentAmount
+            })
+        } catch (error) {
+            console.error('Failed to load customer stats:', error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     if (!isOpen) return null
 
-    // Sample data if not provided in customer object
     const profile = {
         ...customer,
-        phone: customer?.phone || '+1 (555) 123-4567',
-        address: customer?.address || '123 Tech Park, Innovation Blvd, CA',
-        description: customer?.description || 'Leading provider of IoT solutions.',
-        joinDate: 'Jan 15, 2024',
-        totalProjects: 12,
-        activeProjects: 3,
-        totalSpent: '$45,000'
+        phone: customer?.phone || 'Not provided',
+        address: customer?.address || 'Address not available',
+        description: customer?.description || 'No description provided.',
+        companyName: customer?.companyName || 'Company Name'
     }
 
     return (
         <div className="space-y-6">
+            {/* Header Info */}
             <div className="flex flex-col md:flex-row gap-6 items-start">
                 <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white text-3xl font-bold shadow-lg shrink-0">
                     {profile.companyName?.charAt(0) || 'C'}
@@ -45,57 +102,31 @@ function CustomerProfileModal({ isOpen, onClose, customer }) {
                 </div>
             </div>
 
+            {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
                     <div className="text-sm text-gray-500 font-medium mb-1">Total Projects</div>
-                    <div className="text-2xl font-bold text-gray-900">{profile.totalProjects}</div>
+                    {loading ? (
+                        <div className="flex justify-center py-1"><Loader2 className="w-5 h-5 animate-spin text-gray-400" /></div>
+                    ) : (
+                        <div className="text-2xl font-bold text-gray-900">{stats.totalProjects}</div>
+                    )}
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
                     <div className="text-sm text-gray-500 font-medium mb-1">Active Projects</div>
-                    <div className="text-2xl font-bold text-primary">{profile.activeProjects}</div>
+                    {loading ? (
+                        <div className="flex justify-center py-1"><Loader2 className="w-5 h-5 animate-spin text-primary/40" /></div>
+                    ) : (
+                        <div className="text-2xl font-bold text-primary">{stats.activeProjects}</div>
+                    )}
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
                     <div className="text-sm text-gray-500 font-medium mb-1">Total Spent</div>
-                    <div className="text-2xl font-bold text-green-600">{profile.totalSpent}</div>
-                </div>
-            </div>
-
-            <div>
-                <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-gray-500" />
-                    Recent Project History
-                </h4>
-                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                    <table className="w-full text-sm text-left">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="px-4 py-3 font-medium text-gray-500">Project</th>
-                                <th className="px-4 py-3 font-medium text-gray-500">Date</th>
-                                <th className="px-4 py-3 font-medium text-gray-500">Status</th>
-                                <th className="px-4 py-3 font-medium text-gray-500 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            <tr className="hover:bg-gray-50">
-                                <td className="px-4 py-3 font-medium">EMC Certification - Model X</td>
-                                <td className="px-4 py-3 text-gray-500">Feb 01, 2026</td>
-                                <td className="px-4 py-3"><Badge variant="warning">In Progress</Badge></td>
-                                <td className="px-4 py-3 text-right text-primary cursor-pointer hover:underline">View</td>
-                            </tr>
-                            <tr className="hover:bg-gray-50">
-                                <td className="px-4 py-3 font-medium">Safety Testing - Battery Pack</td>
-                                <td className="px-4 py-3 text-gray-500">Jan 10, 2026</td>
-                                <td className="px-4 py-3"><Badge variant="success">Completed</Badge></td>
-                                <td className="px-4 py-3 text-right text-primary cursor-pointer hover:underline">View</td>
-                            </tr>
-                            <tr className="hover:bg-gray-50">
-                                <td className="px-4 py-3 font-medium">RF Analysis - 5G Module</td>
-                                <td className="px-4 py-3 text-gray-500">Dec 15, 2025</td>
-                                <td className="px-4 py-3"><Badge variant="success">Completed</Badge></td>
-                                <td className="px-4 py-3 text-right text-primary cursor-pointer hover:underline">View</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    {loading ? (
+                        <div className="flex justify-center py-1"><Loader2 className="w-5 h-5 animate-spin text-green-400" /></div>
+                    ) : (
+                        <div className="text-2xl font-bold text-green-600">{formatCurrencyINR(stats.totalSpent)}</div>
+                    )}
                 </div>
             </div>
 

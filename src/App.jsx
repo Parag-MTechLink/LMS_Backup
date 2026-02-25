@@ -18,7 +18,7 @@ const Signup = lazy(() => import('./pages/Signup'))
 // Lazy load lab management pages for better performance
 const LabManagementDashboard = lazy(() => import('./pages/lab/management/Dashboard'))
 const LabManagementOrganizationDetails = lazy(() => import('./pages/lab/management/OrganizationDetails'))
-const LabManagementScopeManagement = lazy(() => import('./pages/lab/management/ScopeManagement'))
+import LabManagementScopeManagement from './pages/lab/management/ScopeManagement'
 const LabManagementCustomers = lazy(() => import('./pages/lab/management/Customers'))
 const LabManagementProjects = lazy(() => import('./pages/lab/management/Projects'))
 const LabManagementRFQs = lazy(() => import('./pages/lab/management/RFQs'))
@@ -122,7 +122,7 @@ function AnimatedRoutes() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<Suspense fallback={<RouteFallback />}><LabManagementDashboard /></Suspense>} />
           <Route path="organization" element={<Suspense fallback={<RouteFallback />}><LabManagementOrganizationDetails /></Suspense>} />
-          <Route path="scope-management" element={<Suspense fallback={<RouteFallback />}><LabManagementScopeManagement /></Suspense>} />
+          <Route path="scope-management" element={<LabManagementScopeManagement />} />
           <Route path="customers" element={<Suspense fallback={<RouteFallback />}><LabManagementCustomers /></Suspense>} />
           <Route path="rfqs" element={<Suspense fallback={<RouteFallback />}><LabManagementRFQs /></Suspense>} />
           <Route path="estimations" element={<Suspense fallback={<RouteFallback />}><LabManagementEstimations /></Suspense>} />

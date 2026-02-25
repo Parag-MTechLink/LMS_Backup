@@ -47,7 +47,7 @@ function Audits() {
 
   const filteredAudits = audits.filter(audit => {
     const matchesSearch = audit.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         audit.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      audit.description?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = selectedStatus === 'all' || audit.status === selectedStatus
     return matchesSearch && matchesStatus
   })
@@ -133,9 +133,7 @@ function Audits() {
               whileHover={{ y: -4 }}
             >
               <Card
-                hover
-                className="cursor-pointer h-full flex flex-col"
-                onClick={() => navigate(`/lab/management/audits/${audit.id}`)}
+                className="h-full flex flex-col"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg">
@@ -145,17 +143,17 @@ function Audits() {
                     {audit.status}
                   </Badge>
                 </div>
-                
+
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
                   {audit.title}
                 </h3>
-                
+
                 {audit.description && (
                   <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                     {audit.description}
                   </p>
                 )}
-                
+
                 <div className="mt-auto space-y-2">
                   {audit.auditDate && (
                     <div className="flex items-center text-sm text-gray-500">
@@ -163,7 +161,7 @@ function Audits() {
                       {new Date(audit.auditDate).toLocaleDateString()}
                     </div>
                   )}
-                  
+
                   {audit.auditorName && (
                     <div className="flex items-center text-sm text-gray-500">
                       <User className="w-4 h-4 mr-2" />
