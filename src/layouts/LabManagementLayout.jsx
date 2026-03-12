@@ -34,6 +34,8 @@ import {
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useLabManagementAuth } from '../contexts/LabManagementAuthContext'
 import logo from '../assets/techlink-logo.svg'
+import LiveClock from '../components/labManagement/LiveClock'
+
 
 const allNavItems = [
   { name: 'Dashboard', href: '/lab/management/dashboard', icon: LayoutDashboard },
@@ -235,7 +237,11 @@ function LabManagementLayout() {
                 </form>
               </div>
               <div className="flex items-center gap-4 ml-4">
+                <div className="hidden md:block">
+                  <LiveClock />
+                </div>
                 <div className="relative" ref={notificationRef}>
+
                   <button
                     onClick={() => setNotificationsOpen(!notificationsOpen)}
                     className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
