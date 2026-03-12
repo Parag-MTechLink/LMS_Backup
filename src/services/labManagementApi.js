@@ -166,6 +166,8 @@ export const authService = {
     setCached('auth:me', data)
     return data
   },
+  getAllUsers: () => apiService.get('/api/v1/auth/users'),
+  deleteUser: (userId) => apiService.delete(`/api/v1/auth/users/${userId}`),
 }
 
 // Lab recommendations (engine under /api/v1/labs; requires LAB_ENGINE_DATABASE_URL on backend)

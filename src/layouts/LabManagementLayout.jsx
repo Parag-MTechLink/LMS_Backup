@@ -57,6 +57,7 @@ const allNavItems = [
   { name: 'Inventory Management', href: '/lab/management/inventory', icon: Package, hideForRoles: ['Sales Engineer'] },
   { name: 'Quality Assurance', href: '/lab/management/qa', icon: Shield, hideForRoles: ['Sales Engineer', 'Technician'] },
   { name: 'Lab Recommendations', href: '/lab/management/lab-recommendations', icon: TrendingUp },
+  { name: 'User Management', href: '/lab/management/users', icon: Users, roles: ['Admin'] },
 ]
 
 function getNavigationForRole(role) {
