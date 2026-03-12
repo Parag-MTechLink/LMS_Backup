@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { authService } from '../services/labManagementApi'
 import { getApiErrorMessage } from '../utils/apiError'
-import { User, Mail, Lock, Briefcase, ArrowRight } from 'lucide-react'
+import { User, Mail, Lock, Briefcase, ArrowRight, X } from 'lucide-react'
 
 const ROLES = [
   { value: 'Testing Engineer', label: 'Testing Engineer' },
@@ -74,7 +74,7 @@ export default function Signup() {
           </motion.p>
         </div>
         <p className="text-xs text-slate-500">
-          Enterprise RBAC • Secure signup • No credit card required
+          Enterprise RBAC &bull; Secure signup &bull; No credit card required
         </p>
       </div>
 
@@ -98,6 +98,7 @@ export default function Signup() {
             </p>
 
             <form onSubmit={handleSubmit} className="mt-10 space-y-5">
+              {/* Full name */}
               <div>
                 <label htmlFor="full_name" className="block text-sm font-medium text-slate-700">
                   Full name
@@ -116,6 +117,7 @@ export default function Signup() {
                 </div>
               </div>
 
+              {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-slate-700">
                   Email address
@@ -134,6 +136,7 @@ export default function Signup() {
                 </div>
               </div>
 
+              {/* Password */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-slate-700">
                   Password
@@ -155,6 +158,7 @@ export default function Signup() {
                 </p>
               </div>
 
+              {/* Role */}
               <div>
                 <label htmlFor="role" className="block text-sm font-medium text-slate-700">
                   Role
@@ -177,6 +181,12 @@ export default function Signup() {
                   Admin accounts can only be created by an existing administrator.
                 </p>
               </div>
+
+              {/* ── Terms & Conditions + Privacy Policy Links + Modals ── */}
+              <LegalSection />
+
+              {/* ── Mandatory Consent Checkboxes ── */}
+              <ConsentBoxes />
 
               <button
                 type="submit"
@@ -208,6 +218,245 @@ export default function Signup() {
           </motion.div>
         </div>
       </div>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────────
+   Modal Component
+───────────────────────────────────────────── */
+function Modal({ open, onClose, title, children }) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+          />
+
+          {/* Panel */}
+          <motion.div
+            key="panel"
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+          >
+            <div
+              className="relative w-full max-w-lg max-h-[80vh] rounded-2xl bg-white shadow-2xl flex flex-col pointer-events-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Scrollable content */}
+              <div className="overflow-y-auto px-6 py-5 text-xs text-slate-600 space-y-4 leading-relaxed">
+                {children}
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  )
+}
+
+/* ─────────────────────────────────────────────
+   Legal Section — blue links that open modals
+───────────────────────────────────────────── */
+function LegalSection() {
+  const [tcOpen, setTcOpen] = useState(false)
+  const [ppOpen, setPpOpen] = useState(false)
+
+  return (
+    <>
+      {/* Blue link buttons */}
+      <div className="flex flex-wrap gap-4">
+        <button
+          type="button"
+          onClick={() => setTcOpen(true)}
+          className="text-sm font-medium text-blue-600 hover:text-blue-500 underline underline-offset-2 transition"
+        >
+          Terms &amp; Conditions
+        </button>
+        <button
+          type="button"
+          onClick={() => setPpOpen(true)}
+          className="text-sm font-medium text-blue-600 hover:text-blue-500 underline underline-offset-2 transition"
+        >
+          Privacy Policy
+        </button>
+      </div>
+
+      {/* Terms & Conditions Modal */}
+      <Modal open={tcOpen} onClose={() => setTcOpen(false)} title="Terms & Conditions">
+        <p>By accessing, registering for, or using this Software, you agree to be bound by these Terms &amp; Conditions.</p>
+
+        <div>
+          <p className="font-semibold text-slate-700">1. Account Registration</p>
+          <p>Some features require account registration.</p>
+          <p>You are responsible for maintaining the confidentiality of your login credentials and all activity under your account.</p>
+          <p>You must notify the Company immediately of any unauthorized account use.</p>
+          <p>The Company may suspend or terminate accounts that violate these Terms.</p>
+        </div>
+
+        <div>
+          <p className="font-semibold text-slate-700">2. User Responsibilities</p>
+          <p>Users must provide accurate and complete information when registering or using the software.</p>
+          <p>Users must not upload or transmit unlawful, harmful, or unauthorized content.</p>
+          <p>Users are responsible for maintaining updated account information.</p>
+        </div>
+
+        <div>
+          <p className="font-semibold text-slate-700">3. Payment Terms</p>
+          <p>Some features may require subscription or one-time payments.</p>
+          <p>Fees must be paid in advance unless agreed otherwise.</p>
+          <p>Subscriptions may automatically renew unless cancelled before the renewal date.</p>
+          <p>Failure to pay may result in suspension or termination of access to the Software.</p>
+        </div>
+
+        <div>
+          <p className="font-semibold text-slate-700">4. Refund Policy</p>
+          <p>Payments are generally non-refundable unless otherwise agreed. Refunds may only be issued in cases such as:</p>
+          <ul className="list-disc list-inside ml-2 space-y-0.5">
+            <li>Duplicate payments</li>
+            <li>Billing errors</li>
+            <li>Service failure caused solely by the Company</li>
+          </ul>
+          <p>Refund requests must be submitted within the specified period.</p>
+        </div>
+
+        <div>
+          <p className="font-semibold text-slate-700">5. Liability</p>
+          <p>To the extent permitted by law, the Company shall not be liable for indirect, incidental, or consequential damages or loss of data arising from the use of the Software.</p>
+        </div>
+
+        <div>
+          <p className="font-semibold text-slate-700">6. User-Provided Product for Testing</p>
+          <p>If the User provides any product, equipment, prototype, or component for testing:</p>
+          <ul className="list-disc list-inside ml-2 space-y-0.5">
+            <li>The User confirms the product is safe and legally compliant.</li>
+            <li>The Company will conduct testing only within the agreed scope.</li>
+            <li>Any design flaws, manufacturing defects, or compliance issues remain the User's responsibility.</li>
+            <li>The Company is not liable for losses arising from defects in the user-provided product.</li>
+            <li>The User agrees to indemnify the Company against claims related to such defects.</li>
+          </ul>
+        </div>
+
+        <div>
+          <p className="font-semibold text-slate-700">7. Changes to Terms</p>
+          <p>The Company reserves the right to modify these Terms at any time. Continued use of the Software after changes means you accept the updated Terms.</p>
+        </div>
+
+        <div>
+          <p className="font-semibold text-slate-700">8. Governing Law</p>
+          <p>These Terms shall be governed by the laws of India, and any disputes shall fall under the jurisdiction of Indian courts.</p>
+        </div>
+      </Modal>
+
+      {/* Privacy Policy Modal */}
+      <Modal open={ppOpen} onClose={() => setPpOpen(false)} title="Privacy Policy">
+        <p>This Privacy Policy explains how the Company collects, uses, stores, and protects user information when using the Software.</p>
+
+        <div>
+          <p className="font-semibold text-slate-700">1. Information We Collect</p>
+          <p>We may collect the following types of information:</p>
+          <ul className="list-disc list-inside ml-2 space-y-0.5">
+            <li>Personal information provided during registration</li>
+            <li>Account information and contact details</li>
+            <li>Usage data related to how the software is used</li>
+            <li>Technical information such as device or system data</li>
+          </ul>
+        </div>
+
+        <div>
+          <p className="font-semibold text-slate-700">2. How We Use Your Information</p>
+          <p>Your information may be used for:</p>
+          <ul className="list-disc list-inside ml-2 space-y-0.5">
+            <li>Account management</li>
+            <li>Providing and improving Software services</li>
+            <li>Customer support</li>
+            <li>System monitoring and analytics</li>
+            <li>Communication about updates or service notifications</li>
+            <li>Legal and regulatory compliance</li>
+            <li>Marketing communications where permitted by law</li>
+          </ul>
+        </div>
+
+        <div>
+          <p className="font-semibold text-slate-700">3. Data Storage &amp; Security</p>
+          <p>User data may be stored on secure servers or cloud platforms.</p>
+          <p>Reasonable security measures are implemented to protect user information.</p>
+          <p>However, no digital system can guarantee complete security.</p>
+        </div>
+
+        <div>
+          <p className="font-semibold text-slate-700">4. Data Sharing</p>
+          <p>The Company may share information:</p>
+          <ul className="list-disc list-inside ml-2 space-y-0.5">
+            <li>With authorized service providers assisting in service delivery</li>
+            <li>When required by law or legal authorities</li>
+            <li>To protect legal rights or comply with regulatory obligations</li>
+          </ul>
+          <p>The Company does not sell personal information without user consent unless permitted by law.</p>
+        </div>
+
+        <div>
+          <p className="font-semibold text-slate-700">5. Aggregated Data</p>
+          <p>The Company may use aggregated or anonymized data for research, analytics, or service improvement.</p>
+        </div>
+      </Modal>
+    </>
+  )
+}
+
+/* ─────────────────────────────────────────────
+   Mandatory Consent Checkboxes
+───────────────────────────────────────────── */
+function ConsentBoxes() {
+  const consents = [
+    { id: 'consent_accurate', label: 'The information provided is true and accurate.' },
+    { id: 'consent_privacy', label: 'You consent to the collection and use of your information as described in the Privacy Policy.' },
+    { id: 'consent_terms', label: 'You have read and agree to the Terms & Conditions, including the Payment and Refund Policy.' },
+  ]
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 space-y-3">
+      <p className="text-sm font-semibold text-slate-800">User Consent</p>
+      {consents.map(({ id, label }) => (
+        <label
+          key={id}
+          htmlFor={id}
+          className="flex items-start gap-3 cursor-pointer group"
+        >
+          <input
+            id={id}
+            name={id}
+            type="checkbox"
+            required
+            className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-slate-300 text-indigo-600 accent-indigo-600 cursor-pointer"
+          />
+          <span className="text-xs text-slate-600 leading-relaxed group-hover:text-slate-800 transition">
+            {label}
+          </span>
+        </label>
+      ))}
     </div>
   )
 }
