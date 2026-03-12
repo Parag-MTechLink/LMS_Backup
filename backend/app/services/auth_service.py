@@ -26,6 +26,21 @@ def get_user_by_id(db: Session, user_id: UUID) -> User | None:
     return db.query(User).filter(User.id == user_id).first()
 
 
+def delete_user(db: Session, user_id: UUID) -> bool:
+    """Delete a user by ID. Returns True if successful."""
+    user = get_user_by_id(db, user_id)
+    if user:
+        db.delete(user)
+        db.commit()
+        return True
+    return False
+
+
+def get_all_users(db: Session) -> list[User]:
+    """Return all users."""
+    return db.query(User).order_by(User.created_at.desc()).all()
+
+
 def create_user(
     db: Session,
     full_name: str,
@@ -46,6 +61,12 @@ def create_user(
     role = role.strip()
     if role not in ROLES:
         return None, f"Invalid role. Must be one of: {', '.join(ROLES)}."
+
+    # Limit to 3 Admin accounts
+    if role == "Admin":
+        admin_count = db.query(User).filter(User.role == "Admin").count()
+        if admin_count >= 3:
+            return None, "Maximum limit of 3 Admin accounts has been reached."
 
     # Bootstrap: allow first user to be Admin when no users exist
     admin_ok = created_by_admin or (role == "Admin" and db.query(User).count() == 0)

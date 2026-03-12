@@ -317,10 +317,13 @@ from app.routes.auth import (
     SignupRequest,
     SignupResponse,
     MeResponse,
+    get_users as _auth_get_users,
+    delete_user_route as _auth_delete_user,
 )
 from app.models.user_model import User
 from fastapi import Depends
 from sqlalchemy.orm import Session
+from typing import List
 
 
 @app.post("/api/v1/auth/login", response_model=LoginResponse)
@@ -336,6 +339,18 @@ def auth_signup_route(body: SignupRequest, request: Request, db: Session = Depen
 @app.get("/api/v1/auth/me", response_model=MeResponse)
 def auth_me_route(current_user: User = Depends(get_current_user)):
     return _auth_me(current_user)
+
+
+@app.get("/api/v1/auth/users", response_model=List[MeResponse])
+def auth_users_route(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Return all users for Admin Dashboard."""
+    return _auth_get_users(current_user, db)
+
+
+@app.delete("/api/v1/auth/users/{user_id}")
+def auth_delete_user_route(user_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Delete a user account for Admin Dashboard."""
+    return _auth_delete_user(user_id, db, current_user)
 
 
 if __name__ == "__main__":

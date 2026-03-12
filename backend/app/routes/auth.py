@@ -14,7 +14,7 @@ from app.core.database import get_db
 from app.core.security import create_access_token
 from app.dependencies.auth_dependency import get_current_user, get_current_user_optional
 from app.models.user_model import User
-from app.services.auth_service import create_user, authenticate_user
+from app.services.auth_service import create_user, authenticate_user, get_all_users, delete_user
 from app.services.rbac_service import log_audit
 
 logger = logging.getLogger(__name__)
@@ -155,3 +155,60 @@ def me(current_user: User = Depends(get_current_user)):
         role=current_user.role,
         is_active=current_user.is_active,
     )
+
+
+@router.get("/users", response_model=List[MeResponse])
+def get_users(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Return all users in the system. Admin only."""
+    if current_user.role != "Admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can view the user directory.",
+        )
+    users = get_all_users(db)
+    return [
+        MeResponse(
+            id=str(u.id),
+            email=u.email,
+            full_name=u.full_name,
+            role=u.role,
+            is_active=u.is_active,
+        )
+        for u in users
+    ]
+@router.delete("/users/{user_id}")
+def delete_user_route(
+    user_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Delete a user account. Admin only."""
+    if current_user.role != "Admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can delete user accounts.",
+        )
+    
+    # Optional: Prevent admin from deleting themselves
+    if str(current_user.id) == user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot delete your own admin account from here.",
+        )
+
+    from uuid import UUID
+    try:
+        success = delete_user(db, UUID(user_id))
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found.",
+            )
+        
+        log_audit(db, current_user.id, "user.delete", "user", user_id, {"deleted_by": str(current_user.id)})
+        return {"message": "User deleted successfully."}
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid user ID format.",
+        )
