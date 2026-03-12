@@ -18,17 +18,51 @@ This is a standalone Lab Management System extracted from the main 240Kw project
 
 ## Installation
 
-1. Install dependencies:
+## Frontend
+
+1. Navigate to Project Directory:
+```bash
+cd src
+```
+
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-2. Start the development server:
+3. Start the development server:
 ```bash
 npm run dev
 ```
 
-3. Build for production:
+## Backend
+
+1. Navigate to project directory
+```bash
+cd backend
+```
+
+2. Create virtual environment
+```bash
+py -3.12 -m venv .venv
+```
+
+3. Activate virtual environment
+```bash
+.venv/Scripts/activate
+```
+
+4. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+5. Run the backend server
+```bash
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
+```
+
+## Build for production:
 ```bash
 npm run build
 ```
