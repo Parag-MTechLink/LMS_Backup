@@ -227,6 +227,8 @@ function LabManagementLayout() {
                   <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
+                    id="global-search"
+                    name="global-search"
                     placeholder="Search projects, customers..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}

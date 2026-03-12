@@ -192,6 +192,17 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 from app.middleware.auth_middleware import AuthRequiredMiddleware
 app.add_middleware(AuthRequiredMiddleware)
 
+# Security Headers Middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    # Strict-Transport-Security (optional, but good for production)
+    # response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,

@@ -258,7 +258,7 @@ function App() {
     <ErrorBoundary>
       <LabManagementAuthProvider>
         <LabDataProvider>
-          <Router>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AppContent />
           </Router>
         </LabDataProvider>

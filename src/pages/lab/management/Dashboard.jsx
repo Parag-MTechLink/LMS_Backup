@@ -296,6 +296,8 @@ function LabManagementDashboard() {
         </div>
         <div className="flex items-center gap-3">
           <select
+            id="dashboard-time-range"
+            name="dashboard-time-range"
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
             className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent"
