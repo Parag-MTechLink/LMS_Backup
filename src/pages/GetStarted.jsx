@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import { authService } from '../services/labManagementApi'
 import { getApiErrorMessage } from '../utils/apiError'
 import { User, Mail, Lock, Briefcase, ArrowRight, X } from 'lucide-react'
+import { useLabManagementAuth } from '../contexts/LabManagementAuthContext'
 
 const ROLES = [
   { value: 'Testing Engineer', label: 'Testing Engineer' },
@@ -14,8 +15,9 @@ const ROLES = [
   { value: 'Admin', label: 'Admin' },
 ]
 
-export default function Signup() {
+export default function GetStarted() {
   const navigate = useNavigate()
+  const { login } = useLabManagementAuth()
   const [full_name, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -41,10 +43,23 @@ export default function Signup() {
     setLoading(true)
     try {
       await authService.signup({ full_name: full_name.trim(), email: email.trim(), password, role })
-      toast.success('Account created. Please sign in.')
-      navigate('/login', { replace: true })
+      toast.success('Account created. Getting started...')
+      
+      // Auto-login immediately after signup
+      await login(email.trim(), password)
+      
+      navigate('/lab/management/dashboard', { replace: true })
     } catch (err) {
       const status = err.response?.status
+      const rawMsg = err.response?.data?.error || err.response?.data?.detail
+      const msgStr = typeof rawMsg === 'string' ? rawMsg : JSON.stringify(rawMsg || '')
+      
+      if (msgStr.toLowerCase().includes('already exists') || status === 400) {
+        toast.error('An account with this email already exists. Please sign in instead.', { duration: 5000 })
+        navigate('/login')
+        return
+      }
+
       let msg = status === 404
         ? 'Signup service not found. Ensure the backend is running and VITE_API_URL points to it.'
         : getApiErrorMessage(err) || 'Registration failed. Please try again.'
@@ -68,7 +83,7 @@ export default function Signup() {
             transition={{ delay: 0.1 }}
             className="text-3xl font-bold leading-tight text-slate-900"
           >
-            Create your account
+            Get started right away
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 12 }}
@@ -76,7 +91,7 @@ export default function Signup() {
             transition={{ delay: 0.2 }}
             className="mt-4 max-w-sm text-slate-600"
           >
-            Join your team on the platform for RFQs, test management, inventory, and quality assurance.
+            Join your team on the platform for RFQs, test management, inventory, and quality assurance seamlessly.
           </motion.p>
         </div>
         <p className="text-xs text-slate-500">
@@ -100,7 +115,7 @@ export default function Signup() {
               Get started
             </h1>
             <p className="mt-2 text-sm text-slate-600">
-              Enter your details to create your account.
+              Enter your details to register and access your dashboard instantly.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-10 space-y-5">
@@ -218,7 +233,7 @@ export default function Signup() {
                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 ) : (
                   <>
-                    Create account
+                    Create account and get started
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
@@ -307,7 +322,6 @@ function LegalSection() {
 
   return (
     <>
-      {/* Blue link buttons */}
       <div className="flex flex-wrap gap-4">
         <button
           type="button"
@@ -325,122 +339,40 @@ function LegalSection() {
         </button>
       </div>
 
-      {/* Terms & Conditions Modal */}
       <Modal open={tcOpen} onClose={() => setTcOpen(false)} title="Terms & Conditions">
         <p>By accessing, registering for, or using this Software, you agree to be bound by these Terms &amp; Conditions.</p>
-
         <div>
           <p className="font-semibold text-slate-700">1. Account Registration</p>
           <p>Some features require account registration.</p>
-          <p>You are responsible for maintaining the confidentiality of your login credentials and all activity under your account.</p>
-          <p>You must notify the Company immediately of any unauthorized account use.</p>
-          <p>The Company may suspend or terminate accounts that violate these Terms.</p>
+          <p>You are responsible for maintaining the confidentiality of your login credentials.</p>
         </div>
-
         <div>
           <p className="font-semibold text-slate-700">2. User Responsibilities</p>
-          <p>Users must provide accurate and complete information when registering or using the software.</p>
-          <p>Users must not upload or transmit unlawful, harmful, or unauthorized content.</p>
-          <p>Users are responsible for maintaining updated account information.</p>
+          <p>Users must provide accurate information when using the software.</p>
         </div>
-
         <div>
           <p className="font-semibold text-slate-700">3. Payment Terms</p>
-          <p>Some features may require subscription or one-time payments.</p>
-          <p>Fees must be paid in advance unless agreed otherwise.</p>
-          <p>Subscriptions may automatically renew unless cancelled before the renewal date.</p>
-          <p>Failure to pay may result in suspension or termination of access to the Software.</p>
+          <p>Some features may require subscription payments.</p>
         </div>
-
         <div>
-          <p className="font-semibold text-slate-700">4. Refund Policy</p>
-          <p>Payments are generally non-refundable unless otherwise agreed. Refunds may only be issued in cases such as:</p>
-          <ul className="list-disc list-inside ml-2 space-y-0.5">
-            <li>Duplicate payments</li>
-            <li>Billing errors</li>
-            <li>Service failure caused solely by the Company</li>
-          </ul>
-          <p>Refund requests must be submitted within the specified period.</p>
-        </div>
-
-        <div>
-          <p className="font-semibold text-slate-700">5. Liability</p>
-          <p>To the extent permitted by law, the Company shall not be liable for indirect, incidental, or consequential damages or loss of data arising from the use of the Software.</p>
-        </div>
-
-        <div>
-          <p className="font-semibold text-slate-700">6. User-Provided Product for Testing</p>
-          <p>If the User provides any product, equipment, prototype, or component for testing:</p>
-          <ul className="list-disc list-inside ml-2 space-y-0.5">
-            <li>The User confirms the product is safe and legally compliant.</li>
-            <li>The Company will conduct testing only within the agreed scope.</li>
-            <li>Any design flaws, manufacturing defects, or compliance issues remain the User's responsibility.</li>
-            <li>The Company is not liable for losses arising from defects in the user-provided product.</li>
-            <li>The User agrees to indemnify the Company against claims related to such defects.</li>
-          </ul>
-        </div>
-
-        <div>
-          <p className="font-semibold text-slate-700">7. Changes to Terms</p>
-          <p>The Company reserves the right to modify these Terms at any time. Continued use of the Software after changes means you accept the updated Terms.</p>
-        </div>
-
-        <div>
-          <p className="font-semibold text-slate-700">8. Governing Law</p>
-          <p>These Terms shall be governed by the laws of India, and any disputes shall fall under the jurisdiction of Indian courts.</p>
+          <p className="font-semibold text-slate-700">4. Liability</p>
+          <p>The Company shall not be liable for indirect damages arising from the use of the Software.</p>
         </div>
       </Modal>
 
-      {/* Privacy Policy Modal */}
       <Modal open={ppOpen} onClose={() => setPpOpen(false)} title="Privacy Policy">
-        <p>This Privacy Policy explains how the Company collects, uses, stores, and protects user information when using the Software.</p>
-
+        <p>This Privacy Policy explains how the Company collects, uses, and protects information.</p>
         <div>
           <p className="font-semibold text-slate-700">1. Information We Collect</p>
-          <p>We may collect the following types of information:</p>
-          <ul className="list-disc list-inside ml-2 space-y-0.5">
-            <li>Personal information provided during registration</li>
-            <li>Account information and contact details</li>
-            <li>Usage data related to how the software is used</li>
-            <li>Technical information such as device or system data</li>
-          </ul>
+          <p>We may collect personal information provided during registration and usage data.</p>
         </div>
-
         <div>
           <p className="font-semibold text-slate-700">2. How We Use Your Information</p>
-          <p>Your information may be used for:</p>
-          <ul className="list-disc list-inside ml-2 space-y-0.5">
-            <li>Account management</li>
-            <li>Providing and improving Software services</li>
-            <li>Customer support</li>
-            <li>System monitoring and analytics</li>
-            <li>Communication about updates or service notifications</li>
-            <li>Legal and regulatory compliance</li>
-            <li>Marketing communications where permitted by law</li>
-          </ul>
+          <p>Information may be used for account management and service improvements.</p>
         </div>
-
         <div>
-          <p className="font-semibold text-slate-700">3. Data Storage &amp; Security</p>
-          <p>User data may be stored on secure servers or cloud platforms.</p>
-          <p>Reasonable security measures are implemented to protect user information.</p>
-          <p>However, no digital system can guarantee complete security.</p>
-        </div>
-
-        <div>
-          <p className="font-semibold text-slate-700">4. Data Sharing</p>
-          <p>The Company may share information:</p>
-          <ul className="list-disc list-inside ml-2 space-y-0.5">
-            <li>With authorized service providers assisting in service delivery</li>
-            <li>When required by law or legal authorities</li>
-            <li>To protect legal rights or comply with regulatory obligations</li>
-          </ul>
-          <p>The Company does not sell personal information without user consent unless permitted by law.</p>
-        </div>
-
-        <div>
-          <p className="font-semibold text-slate-700">5. Aggregated Data</p>
-          <p>The Company may use aggregated or anonymized data for research, analytics, or service improvement.</p>
+          <p className="font-semibold text-slate-700">3. Data Sharing</p>
+          <p>The Company does not sell personal information without user consent.</p>
         </div>
       </Modal>
     </>
@@ -454,7 +386,7 @@ function ConsentBoxes() {
   const consents = [
     { id: 'consent_accurate', label: 'The information provided is true and accurate.' },
     { id: 'consent_privacy', label: 'You consent to the collection and use of your information as described in the Privacy Policy.' },
-    { id: 'consent_terms', label: 'You have read and agree to the Terms & Conditions, including the Payment and Refund Policy.' },
+    { id: 'consent_terms', label: 'You have read and agree to the Terms & Conditions.' },
   ]
 
   return (
