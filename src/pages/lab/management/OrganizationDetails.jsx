@@ -107,6 +107,7 @@ export default function OrganizationDetails() {
   const [organizationId, setOrganizationId] = useState(null)  // Always start fresh
   const [loading, setLoading] = useState(false)
   const [checklist, setChecklist] = useState(null)  // Backend checklist data
+  const [errors, setErrors] = useState({})
   const [formData, setFormData] = useState(organizationData || {
     // Laboratory Details
     labName: '',
@@ -506,96 +507,226 @@ export default function OrganizationDetails() {
 
   const validateStep = (step) => {
     switch (step) {
-      case 1:
-        if (!formData.labName || !formData.labAddress || !formData.labState ||
-          !formData.labDistrict || !formData.labCity || !formData.labPinCode) {
-          toast.error('Please fill in all required laboratory details')
-          return false
-        }
+      case 1: {
+        const newErrors = {}
+        if (!formData.labName?.trim()) newErrors.labName = 'Please enter laboratory name'
+        if (!formData.labAddress?.trim()) newErrors.labAddress = 'Please enter complete address'
+        if (!formData.labState?.trim()) newErrors.labState = 'Please enter state'
+        if (!formData.labCity?.trim()) newErrors.labCity = 'Please enter city'
+        if (!formData.labPinCode?.trim()) newErrors.labPinCode = 'Please enter pin code'
+        
         if (formData.labProofOfAddress === 'Select') {
-          toast.error('Please select proof of laboratory address')
-          return false
+          newErrors.labProofOfAddress = 'Please select proof of laboratory address'
         }
-        if (formData.labProofOfAddress === 'Other' && !formData.labProofOfAddressOther) {
-          toast.error('Please specify other proof of address')
+        if (formData.labProofOfAddress === 'Other' && !formData.labProofOfAddressOther?.trim()) {
+          newErrors.labProofOfAddressOther = 'Please specify other proof of address'
+        }
+
+        setErrors(newErrors)
+
+        if (Object.keys(newErrors).length > 0) {
+          toast.error('Please fill out all mandatory laboratory details')
           return false
         }
         break
-      case 2:
+      }
+      case 2: {
+        const newErrors = {}
+        const phoneRegex = /^[0-9]{10}$/
+        const generalPhoneRegex = /^[0-9]+$/
+
         if (!formData.sameAsLabAddress) {
-          if (!formData.registeredAddress || !formData.registeredState ||
-            !formData.registeredDistrict || !formData.registeredCity ||
-            !formData.registeredPinCode || !formData.registeredMobile) {
-            toast.error('Please fill in all required registered office details')
-            return false
+          if (!formData.registeredAddress?.trim()) newErrors.registeredAddress = 'Please enter address'
+          if (!formData.registeredState?.trim()) newErrors.registeredState = 'Please enter state'
+          if (!formData.registeredDistrict?.trim()) newErrors.registeredDistrict = 'Please enter district'
+          if (!formData.registeredCity?.trim()) newErrors.registeredCity = 'Please enter city'
+          if (!formData.registeredPinCode?.trim()) newErrors.registeredPinCode = 'Please enter pin code'
+          
+          if (!formData.registeredMobile?.trim()) {
+            newErrors.registeredMobile = 'Please enter mobile number'
+          } else if (!phoneRegex.test(formData.registeredMobile.trim())) {
+            newErrors.registeredMobile = 'Mobile must be exactly 10 digits'
+          }
+
+          if (formData.registeredTelephone?.trim() && !generalPhoneRegex.test(formData.registeredTelephone.trim())) {
+            newErrors.registeredTelephone = 'Telephone must contain only digits'
+          }
+
+          if (formData.registeredFax?.trim() && !generalPhoneRegex.test(formData.registeredFax.trim())) {
+            newErrors.registeredFax = 'Fax must contain only digits'
           }
         }
-        if (formData.topManagement.some(tm => !tm.name || !tm.designation || !tm.mobile)) {
-          toast.error('Please fill in all required top management details')
+        
+        formData.topManagement.forEach((tm, index) => {
+          if (!tm.name?.trim()) newErrors[`topManagement_${index}_name`] = 'Required'
+          if (!tm.designation?.trim()) newErrors[`topManagement_${index}_designation`] = 'Required'
+          
+          if (!tm.mobile?.trim()) {
+            newErrors[`topManagement_${index}_mobile`] = 'Required'
+          } else if (!phoneRegex.test(tm.mobile.trim())) {
+            newErrors[`topManagement_${index}_mobile`] = 'Must be exactly 10 digits'
+          }
+
+          if (tm.telephone?.trim() && !generalPhoneRegex.test(tm.telephone.trim())) {
+            newErrors[`topManagement_${index}_telephone`] = 'Must contain only digits'
+          }
+
+          if (tm.fax?.trim() && !generalPhoneRegex.test(tm.fax.trim())) {
+            newErrors[`topManagement_${index}_fax`] = 'Must contain only digits'
+          }
+        })
+
+        setErrors(newErrors)
+        if (Object.keys(newErrors).length > 0) {
+          toast.error('Please fill in all required registered office details')
           return false
         }
         break
-      case 4:
-        if (formData.workingDays.length === 0) {
-          toast.error('Please select at least one working day')
-          return false
-        }
-        if (formData.shiftTimings.some(shift => !shift.from || !shift.to)) {
-          toast.error('Please fill in all shift timings')
-          return false
-        }
-        if (formData.organizationType === 'Select') {
-          toast.error('Please select organization type')
-          return false
-        }
-        if (formData.organizationType === 'Other' && !formData.organizationTypeOther) {
-          toast.error('Please specify other organization type')
-          return false
-        }
-        if (formData.proofOfLegalIdentity === 'Select') {
-          toast.error('Please select proof of legal identity')
+      }
+      case 3: {
+        const newErrors = {}
+        if (!formData.accountHolderName?.trim()) newErrors.accountHolderName = 'Please enter account holder name'
+        if (!formData.accountNumber?.trim()) newErrors.accountNumber = 'Please enter account number'
+        if (!formData.ifscCode?.trim()) newErrors.ifscCode = 'Please enter IFSC code'
+        if (!formData.branchName?.trim()) newErrors.branchName = 'Please enter branch name'
+        if (!formData.gstNumber?.trim()) newErrors.gstNumber = 'Please enter GST number'
+
+        setErrors(newErrors)
+        if (Object.keys(newErrors).length > 0) {
+          toast.error('Please fill in all required bank details')
           return false
         }
         break
-      case 6:
-        if (!formData.impartialityDocument || !formData.termsConditionsDocument ||
-          !formData.codeOfEthicsDocument || !formData.testingChargesPolicyDocument) {
+      }
+      case 4: {
+        const newErrors = {}
+        if (formData.workingDays.length === 0) newErrors.workingDays = 'Please select at least one working day'
+        
+        formData.shiftTimings.forEach((shift, index) => {
+          if (!shift.from) newErrors[`shiftTimings_${index}_from`] = 'Required'
+          if (!shift.to) newErrors[`shiftTimings_${index}_to`] = 'Required'
+        })
+        
+        if (formData.organizationType === 'Select') newErrors.organizationType = 'Please select organization type'
+        if (formData.organizationType === 'Other' && !formData.organizationTypeOther?.trim()) {
+          newErrors.organizationTypeOther = 'Please specify other organization type'
+        }
+        if (formData.proofOfLegalIdentity === 'Select') newErrors.proofOfLegalIdentity = 'Please select proof of legal identity'
+        if (formData.proofOfLegalIdentity === 'Other' && !formData.proofOfLegalIdentityOther?.trim()) {
+          newErrors.proofOfLegalIdentityOther = 'Please specify other proof of legal identity'
+        }
+
+        setErrors(newErrors)
+        if (Object.keys(newErrors).length > 0) {
+          toast.error('Please fill out all mandatory working days and organization type details')
+          return false
+        }
+        break
+      }
+      case 5: {
+        const newErrors = {}
+        formData.complianceDocuments.forEach((doc, index) => {
+          if (doc.type === 'Select') newErrors[`complianceDocuments_${index}_type`] = 'Please select document type'
+          if (doc.type === 'Other' && !doc.typeOther?.trim()) newErrors[`complianceDocuments_${index}_typeOther`] = 'Required'
+        })
+        
+        setErrors(newErrors)
+        if (Object.keys(newErrors).length > 0) {
+          toast.error('Please fill in all mandatory compliance document details')
+          return false
+        }
+        break
+      }
+      case 6: {
+        const newErrors = {}
+
+        setErrors(newErrors)
+        if (Object.keys(newErrors).length > 0) {
           toast.error('Please upload all required policy documents')
           return false
         }
         break
-      case 7:
-        if (!formData.adequacySanctionedLoad) {
-          toast.error('Please fill in adequacy of sanctioned load details')
-          return false
-        }
-        if (formData.waterSource === 'Select') {
-          toast.error('Please select water source')
-          return false
-        }
-        break
-      case 8:
-        if (!formData.layoutLabPremises || !formData.organizationChart) {
-          toast.error('Please upload layout and organization chart documents')
-          return false
-        }
-        if (!formData.gpsLatitude || !formData.gpsLongitude) {
-          toast.error('Please fill in GPS coordinates')
+      }
+      case 7: {
+        const newErrors = {}
+        if (!formData.adequacySanctionedLoad?.trim()) newErrors.adequacySanctionedLoad = 'Please fill in adequacy of sanctioned load details'
+        if (formData.waterSource === 'Select') newErrors.waterSource = 'Please select water source'
+
+        setErrors(newErrors)
+        if (Object.keys(newErrors).length > 0) {
+          toast.error('Please fill in required power & water supply details')
           return false
         }
         break
-      case 9:
-        if (!formData.qualityManualTitle || !formData.qualityManualIssueNumber ||
-          !formData.qualityManualIssueDate || !formData.qualityManualAmendments) {
-          toast.error('Please fill in all quality manual details')
-          return false
-        }
-        if (!formData.qualityManualDocument) {
-          toast.error('Please upload quality manual document')
+      }
+      case 8: {
+        const newErrors = {}
+        if (!formData.gpsLatitude?.trim()) newErrors.gpsLatitude = 'Please enter latitude'
+        if (!formData.gpsLongitude?.trim()) newErrors.gpsLongitude = 'Please enter longitude'
+        
+        formData.accreditationDocuments.forEach((doc, index) => {
+          if (doc.type === 'Select') newErrors[`accreditationDocuments_${index}_type`] = 'Required'
+          if (!doc.certificateNo?.trim()) newErrors[`accreditationDocuments_${index}_certificateNo`] = 'Required'
+          if (doc.type === 'Other' && !doc.typeOther?.trim()) newErrors[`accreditationDocuments_${index}_typeOther`] = 'Required'
+          if (!doc.validityDate) newErrors[`accreditationDocuments_${index}_validityDate`] = 'Required'
+        })
+
+        setErrors(newErrors)
+        if (Object.keys(newErrors).length > 0) {
+          toast.error('Please upload layout, organization chart and enter GPS coordinates')
           return false
         }
         break
+      }
+      case 9: {
+        const newErrors = {}
+        if (!formData.qualityManualTitle?.trim()) newErrors.qualityManualTitle = 'Required'
+        if (!formData.qualityManualIssueNumber?.trim()) newErrors.qualityManualIssueNumber = 'Required'
+        if (!formData.qualityManualIssueDate) newErrors.qualityManualIssueDate = 'Required'
+        if (!formData.qualityManualAmendments?.trim()) newErrors.qualityManualAmendments = 'Required'
+        
+        formData.sopList.forEach((sop, index) => {
+          if (!sop.title?.trim()) newErrors[`sopList_${index}_title`] = 'Required'
+          if (!sop.number?.trim()) newErrors[`sopList_${index}_number`] = 'Required'
+          if (!sop.issueNumber?.trim()) newErrors[`sopList_${index}_issueNumber`] = 'Required'
+          if (!sop.issueDate) newErrors[`sopList_${index}_issueDate`] = 'Required'
+          if (!sop.amendments?.trim()) newErrors[`sopList_${index}_amendments`] = 'Required'
+        })
+
+        setErrors(newErrors)
+        if (Object.keys(newErrors).length > 0) {
+          toast.error('Please fill in all quality manual and SOP details')
+          return false
+        }
+        break
+      }
+      case 10: {
+        const newErrors = {}
+        formData.qualityFormats.forEach((format, index) => {
+          if (!format.title?.trim()) newErrors[`qualityFormats_${index}_title`] = 'Required'
+          if (!format.number?.trim()) newErrors[`qualityFormats_${index}_number`] = 'Required'
+          if (!format.issueNumber?.trim()) newErrors[`qualityFormats_${index}_issueNumber`] = 'Required'
+          if (!format.issueDate) newErrors[`qualityFormats_${index}_issueDate`] = 'Required'
+          if (!format.amendments?.trim()) newErrors[`qualityFormats_${index}_amendments`] = 'Required'
+        })
+
+        formData.qualityProcedures.forEach((proc, index) => {
+          if (!proc.title?.trim()) newErrors[`qualityProcedures_${index}_title`] = 'Required'
+          if (!proc.number?.trim()) newErrors[`qualityProcedures_${index}_number`] = 'Required'
+          if (!proc.issueNumber?.trim()) newErrors[`qualityProcedures_${index}_issueNumber`] = 'Required'
+          if (!proc.issueDate) newErrors[`qualityProcedures_${index}_issueDate`] = 'Required'
+          if (!proc.amendments?.trim()) newErrors[`qualityProcedures_${index}_amendments`] = 'Required'
+        })
+        
+        setErrors(newErrors)
+        if (Object.keys(newErrors).length > 0) {
+          toast.error('Please fill in all quality formats and procedures details')
+          return false
+        }
+        break
+      }
       default:
+        setErrors({})
         break
     }
     return true
@@ -753,6 +884,7 @@ export default function OrganizationDetails() {
           transition={{ duration: 0.3 }}
         >
           <Card>
+            <p className="text-sm text-red-500 mb-4 px-6 pt-4">Please fill all the mandatory details in the form (*)</p>
             {/* Step 1: Laboratory Details */}
             {currentStep === 1 && (
               <div className="space-y-6">
@@ -769,7 +901,7 @@ export default function OrganizationDetails() {
                 {/* Logo Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Logo <span className="text-red-500">*</span>
+                    Logo
                   </label>
                   <p className="text-xs text-gray-500 mb-2">
                     Upload Logo of your laboratory. JPG files are recommended of not more than 1 MB size.
@@ -803,11 +935,14 @@ export default function OrganizationDetails() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
                     <Input
-                      label="Name"
+                      label={<>Name <span className="text-red-500">*</span></>}
                       value={formData.labName}
-                      onChange={(e) => handleInputChange('labName', e.target.value)}
+                      onChange={(e) => {
+                        handleInputChange('labName', e.target.value)
+                        if (errors.labName) setErrors(prev => ({ ...prev, labName: null }))
+                      }}
+                      error={errors.labName}
                       placeholder="Enter laboratory name"
-                      required
                     />
                   </div>
 
@@ -817,12 +952,15 @@ export default function OrganizationDetails() {
                     </label>
                     <textarea
                       value={formData.labAddress}
-                      onChange={(e) => handleInputChange('labAddress', e.target.value)}
+                      onChange={(e) => {
+                        handleInputChange('labAddress', e.target.value)
+                        if (errors.labAddress) setErrors(prev => ({ ...prev, labAddress: null }))
+                      }}
                       placeholder="Enter complete address"
                       rows={3}
-                      required
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                      className={`w-full px-4 py-2.5 rounded-xl border ${errors.labAddress ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary'} focus:outline-none focus:ring-2 focus:border-transparent resize-none`}
                     />
+                    {errors.labAddress && <p className="mt-1 text-sm text-red-600">{errors.labAddress}</p>}
                   </div>
 
                   <div>
@@ -832,7 +970,6 @@ export default function OrganizationDetails() {
                     <select
                       value={formData.labCountry}
                       onChange={(e) => handleInputChange('labCountry', e.target.value)}
-                      required
                       className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     >
                       <option value="India">India</option>
@@ -840,35 +977,43 @@ export default function OrganizationDetails() {
                   </div>
 
                   <Input
-                    label="State"
+                    label={<>State <span className="text-red-500">*</span></>}
                     value={formData.labState}
-                    onChange={(e) => handleInputChange('labState', e.target.value)}
+                    onChange={(e) => {
+                      handleInputChange('labState', e.target.value)
+                      if (errors.labState) setErrors(prev => ({ ...prev, labState: null }))
+                    }}
+                    error={errors.labState}
                     placeholder="Enter state"
-                    required
                   />
 
                   <Input
                     label="District"
                     value={formData.labDistrict}
                     onChange={(e) => handleInputChange('labDistrict', e.target.value)}
-                    placeholder="Enter district"
-                    required
+                    placeholder="Enter district (Optional)"
                   />
 
                   <Input
-                    label="City"
+                    label={<>City <span className="text-red-500">*</span></>}
                     value={formData.labCity}
-                    onChange={(e) => handleInputChange('labCity', e.target.value)}
+                    onChange={(e) => {
+                      handleInputChange('labCity', e.target.value)
+                      if (errors.labCity) setErrors(prev => ({ ...prev, labCity: null }))
+                    }}
+                    error={errors.labCity}
                     placeholder="Enter city"
-                    required
                   />
 
                   <Input
-                    label="Pin Code"
+                    label={<>Pin Code <span className="text-red-500">*</span></>}
                     value={formData.labPinCode}
-                    onChange={(e) => handleInputChange('labPinCode', e.target.value)}
+                    onChange={(e) => {
+                      handleInputChange('labPinCode', e.target.value)
+                      if (errors.labPinCode) setErrors(prev => ({ ...prev, labPinCode: null }))
+                    }}
+                    error={errors.labPinCode}
                     placeholder="Enter pin code"
-                    required
                   />
                 </div>
 
@@ -879,14 +1024,17 @@ export default function OrganizationDetails() {
                     </label>
                     <select
                       value={formData.labProofOfAddress}
-                      onChange={(e) => handleInputChange('labProofOfAddress', e.target.value)}
-                      required
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      onChange={(e) => {
+                        handleInputChange('labProofOfAddress', e.target.value)
+                        if (errors.labProofOfAddress) setErrors(prev => ({ ...prev, labProofOfAddress: null }))
+                      }}
+                      className={`w-full px-4 py-2.5 rounded-xl border ${errors.labProofOfAddress ? 'border-red-300 bg-red-50 text-red-900 focus:ring-red-500' : 'border-gray-300 focus:ring-primary'} focus:outline-none focus:ring-2 focus:border-transparent`}
                     >
                       {proofOfLabAddressOptions.map(option => (
                         <option key={option} value={option}>{option}</option>
                       ))}
                     </select>
+                    {errors.labProofOfAddress && <p className="mt-1 text-sm text-red-600">{errors.labProofOfAddress}</p>}
                   </div>
 
                   <Input
@@ -899,24 +1047,27 @@ export default function OrganizationDetails() {
 
                 {formData.labProofOfAddress === 'Other' && (
                   <Input
-                    label="Specify Other Proof of Address"
+                    label={<>Specify Other Proof of Address <span className="text-red-500">*</span></>}
                     value={formData.labProofOfAddressOther}
-                    onChange={(e) => handleInputChange('labProofOfAddressOther', e.target.value)}
+                    onChange={(e) => {
+                      handleInputChange('labProofOfAddressOther', e.target.value)
+                      if (errors.labProofOfAddressOther) setErrors(prev => ({ ...prev, labProofOfAddressOther: null }))
+                    }}
+                    error={errors.labProofOfAddressOther}
                     placeholder="Specify other proof of address"
-                    required
                   />
                 )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Address Proof Document <span className="text-red-500">*</span>
+                    Address Proof Document
                   </label>
                   <p className="text-xs text-gray-500 mb-2">
                     Only PDF file of up to 2 MB size are allowed.
                   </p>
                   <div className="flex items-center gap-4">
                     <div className="flex-1">
-                      <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
+                      <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 hover:border-primary rounded-xl cursor-pointer transition-colors">
                         <Upload className="w-5 h-5 text-gray-400 mr-2" />
                         <span className="text-sm text-gray-600">
                           {formData.labAddressProofDocument ? formData.labAddressProofDocument.name : 'Choose file...'}
@@ -978,12 +1129,15 @@ export default function OrganizationDetails() {
                         </label>
                         <textarea
                           value={formData.registeredAddress}
-                          onChange={(e) => handleInputChange('registeredAddress', e.target.value)}
+                          onChange={(e) => {
+                            handleInputChange('registeredAddress', e.target.value)
+                            if (errors.registeredAddress) setErrors(prev => ({ ...prev, registeredAddress: null }))
+                          }}
                           placeholder="Enter complete address"
                           rows={3}
-                          required
-                          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                          className={`w-full px-4 py-2.5 rounded-xl border ${errors.registeredAddress ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary'} focus:outline-none focus:ring-2 focus:border-transparent resize-none`}
                         />
+                        {errors.registeredAddress && <p className="mt-1 text-sm text-red-600">{errors.registeredAddress}</p>}
                       </div>
 
                       <div>
@@ -993,7 +1147,6 @@ export default function OrganizationDetails() {
                         <select
                           value={formData.registeredCountry}
                           onChange={(e) => handleInputChange('registeredCountry', e.target.value)}
-                          required
                           className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                         >
                           <option value="India">India</option>
@@ -1001,56 +1154,82 @@ export default function OrganizationDetails() {
                       </div>
 
                       <Input
-                        label="State"
+                        label={<>State <span className="text-red-500">*</span></>}
                         value={formData.registeredState}
-                        onChange={(e) => handleInputChange('registeredState', e.target.value)}
+                        onChange={(e) => {
+                          handleInputChange('registeredState', e.target.value)
+                          if (errors.registeredState) setErrors(prev => ({ ...prev, registeredState: null }))
+                        }}
+                        error={errors.registeredState}
                         placeholder="Enter state"
-                        required
                       />
 
                       <Input
-                        label="District"
+                        label={<>District <span className="text-red-500">*</span></>}
                         value={formData.registeredDistrict}
-                        onChange={(e) => handleInputChange('registeredDistrict', e.target.value)}
+                        onChange={(e) => {
+                          handleInputChange('registeredDistrict', e.target.value)
+                          if (errors.registeredDistrict) setErrors(prev => ({ ...prev, registeredDistrict: null }))
+                        }}
+                        error={errors.registeredDistrict}
                         placeholder="Enter district"
-                        required
                       />
 
                       <Input
-                        label="City"
+                        label={<>City <span className="text-red-500">*</span></>}
                         value={formData.registeredCity}
-                        onChange={(e) => handleInputChange('registeredCity', e.target.value)}
+                        onChange={(e) => {
+                          handleInputChange('registeredCity', e.target.value)
+                          if (errors.registeredCity) setErrors(prev => ({ ...prev, registeredCity: null }))
+                        }}
+                        error={errors.registeredCity}
                         placeholder="Enter city"
-                        required
                       />
 
                       <Input
-                        label="Pin Code"
+                        label={<>Pin Code <span className="text-red-500">*</span></>}
                         value={formData.registeredPinCode}
-                        onChange={(e) => handleInputChange('registeredPinCode', e.target.value)}
+                        onChange={(e) => {
+                          handleInputChange('registeredPinCode', e.target.value)
+                          if (errors.registeredPinCode) setErrors(prev => ({ ...prev, registeredPinCode: null }))
+                        }}
+                        error={errors.registeredPinCode}
                         placeholder="Enter pin code"
-                        required
                       />
 
                       <Input
-                        label="Mobile Number"
+                        label={<>Mobile Number <span className="text-red-500">*</span></>}
                         value={formData.registeredMobile}
-                        onChange={(e) => handleInputChange('registeredMobile', e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 10)
+                          handleInputChange('registeredMobile', value)
+                          if (errors.registeredMobile) setErrors(prev => ({ ...prev, registeredMobile: null }))
+                        }}
+                        error={errors.registeredMobile}
                         placeholder="eg. +91 9818035577"
-                        required
                       />
 
                       <Input
                         label="Telephone Number"
                         value={formData.registeredTelephone}
-                        onChange={(e) => handleInputChange('registeredTelephone', e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '')
+                          handleInputChange('registeredTelephone', value)
+                          if (errors.registeredTelephone) setErrors(prev => ({ ...prev, registeredTelephone: null }))
+                        }}
+                        error={errors.registeredTelephone}
                         placeholder="Telephone number"
                       />
 
                       <Input
                         label="Fax"
                         value={formData.registeredFax}
-                        onChange={(e) => handleInputChange('registeredFax', e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '')
+                          handleInputChange('registeredFax', value)
+                          if (errors.registeredFax) setErrors(prev => ({ ...prev, registeredFax: null }))
+                        }}
+                        error={errors.registeredFax}
                         placeholder="Fax number"
                       />
                     </div>
@@ -1087,40 +1266,60 @@ export default function OrganizationDetails() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input
-                          label="Name"
+                          label={<>Name <span className="text-red-500">*</span></>}
                           value={member.name}
-                          onChange={(e) => updateTopManagement(member.id, 'name', e.target.value)}
+                          onChange={(e) => {
+                            updateTopManagement(member.id, 'name', e.target.value)
+                            if (errors[`topManagement_${index}_name`]) setErrors(prev => ({ ...prev, [`topManagement_${index}_name`]: null }))
+                          }}
+                          error={errors[`topManagement_${index}_name`]}
                           placeholder="Enter name"
-                          required
                         />
 
                         <Input
-                          label="Designation"
+                          label={<>Designation <span className="text-red-500">*</span></>}
                           value={member.designation}
-                          onChange={(e) => updateTopManagement(member.id, 'designation', e.target.value)}
+                          onChange={(e) => {
+                            updateTopManagement(member.id, 'designation', e.target.value)
+                            if (errors[`topManagement_${index}_designation`]) setErrors(prev => ({ ...prev, [`topManagement_${index}_designation`]: null }))
+                          }}
+                          error={errors[`topManagement_${index}_designation`]}
                           placeholder="Enter designation"
-                          required
                         />
 
                         <Input
-                          label="Mobile Number"
+                          label={<>Mobile Number <span className="text-red-500">*</span></>}
                           value={member.mobile}
-                          onChange={(e) => updateTopManagement(member.id, 'mobile', e.target.value)}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '').slice(0, 10)
+                            updateTopManagement(member.id, 'mobile', value)
+                            if (errors[`topManagement_${index}_mobile`]) setErrors(prev => ({ ...prev, [`topManagement_${index}_mobile`]: null }))
+                          }}
+                          error={errors[`topManagement_${index}_mobile`]}
                           placeholder="eg. +91 9818035577"
-                          required
                         />
 
                         <Input
                           label="Telephone Number"
                           value={member.telephone}
-                          onChange={(e) => updateTopManagement(member.id, 'telephone', e.target.value)}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '')
+                            updateTopManagement(member.id, 'telephone', value)
+                            if (errors[`topManagement_${index}_telephone`]) setErrors(prev => ({ ...prev, [`topManagement_${index}_telephone`]: null }))
+                          }}
+                          error={errors[`topManagement_${index}_telephone`]}
                           placeholder="Telephone number"
                         />
 
                         <Input
                           label="Fax"
                           value={member.fax}
-                          onChange={(e) => updateTopManagement(member.id, 'fax', e.target.value)}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '')
+                            updateTopManagement(member.id, 'fax', value)
+                            if (errors[`topManagement_${index}_fax`]) setErrors(prev => ({ ...prev, [`topManagement_${index}_fax`]: null }))
+                          }}
+                          error={errors[`topManagement_${index}_fax`]}
                           placeholder="Fax number"
                         />
                       </div>
@@ -1282,64 +1481,82 @@ export default function OrganizationDetails() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
-                      label="Account Holder Name"
+                      label={<>Account Holder Name <span className="text-red-500">*</span></>}
                       value={formData.accountHolderName}
-                      onChange={(e) => handleInputChange('accountHolderName', e.target.value)}
+                      onChange={(e) => {
+                        handleInputChange('accountHolderName', e.target.value)
+                        if (errors.accountHolderName) setErrors(prev => ({ ...prev, accountHolderName: null }))
+                      }}
+                      error={errors.accountHolderName}
                       placeholder="Enter account holder name"
-                      required
                     />
 
                     <Input
-                      label="Account Number"
+                      label={<>Account Number <span className="text-red-500">*</span></>}
                       value={formData.accountNumber}
-                      onChange={(e) => handleInputChange('accountNumber', e.target.value)}
+                      onChange={(e) => {
+                        handleInputChange('accountNumber', e.target.value)
+                        if (errors.accountNumber) setErrors(prev => ({ ...prev, accountNumber: null }))
+                      }}
+                      error={errors.accountNumber}
                       placeholder="Enter account number"
-                      required
                     />
 
                     <Input
-                      label="IFSC Code"
+                      label={<>IFSC Code <span className="text-red-500">*</span></>}
                       value={formData.ifscCode}
-                      onChange={(e) => handleInputChange('ifscCode', e.target.value)}
+                      onChange={(e) => {
+                        handleInputChange('ifscCode', e.target.value)
+                        if (errors.ifscCode) setErrors(prev => ({ ...prev, ifscCode: null }))
+                      }}
+                      error={errors.ifscCode}
                       placeholder="Enter IFSC code"
-                      required
                     />
 
                     <Input
-                      label="Branch Name"
+                      label={<>Branch Name <span className="text-red-500">*</span></>}
                       value={formData.branchName}
-                      onChange={(e) => handleInputChange('branchName', e.target.value)}
+                      onChange={(e) => {
+                        handleInputChange('branchName', e.target.value)
+                        if (errors.branchName) setErrors(prev => ({ ...prev, branchName: null }))
+                      }}
+                      error={errors.branchName}
                       placeholder="Enter branch name"
-                      required
                     />
 
                     <Input
-                      label="GST Number"
+                      label={<>GST Number <span className="text-red-500">*</span></>}
                       value={formData.gstNumber}
-                      onChange={(e) => handleInputChange('gstNumber', e.target.value)}
+                      onChange={(e) => {
+                        handleInputChange('gstNumber', e.target.value)
+                        if (errors.gstNumber) setErrors(prev => ({ ...prev, gstNumber: null }))
+                      }}
+                      error={errors.gstNumber}
                       placeholder="Enter GST number"
-                      required
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cancelled Cheque <span className="text-red-500">*</span>
+                      Cancelled Cheque
                     </label>
                     <p className="text-xs text-gray-500 mb-2">
                       Upload a copy of cancelled cheque of the bank a/c provided. Only PDF file of up to 2 MB size are allowed.
                     </p>
                     <div className="flex items-center gap-4">
                       <div className="flex-1">
-                        <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
-                          <Upload className="w-5 h-5 text-gray-400 mr-2" />
-                          <span className="text-sm text-gray-600">
+                        <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.cancelledCheque ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
+                          <Upload className={`w-5 h-5 mr-2 ${errors.cancelledCheque ? 'text-red-400' : 'text-gray-400'}`} />
+                          <span className={`text-sm ${errors.cancelledCheque ? 'text-red-500' : 'text-gray-600'}`}>
                             {formData.cancelledCheque ? formData.cancelledCheque.name : 'Choose file...'}
                           </span>
                           <input
                             type="file"
                             accept=".pdf"
-                            onChange={(e) => handleFileUpload('cancelledCheque', e.target.files[0])}
+                            onChange={(e) => {
+                              handleFileUpload('cancelledCheque', e.target.files[0])
+                              if (errors.cancelledCheque) setErrors(prev => ({ ...prev, cancelledCheque: null }))
+                            }}
                             className="hidden"
                           />
                         </label>
@@ -1353,6 +1570,7 @@ export default function OrganizationDetails() {
                         </Button>
                       )}
                     </div>
+                    {errors.cancelledCheque && <p className="mt-1 text-sm text-red-600">{errors.cancelledCheque}</p>}
                   </div>
                 </div>
               </div>
@@ -1389,13 +1607,17 @@ export default function OrganizationDetails() {
                           <input
                             type="checkbox"
                             checked={formData.workingDays.includes(day)}
-                            onChange={() => toggleWorkingDay(day)}
+                            onChange={() => {
+                              toggleWorkingDay(day)
+                              if (errors.workingDays) setErrors(prev => ({ ...prev, workingDays: null }))
+                            }}
                             className="sr-only"
                           />
                           <span className="text-sm font-medium">{day}</span>
                         </label>
                       ))}
                     </div>
+                    {errors.workingDays && <p className="mt-2 text-sm text-red-600">{errors.workingDays}</p>}
                   </div>
 
                   <div>
@@ -1413,17 +1635,21 @@ export default function OrganizationDetails() {
                             <input
                               type="time"
                               value={shift.from}
-                              onChange={(e) => updateShiftTiming(index, 'from', e.target.value)}
-                              required
-                              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                              onChange={(e) => {
+                                updateShiftTiming(index, 'from', e.target.value)
+                                if (errors[`shiftTimings_${index}_from`]) setErrors(prev => ({ ...prev, [`shiftTimings_${index}_from`]: null }))
+                              }}
+                              className={`flex-1 px-4 py-2.5 rounded-xl border ${errors[`shiftTimings_${index}_from`] ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary'} focus:outline-none focus:ring-2 focus:border-transparent`}
                             />
                             <span className="text-gray-500">To</span>
                             <input
                               type="time"
                               value={shift.to}
-                              onChange={(e) => updateShiftTiming(index, 'to', e.target.value)}
-                              required
-                              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                              onChange={(e) => {
+                                updateShiftTiming(index, 'to', e.target.value)
+                                if (errors[`shiftTimings_${index}_to`]) setErrors(prev => ({ ...prev, [`shiftTimings_${index}_to`]: null }))
+                              }}
+                              className={`flex-1 px-4 py-2.5 rounded-xl border ${errors[`shiftTimings_${index}_to`] ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary'} focus:outline-none focus:ring-2 focus:border-transparent`}
                             />
                           </div>
                           <div className="flex gap-2">
@@ -1470,23 +1696,29 @@ export default function OrganizationDetails() {
                       </label>
                       <select
                         value={formData.organizationType}
-                        onChange={(e) => handleInputChange('organizationType', e.target.value)}
-                        required
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        onChange={(e) => {
+                          handleInputChange('organizationType', e.target.value)
+                          if (errors.organizationType) setErrors(prev => ({ ...prev, organizationType: null }))
+                        }}
+                        className={`w-full px-4 py-2.5 rounded-xl border ${errors.organizationType ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary'} focus:outline-none focus:ring-2 focus:border-transparent`}
                       >
                         {organizationTypeOptions.map(option => (
                           <option key={option} value={option}>{option}</option>
                         ))}
                       </select>
+                      {errors.organizationType && <p className="mt-1 text-sm text-red-600">{errors.organizationType}</p>}
                     </div>
 
                     {formData.organizationType === 'Other' && (
                       <Input
-                        label="Specify Other Organization Type"
+                        label={<>Specify Other Organization Type <span className="text-red-500">*</span></>}
                         value={formData.organizationTypeOther}
-                        onChange={(e) => handleInputChange('organizationTypeOther', e.target.value)}
+                        onChange={(e) => {
+                          handleInputChange('organizationTypeOther', e.target.value)
+                          if (errors.organizationTypeOther) setErrors(prev => ({ ...prev, organizationTypeOther: null }))
+                        }}
+                        error={errors.organizationTypeOther}
                         placeholder="Specify other organization type"
-                        required
                       />
                     )}
                   </div>
@@ -1498,14 +1730,17 @@ export default function OrganizationDetails() {
                       </label>
                       <select
                         value={formData.proofOfLegalIdentity}
-                        onChange={(e) => handleInputChange('proofOfLegalIdentity', e.target.value)}
-                        required
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        onChange={(e) => {
+                          handleInputChange('proofOfLegalIdentity', e.target.value)
+                          if (errors.proofOfLegalIdentity) setErrors(prev => ({ ...prev, proofOfLegalIdentity: null }))
+                        }}
+                        className={`w-full px-4 py-2.5 rounded-xl border ${errors.proofOfLegalIdentity ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary'} focus:outline-none focus:ring-2 focus:border-transparent`}
                       >
                         {proofOfLegalIdentityOptions.map(option => (
                           <option key={option} value={option}>{option}</option>
                         ))}
                       </select>
+                      {errors.proofOfLegalIdentity && <p className="mt-1 text-sm text-red-600">{errors.proofOfLegalIdentity}</p>}
                     </div>
 
                     <Input
@@ -1518,32 +1753,38 @@ export default function OrganizationDetails() {
 
                   {formData.proofOfLegalIdentity === 'Other' && (
                     <Input
-                      label="Specify Other Proof of Legal Identity"
+                      label={<>Specify Other Proof of Legal Identity <span className="text-red-500">*</span></>}
                       value={formData.proofOfLegalIdentityOther}
-                      onChange={(e) => handleInputChange('proofOfLegalIdentityOther', e.target.value)}
+                      onChange={(e) => {
+                        handleInputChange('proofOfLegalIdentityOther', e.target.value)
+                        if (errors.proofOfLegalIdentityOther) setErrors(prev => ({ ...prev, proofOfLegalIdentityOther: null }))
+                      }}
+                      error={errors.proofOfLegalIdentityOther}
                       placeholder="Specify other proof of legal identity"
-                      required
                     />
                   )}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Legal Identity Proof Document <span className="text-red-500">*</span>
+                      Legal Identity Proof Document
                     </label>
                     <p className="text-xs text-gray-500 mb-2">
                       Only PDF file of up to 2 MB size are allowed.
                     </p>
                     <div className="flex items-center gap-4">
                       <div className="flex-1">
-                        <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
-                          <Upload className="w-5 h-5 text-gray-400 mr-2" />
-                          <span className="text-sm text-gray-600">
+                        <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.legalIdentityDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
+                          <Upload className={`w-5 h-5 mr-2 ${errors.legalIdentityDocument ? 'text-red-400' : 'text-gray-400'}`} />
+                          <span className={`text-sm ${errors.legalIdentityDocument ? 'text-red-500' : 'text-gray-600'}`}>
                             {formData.legalIdentityDocument ? formData.legalIdentityDocument.name : 'Choose file...'}
                           </span>
                           <input
                             type="file"
                             accept=".pdf"
-                            onChange={(e) => handleFileUpload('legalIdentityDocument', e.target.files[0])}
+                            onChange={(e) => {
+                              handleFileUpload('legalIdentityDocument', e.target.files[0])
+                              if (errors.legalIdentityDocument) setErrors(prev => ({ ...prev, legalIdentityDocument: null }))
+                            }}
                             className="hidden"
                           />
                         </label>
@@ -1557,6 +1798,7 @@ export default function OrganizationDetails() {
                         </Button>
                       )}
                     </div>
+                    {errors.legalIdentityDocument && <p className="mt-1 text-sm text-red-600">{errors.legalIdentityDocument}</p>}
                   </div>
                 </div>
               </div>
@@ -1723,22 +1965,25 @@ export default function OrganizationDetails() {
                   {/* Impartiality Document */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Upload Impartiality Document <span className="text-red-500">*</span>
+                      Upload Impartiality Document
                     </label>
                     <p className="text-xs text-gray-500 mb-2">
                       Upload an Impartiality Document as per format provided. Only PDF file of up to 2 MB size are allowed.
                     </p>
                     <div className="flex items-center gap-4">
                       <div className="flex-1">
-                        <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
-                          <Upload className="w-5 h-5 text-gray-400 mr-2" />
-                          <span className="text-sm text-gray-600">
+                        <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.impartialityDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
+                          <Upload className={`w-5 h-5 mr-2 ${errors.impartialityDocument ? 'text-red-400' : 'text-gray-400'}`} />
+                          <span className={`text-sm ${errors.impartialityDocument ? 'text-red-500' : 'text-gray-600'}`}>
                             {formData.impartialityDocument ? formData.impartialityDocument.name : 'Choose file...'}
                           </span>
                           <input
                             type="file"
                             accept=".pdf"
-                            onChange={(e) => handleFileUpload('impartialityDocument', e.target.files[0])}
+                            onChange={(e) => {
+                              handleFileUpload('impartialityDocument', e.target.files[0])
+                              if (errors.impartialityDocument) setErrors(prev => ({ ...prev, impartialityDocument: null }))
+                            }}
                             className="hidden"
                           />
                         </label>
@@ -1752,27 +1997,31 @@ export default function OrganizationDetails() {
                         </Button>
                       )}
                     </div>
+                    {errors.impartialityDocument && <p className="mt-1 text-sm text-red-600">{errors.impartialityDocument}</p>}
                   </div>
 
                   {/* Terms & Conditions Document */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Upload Terms & Conditions Document <span className="text-red-500">*</span>
+                      Upload Terms & Conditions Document
                     </label>
                     <p className="text-xs text-gray-500 mb-2">
                       Upload a Terms & Conditions Document as per format provided. Only PDF file of up to 2 MB size are allowed.
                     </p>
                     <div className="flex items-center gap-4">
                       <div className="flex-1">
-                        <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
-                          <Upload className="w-5 h-5 text-gray-400 mr-2" />
-                          <span className="text-sm text-gray-600">
+                        <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.termsConditionsDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
+                          <Upload className={`w-5 h-5 mr-2 ${errors.termsConditionsDocument ? 'text-red-400' : 'text-gray-400'}`} />
+                          <span className={`text-sm ${errors.termsConditionsDocument ? 'text-red-500' : 'text-gray-600'}`}>
                             {formData.termsConditionsDocument ? formData.termsConditionsDocument.name : 'Choose file...'}
                           </span>
                           <input
                             type="file"
                             accept=".pdf"
-                            onChange={(e) => handleFileUpload('termsConditionsDocument', e.target.files[0])}
+                            onChange={(e) => {
+                              handleFileUpload('termsConditionsDocument', e.target.files[0])
+                              if (errors.termsConditionsDocument) setErrors(prev => ({ ...prev, termsConditionsDocument: null }))
+                            }}
                             className="hidden"
                           />
                         </label>
@@ -1786,27 +2035,31 @@ export default function OrganizationDetails() {
                         </Button>
                       )}
                     </div>
+                    {errors.termsConditionsDocument && <p className="mt-1 text-sm text-red-600">{errors.termsConditionsDocument}</p>}
                   </div>
 
                   {/* Code of Ethics Document */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Upload Code of Ethics Document <span className="text-red-500">*</span>
+                      Upload Code of Ethics Document
                     </label>
                     <p className="text-xs text-gray-500 mb-2">
                       Upload a Code of Ethics Document as per format provided. Only PDF file of up to 2 MB size are allowed.
                     </p>
                     <div className="flex items-center gap-4">
                       <div className="flex-1">
-                        <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
-                          <Upload className="w-5 h-5 text-gray-400 mr-2" />
-                          <span className="text-sm text-gray-600">
+                        <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.codeOfEthicsDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
+                          <Upload className={`w-5 h-5 mr-2 ${errors.codeOfEthicsDocument ? 'text-red-400' : 'text-gray-400'}`} />
+                          <span className={`text-sm ${errors.codeOfEthicsDocument ? 'text-red-500' : 'text-gray-600'}`}>
                             {formData.codeOfEthicsDocument ? formData.codeOfEthicsDocument.name : 'Choose file...'}
                           </span>
                           <input
                             type="file"
                             accept=".pdf"
-                            onChange={(e) => handleFileUpload('codeOfEthicsDocument', e.target.files[0])}
+                            onChange={(e) => {
+                              handleFileUpload('codeOfEthicsDocument', e.target.files[0])
+                              if (errors.codeOfEthicsDocument) setErrors(prev => ({ ...prev, codeOfEthicsDocument: null }))
+                            }}
                             className="hidden"
                           />
                         </label>
@@ -1820,27 +2073,31 @@ export default function OrganizationDetails() {
                         </Button>
                       )}
                     </div>
+                    {errors.codeOfEthicsDocument && <p className="mt-1 text-sm text-red-600">{errors.codeOfEthicsDocument}</p>}
                   </div>
 
                   {/* Testing Charges Policy Document */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Upload Testing Charges Policy Document <span className="text-red-500">*</span>
+                      Upload Testing Charges Policy Document
                     </label>
                     <p className="text-xs text-gray-500 mb-2">
                       Upload a Testing Charges Document as per format provided. Only PDF file of up to 2 MB size are allowed.
                     </p>
                     <div className="flex items-center gap-4">
                       <div className="flex-1">
-                        <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
-                          <Upload className="w-5 h-5 text-gray-400 mr-2" />
-                          <span className="text-sm text-gray-600">
+                        <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.testingChargesPolicyDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
+                          <Upload className={`w-5 h-5 mr-2 ${errors.testingChargesPolicyDocument ? 'text-red-400' : 'text-gray-400'}`} />
+                          <span className={`text-sm ${errors.testingChargesPolicyDocument ? 'text-red-500' : 'text-gray-600'}`}>
                             {formData.testingChargesPolicyDocument ? formData.testingChargesPolicyDocument.name : 'Choose file...'}
                           </span>
                           <input
                             type="file"
                             accept=".pdf"
-                            onChange={(e) => handleFileUpload('testingChargesPolicyDocument', e.target.files[0])}
+                            onChange={(e) => {
+                              handleFileUpload('testingChargesPolicyDocument', e.target.files[0])
+                              if (errors.testingChargesPolicyDocument) setErrors(prev => ({ ...prev, testingChargesPolicyDocument: null }))
+                            }}
                             className="hidden"
                           />
                         </label>
@@ -1854,6 +2111,7 @@ export default function OrganizationDetails() {
                         </Button>
                       )}
                     </div>
+                    {errors.testingChargesPolicyDocument && <p className="mt-1 text-sm text-red-600">{errors.testingChargesPolicyDocument}</p>}
                   </div>
                 </div>
               </div>
@@ -1874,11 +2132,14 @@ export default function OrganizationDetails() {
 
                 <div className="grid grid-cols-1 gap-6">
                   <Input
-                    label="Adequacy of Sanctioned Load / Captive Power for Testing"
+                    label={<>Adequacy of Sanctioned Load / Captive Power for Testing <span className="text-red-500">*</span></>}
                     value={formData.adequacySanctionedLoad}
-                    onChange={(e) => handleInputChange('adequacySanctionedLoad', e.target.value)}
+                    onChange={(e) => {
+                      handleInputChange('adequacySanctionedLoad', e.target.value)
+                      if (errors.adequacySanctionedLoad) setErrors(prev => ({ ...prev, adequacySanctionedLoad: null }))
+                    }}
+                    error={errors.adequacySanctionedLoad}
                     placeholder="Enter details"
-                    required
                   />
 
                   <div className="space-y-3">
@@ -1926,14 +2187,17 @@ export default function OrganizationDetails() {
                     </p>
                     <select
                       value={formData.waterSource}
-                      onChange={(e) => handleInputChange('waterSource', e.target.value)}
-                      required
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      onChange={(e) => {
+                        handleInputChange('waterSource', e.target.value)
+                        if (errors.waterSource) setErrors(prev => ({ ...prev, waterSource: null }))
+                      }}
+                      className={`w-full px-4 py-2.5 rounded-xl border ${errors.waterSource ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary'} focus:outline-none focus:ring-2 focus:border-transparent`}
                     >
                       {waterSourceOptions.map(option => (
                         <option key={option} value={option}>{option}</option>
                       ))}
                     </select>
+                    {errors.waterSource && <p className="mt-1 text-sm text-red-600">{errors.waterSource}</p>}
                   </div>
                 </div>
               </div>
@@ -2219,22 +2483,25 @@ export default function OrganizationDetails() {
                     {/* Layout of Laboratory Premises */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Layout of Laboratory Premises <span className="text-red-500">*</span>
+                        Layout of Laboratory Premises
                       </label>
                       <p className="text-xs text-gray-500 mb-2">
                         Upload a document to provide building/floor plans of the Lab. Only PDF file of up to 2 MB size are allowed.
                       </p>
                       <div className="flex items-center gap-4">
                         <div className="flex-1">
-                          <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
-                            <Upload className="w-5 h-5 text-gray-400 mr-2" />
-                            <span className="text-sm text-gray-600">
+                          <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.layoutLabPremises ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
+                            <Upload className={`w-5 h-5 mr-2 ${errors.layoutLabPremises ? 'text-red-400' : 'text-gray-400'}`} />
+                            <span className={`text-sm ${errors.layoutLabPremises ? 'text-red-500' : 'text-gray-600'}`}>
                               {formData.layoutLabPremises ? formData.layoutLabPremises.name : 'Choose file...'}
                             </span>
                             <input
                               type="file"
                               accept=".pdf"
-                              onChange={(e) => handleFileUpload('layoutLabPremises', e.target.files[0])}
+                              onChange={(e) => {
+                                handleFileUpload('layoutLabPremises', e.target.files[0])
+                                if (errors.layoutLabPremises) setErrors(prev => ({ ...prev, layoutLabPremises: null }))
+                              }}
                               className="hidden"
                             />
                           </label>
@@ -2248,12 +2515,13 @@ export default function OrganizationDetails() {
                           </Button>
                         )}
                       </div>
+                      {errors.layoutLabPremises && <p className="mt-1 text-sm text-red-600">{errors.layoutLabPremises}</p>}
                     </div>
 
                     {/* Organization Chart */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Organization Chart <span className="text-red-500">*</span>
+                        Organization Chart
                       </label>
                       <p className="text-xs text-gray-500 mb-2">
                         Upload a document to provide details of Organization Structure Diagram on Lab Letter Head.
@@ -2261,15 +2529,18 @@ export default function OrganizationDetails() {
                       </p>
                       <div className="flex items-center gap-4">
                         <div className="flex-1">
-                          <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
-                            <Upload className="w-5 h-5 text-gray-400 mr-2" />
-                            <span className="text-sm text-gray-600">
+                          <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.organizationChart ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
+                            <Upload className={`w-5 h-5 mr-2 ${errors.organizationChart ? 'text-red-400' : 'text-gray-400'}`} />
+                            <span className={`text-sm ${errors.organizationChart ? 'text-red-500' : 'text-gray-600'}`}>
                               {formData.organizationChart ? formData.organizationChart.name : 'Choose file...'}
                             </span>
                             <input
                               type="file"
                               accept=".pdf"
-                              onChange={(e) => handleFileUpload('organizationChart', e.target.files[0])}
+                              onChange={(e) => {
+                                handleFileUpload('organizationChart', e.target.files[0])
+                                if (errors.organizationChart) setErrors(prev => ({ ...prev, organizationChart: null }))
+                              }}
                               className="hidden"
                             />
                           </label>
@@ -2283,6 +2554,7 @@ export default function OrganizationDetails() {
                           </Button>
                         )}
                       </div>
+                      {errors.organizationChart && <p className="mt-1 text-sm text-red-600">{errors.organizationChart}</p>}
                     </div>
                   </div>
 
@@ -2296,18 +2568,24 @@ export default function OrganizationDetails() {
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Input
-                        label="Latitude"
+                        label={<>Latitude <span className="text-red-500">*</span></>}
                         value={formData.gpsLatitude}
-                        onChange={(e) => handleInputChange('gpsLatitude', e.target.value)}
+                        onChange={(e) => {
+                          handleInputChange('gpsLatitude', e.target.value)
+                          if (errors.gpsLatitude) setErrors(prev => ({ ...prev, gpsLatitude: null }))
+                        }}
+                        error={errors.gpsLatitude}
                         placeholder="Enter latitude"
-                        required
                       />
                       <Input
-                        label="Longitude"
+                        label={<>Longitude <span className="text-red-500">*</span></>}
                         value={formData.gpsLongitude}
-                        onChange={(e) => handleInputChange('gpsLongitude', e.target.value)}
+                        onChange={(e) => {
+                          handleInputChange('gpsLongitude', e.target.value)
+                          if (errors.gpsLongitude) setErrors(prev => ({ ...prev, gpsLongitude: null }))
+                        }}
+                        error={errors.gpsLongitude}
                         placeholder="Enter longitude"
-                        required
                       />
                     </div>
                   </div>
@@ -2333,20 +2611,26 @@ export default function OrganizationDetails() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
                       <Input
-                        label="Title"
+                        label={<>Title <span className="text-red-500">*</span></>}
                         value={formData.qualityManualTitle}
-                        onChange={(e) => handleInputChange('qualityManualTitle', e.target.value)}
+                        onChange={(e) => {
+                          handleInputChange('qualityManualTitle', e.target.value)
+                          if (errors.qualityManualTitle) setErrors(prev => ({ ...prev, qualityManualTitle: null }))
+                        }}
+                        error={errors.qualityManualTitle}
                         placeholder="Enter quality manual title"
-                        required
                       />
                     </div>
 
                     <Input
-                      label="Issue Number"
+                      label={<>Issue Number <span className="text-red-500">*</span></>}
                       value={formData.qualityManualIssueNumber}
-                      onChange={(e) => handleInputChange('qualityManualIssueNumber', e.target.value)}
+                      onChange={(e) => {
+                        handleInputChange('qualityManualIssueNumber', e.target.value)
+                        if (errors.qualityManualIssueNumber) setErrors(prev => ({ ...prev, qualityManualIssueNumber: null }))
+                      }}
+                      error={errors.qualityManualIssueNumber}
                       placeholder="Enter issue number"
-                      required
                     />
 
                     <div>
@@ -2356,43 +2640,52 @@ export default function OrganizationDetails() {
                       <input
                         type="date"
                         value={formData.qualityManualIssueDate}
-                        onChange={(e) => handleInputChange('qualityManualIssueDate', e.target.value)}
+                        onChange={(e) => {
+                          handleInputChange('qualityManualIssueDate', e.target.value)
+                          if (errors.qualityManualIssueDate) setErrors(prev => ({ ...prev, qualityManualIssueDate: null }))
+                        }}
                         placeholder="dd/mm/yyyy"
-                        required
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className={`w-full px-4 py-2.5 rounded-xl border ${errors.qualityManualIssueDate ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary'} focus:outline-none focus:ring-2 focus:border-transparent`}
                       />
+                      {errors.qualityManualIssueDate && <p className="mt-1 text-sm text-red-600">{errors.qualityManualIssueDate}</p>}
                       <p className="text-xs text-gray-500 mt-1">
                         Enter the Date of Issue of Current Quality Manual being followed.
                       </p>
                     </div>
 
                     <Input
-                      label="Amendments"
+                      label={<>Amendments <span className="text-red-500">*</span></>}
                       value={formData.qualityManualAmendments}
-                      onChange={(e) => handleInputChange('qualityManualAmendments', e.target.value)}
+                      onChange={(e) => {
+                        handleInputChange('qualityManualAmendments', e.target.value)
+                        if (errors.qualityManualAmendments) setErrors(prev => ({ ...prev, qualityManualAmendments: null }))
+                      }}
+                      error={errors.qualityManualAmendments}
                       placeholder="Enter number of amendments"
-                      required
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Quality Manual / Document <span className="text-red-500">*</span>
+                      Quality Manual / Document
                     </label>
                     <p className="text-xs text-gray-500 mb-2">
                       Upload the Quality Manual / Other Document followed by the Lab. Only PDF file of up to 2 MB size are allowed.
                     </p>
                     <div className="flex items-center gap-4">
                       <div className="flex-1">
-                        <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
-                          <Upload className="w-5 h-5 text-gray-400 mr-2" />
-                          <span className="text-sm text-gray-600">
+                        <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.qualityManualDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
+                          <Upload className={`w-5 h-5 mr-2 ${errors.qualityManualDocument ? 'text-red-400' : 'text-gray-400'}`} />
+                          <span className={`text-sm ${errors.qualityManualDocument ? 'text-red-500' : 'text-gray-600'}`}>
                             {formData.qualityManualDocument ? (typeof formData.qualityManualDocument === 'string' ? formData.qualityManualDocument.split('/').pop() : formData.qualityManualDocument.name) : 'Choose file...'}
                           </span>
                           <input
                             type="file"
                             accept=".pdf"
-                            onChange={(e) => handleFileUpload('qualityManualDocument', e.target.files[0])}
+                            onChange={(e) => {
+                              handleFileUpload('qualityManualDocument', e.target.files[0])
+                              if (errors.qualityManualDocument) setErrors(prev => ({ ...prev, qualityManualDocument: null }))
+                            }}
                             className="hidden"
                           />
                         </label>
@@ -2406,6 +2699,7 @@ export default function OrganizationDetails() {
                         </Button>
                       )}
                     </div>
+                    {errors.qualityManualDocument && <p className="mt-1 text-sm text-red-600">{errors.qualityManualDocument}</p>}
                   </div>
                 </div>
 
@@ -2446,43 +2740,63 @@ export default function OrganizationDetails() {
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Input
-                              label="SOP Title"
+                              label={<>SOP Title <span className="text-red-500">*</span></>}
                               value={sop.title}
-                              onChange={(e) => updateSOP(sop.id, 'title', e.target.value)}
+                              onChange={(e) => {
+                                updateSOP(sop.id, 'title', e.target.value)
+                                if (errors[`sopList_${index}_title`]) setErrors(prev => ({ ...prev, [`sopList_${index}_title`]: null }))
+                              }}
+                              error={errors[`sopList_${index}_title`]}
                               placeholder="Enter SOP title"
                             />
 
                             <Input
-                              label="SOP Number"
+                              label={<>SOP Number <span className="text-red-500">*</span></>}
                               value={sop.number}
-                              onChange={(e) => updateSOP(sop.id, 'number', e.target.value)}
+                              onChange={(e) => {
+                                updateSOP(sop.id, 'number', e.target.value)
+                                if (errors[`sopList_${index}_number`]) setErrors(prev => ({ ...prev, [`sopList_${index}_number`]: null }))
+                              }}
+                              error={errors[`sopList_${index}_number`]}
                               placeholder="Enter SOP number"
                             />
 
                             <Input
-                              label="SOP Issue Number"
+                              label={<>SOP Issue Number <span className="text-red-500">*</span></>}
                               value={sop.issueNumber}
-                              onChange={(e) => updateSOP(sop.id, 'issueNumber', e.target.value)}
+                              onChange={(e) => {
+                                updateSOP(sop.id, 'issueNumber', e.target.value)
+                                if (errors[`sopList_${index}_issueNumber`]) setErrors(prev => ({ ...prev, [`sopList_${index}_issueNumber`]: null }))
+                              }}
+                              error={errors[`sopList_${index}_issueNumber`]}
                               placeholder="Enter issue number"
                             />
 
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-2">
-                                SOP Issue Date
+                                SOP Issue Date <span className="text-red-500">*</span>
                               </label>
                               <input
                                 type="date"
                                 value={sop.issueDate}
-                                onChange={(e) => updateSOP(sop.id, 'issueDate', e.target.value)}
+                                onChange={(e) => {
+                                  updateSOP(sop.id, 'issueDate', e.target.value)
+                                  if (errors[`sopList_${index}_issueDate`]) setErrors(prev => ({ ...prev, [`sopList_${index}_issueDate`]: null }))
+                                }}
                                 placeholder="dd/mm/yyyy"
-                                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                className={`w-full px-4 py-2.5 rounded-xl border ${errors[`sopList_${index}_issueDate`] ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary'} focus:outline-none focus:ring-2 focus:border-transparent`}
                               />
+                              {errors[`sopList_${index}_issueDate`] && <p className="mt-1 text-sm text-red-600">{errors[`sopList_${index}_issueDate`]}</p>}
                             </div>
 
                             <Input
-                              label="SOP Amendments"
+                              label={<>SOP Amendments <span className="text-red-500">*</span></>}
                               value={sop.amendments}
-                              onChange={(e) => updateSOP(sop.id, 'amendments', e.target.value)}
+                              onChange={(e) => {
+                                updateSOP(sop.id, 'amendments', e.target.value)
+                                if (errors[`sopList_${index}_amendments`]) setErrors(prev => ({ ...prev, [`sopList_${index}_amendments`]: null }))
+                              }}
+                              error={errors[`sopList_${index}_amendments`]}
                               placeholder="Enter amendments"
                             />
                           </div>
@@ -2544,9 +2858,13 @@ export default function OrganizationDetails() {
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Input
-                              label="Format Title"
+                              label={<>Format Title <span className="text-red-500">*</span></>}
                               value={format.title}
-                              onChange={(e) => updateQualityFormat(format.id, 'title', e.target.value)}
+                              onChange={(e) => {
+                                updateQualityFormat(format.id, 'title', e.target.value)
+                                if (errors[`qualityFormats_${index}_title`]) setErrors(prev => ({ ...prev, [`qualityFormats_${index}_title`]: null }))
+                              }}
+                              error={errors[`qualityFormats_${index}_title`]}
                               placeholder="Enter format title"
                             />
 

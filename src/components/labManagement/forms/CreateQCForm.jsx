@@ -20,8 +20,43 @@ export default function CreateQCForm({ onSuccess, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!formData.testName || !formData.parameter || !formData.targetValue || !formData.acceptanceRangeMin || !formData.acceptanceRangeMax) {
-      toast.error('Please fill in all required fields')
+    if (!formData.qcId.trim()) {
+      toast.error('Please enter QC ID')
+      return
+    }
+
+    if (!formData.testName.trim()) {
+      toast.error('Please enter Test Name')
+      return
+    }
+
+    if (!formData.parameter.trim()) {
+      toast.error('Please enter Parameter')
+      return
+    }
+
+    if (formData.targetValue === '') {
+      toast.error('Please enter Target Value')
+      return
+    }
+
+    if (formData.acceptanceRangeMin === '') {
+      toast.error('Please enter Acceptance Range (Min)')
+      return
+    }
+
+    if (formData.acceptanceRangeMax === '') {
+      toast.error('Please enter Acceptance Range (Max)')
+      return
+    }
+
+    if (!formData.unit.trim()) {
+      toast.error('Please enter Unit')
+      return
+    }
+
+    if (!formData.frequency) {
+      toast.error('Please select Frequency')
       return
     }
 
@@ -69,29 +104,47 @@ export default function CreateQCForm({ onSuccess, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
-          label="QC ID"
+          label={
+            <span>
+              QC ID <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.qcId}
           onChange={(e) => setFormData({ ...formData, qcId: e.target.value })}
           placeholder="QC-001"
+          required
         />
         <Input
-          label="Test Name"
+          label={
+            <span>
+              Test Name <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.testName}
           onChange={(e) => setFormData({ ...formData, testName: e.target.value })}
           placeholder="EMC Compliance Test"
           required
         />
         <Input
-          label="Parameter"
+          label={
+            <span>
+              Parameter <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.parameter}
           onChange={(e) => setFormData({ ...formData, parameter: e.target.value })}
           placeholder="Emission Level"
           required
         />
         <Input
-          label="Target Value"
+          label={
+            <span>
+              Target Value <span className="text-red-500">*</span>
+            </span>
+          }
           type="number"
           step="0.01"
           value={formData.targetValue}
@@ -100,7 +153,11 @@ export default function CreateQCForm({ onSuccess, onCancel }) {
           required
         />
         <Input
-          label="Acceptance Range (Min)"
+          label={
+            <span>
+              Acceptance Range (Min) <span className="text-red-500">*</span>
+            </span>
+          }
           type="number"
           step="0.01"
           value={formData.acceptanceRangeMin}
@@ -109,7 +166,11 @@ export default function CreateQCForm({ onSuccess, onCancel }) {
           required
         />
         <Input
-          label="Acceptance Range (Max)"
+          label={
+            <span>
+              Acceptance Range (Max) <span className="text-red-500">*</span>
+            </span>
+          }
           type="number"
           step="0.01"
           value={formData.acceptanceRangeMax}
@@ -118,14 +179,19 @@ export default function CreateQCForm({ onSuccess, onCancel }) {
           required
         />
         <Input
-          label="Unit"
+          label={
+            <span>
+              Unit <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.unit}
           onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
           placeholder="dBµV/m"
+          required
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Frequency
+            Frequency <span className="text-red-500">*</span>
           </label>
           <select
             value={formData.frequency}

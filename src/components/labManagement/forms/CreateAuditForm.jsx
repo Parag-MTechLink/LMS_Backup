@@ -18,8 +18,18 @@ export default function CreateAuditForm({ onSuccess, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!formData.title || !formData.auditDate) {
-      toast.error('Please fill in all required fields')
+    if (!formData.title.trim()) {
+      toast.error('Please enter Audit Title')
+      return
+    }
+
+    if (!formData.auditDate) {
+      toast.error('Please select Audit Date')
+      return
+    }
+
+    if (!formData.auditorName.trim()) {
+      toast.error('Please enter Auditor Name')
       return
     }
 
@@ -37,8 +47,13 @@ export default function CreateAuditForm({ onSuccess, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
       <Input
-        label="Audit Title"
+        label={
+          <span>
+            Audit Title <span className="text-red-500">*</span>
+          </span>
+        }
         value={formData.title}
         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
         placeholder="Enter audit title"
@@ -59,7 +74,11 @@ export default function CreateAuditForm({ onSuccess, onCancel }) {
       </div>
 
       <Input
-        label="Audit Date"
+        label={
+          <span>
+            Audit Date <span className="text-red-500">*</span>
+          </span>
+        }
         type="date"
         value={formData.auditDate}
         onChange={(e) => setFormData({ ...formData, auditDate: e.target.value })}
@@ -83,10 +102,15 @@ export default function CreateAuditForm({ onSuccess, onCancel }) {
       </div>
 
       <Input
-        label="Auditor Name"
+        label={
+          <span>
+            Auditor Name <span className="text-red-500">*</span>
+          </span>
+        }
         value={formData.auditorName}
         onChange={(e) => setFormData({ ...formData, auditorName: e.target.value })}
         placeholder="Enter auditor name"
+        required
       />
 
       <div>

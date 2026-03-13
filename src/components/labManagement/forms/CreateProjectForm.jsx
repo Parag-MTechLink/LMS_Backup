@@ -61,8 +61,13 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!formData.name || !formData.clientId) {
-      toast.error('Please fill in all required fields')
+    if (!formData.clientId || formData.clientId === 0) {
+      toast.error('Please select customer')
+      return
+    }
+
+    if (!formData.name || !formData.code) {
+      toast.error('Please fill all the mandatory details')
       return
     }
 
@@ -80,6 +85,7 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500 mb-4">Please fill all the mandatory details in the form (*)</p>
       {!customerId && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -106,7 +112,7 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
       )}
 
       <Input
-        label="Project Name"
+        label={<>Project Name <span className="text-red-500">*</span></>}
         value={formData.name}
         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         placeholder="Enter project name"
@@ -114,10 +120,11 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
       />
 
       <Input
-        label="Project Code"
+        label={<>Project Code <span className="text-red-500">*</span></>}
         value={formData.code}
         onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-        placeholder="Enter project code (optional)"
+        placeholder="Enter project code"
+        required
       />
 
       <Input

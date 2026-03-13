@@ -18,8 +18,13 @@ export default function CreateNCRForm({ onSuccess, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!formData.description) {
-      toast.error('Please enter NCR description')
+    if (!formData.ncrNumber.trim()) {
+      toast.error('Please enter NCR Number')
+      return
+    }
+
+    if (!formData.raisedBy.trim()) {
+      toast.error('Please enter Raised By')
       return
     }
 
@@ -37,16 +42,22 @@ export default function CreateNCRForm({ onSuccess, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
       <Input
-        label="NCR Number"
+        label={
+          <span>
+            NCR Number <span className="text-red-500">*</span>
+          </span>
+        }
         value={formData.ncrNumber}
         onChange={(e) => setFormData({ ...formData, ncrNumber: e.target.value })}
-        placeholder="e.g., NCR-001 (auto-generated if empty)"
+        placeholder="e.g., NCR-001"
+        required
       />
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Description <span className="text-red-500">*</span>
+          Description
         </label>
         <textarea
           value={formData.description}
@@ -54,7 +65,6 @@ export default function CreateNCRForm({ onSuccess, onCancel }) {
           placeholder="Enter NCR description"
           rows={4}
           className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-          required
         />
       </div>
 
@@ -91,10 +101,15 @@ export default function CreateNCRForm({ onSuccess, onCancel }) {
       </div>
 
       <Input
-        label="Raised By"
+        label={
+          <span>
+            Raised By <span className="text-red-500">*</span>
+          </span>
+        }
         value={formData.raisedBy}
         onChange={(e) => setFormData({ ...formData, raisedBy: e.target.value })}
         placeholder="Enter name of person who raised the NCR"
+        required
       />
 
       <div>

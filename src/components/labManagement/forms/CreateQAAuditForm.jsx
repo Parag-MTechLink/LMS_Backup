@@ -21,8 +21,43 @@ export default function CreateQAAuditForm({ onSuccess, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!formData.date || !formData.auditorName || !formData.scope) {
-      toast.error('Please fill in all required fields')
+    if (!formData.auditId.trim()) {
+      toast.error('Please enter Audit ID')
+      return
+    }
+
+    if (!formData.auditType) {
+      toast.error('Please select Audit Type')
+      return
+    }
+
+    if (!formData.date) {
+      toast.error('Please select Date')
+      return
+    }
+
+    if (!formData.auditorName.trim()) {
+      toast.error('Please enter Auditor Name')
+      return
+    }
+
+    if (!formData.auditorOrganization.trim()) {
+      toast.error('Please enter Auditor Organization')
+      return
+    }
+
+    if (!formData.scope.trim()) {
+      toast.error('Please enter Scope')
+      return
+    }
+
+    if (!formData.status) {
+      toast.error('Please select Status')
+      return
+    }
+
+    if (formData.findings.length === 0) {
+      toast.error('Please add at least one Finding')
       return
     }
 
@@ -84,12 +119,18 @@ export default function CreateQAAuditForm({ onSuccess, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
-          label="Audit ID"
+          label={
+            <span>
+              Audit ID <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.auditId}
           onChange={(e) => setFormData({ ...formData, auditId: e.target.value })}
           placeholder="AUD-2024-001"
+          required
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -106,27 +147,44 @@ export default function CreateQAAuditForm({ onSuccess, onCancel }) {
           </select>
         </div>
         <Input
-          label="Date"
+          label={
+            <span>
+              Date <span className="text-red-500">*</span>
+            </span>
+          }
           type="date"
           value={formData.date}
           onChange={(e) => setFormData({ ...formData, date: e.target.value })}
           required
         />
         <Input
-          label="Auditor Name"
+          label={
+            <span>
+              Auditor Name <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.auditorName}
           onChange={(e) => setFormData({ ...formData, auditorName: e.target.value })}
           placeholder="Dr. John Smith"
           required
         />
         <Input
-          label="Auditor Organization"
+          label={
+            <span>
+              Auditor Organization <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.auditorOrganization}
           onChange={(e) => setFormData({ ...formData, auditorOrganization: e.target.value })}
           placeholder="Internal QA Team"
+          required
         />
         <Input
-          label="Scope"
+          label={
+            <span>
+              Scope <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.scope}
           onChange={(e) => setFormData({ ...formData, scope: e.target.value })}
           placeholder="EMC Testing Department"
@@ -134,7 +192,7 @@ export default function CreateQAAuditForm({ onSuccess, onCancel }) {
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Status
+            Status <span className="text-red-500">*</span>
           </label>
           <select
             value={formData.status}
@@ -151,7 +209,7 @@ export default function CreateQAAuditForm({ onSuccess, onCancel }) {
       {/* Findings Section */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Findings
+          Findings <span className="text-red-500">*</span>
         </label>
         <div className="space-y-2 mb-2">
           {formData.findings.map((finding, index) => (

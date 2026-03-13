@@ -88,7 +88,8 @@ export default function Login() {
               Enter your credentials to access the platform.
             </p>
 
-            <form onSubmit={handleSubmit} className="mt-10 space-y-6">
+            <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+            <p className="text-sm text-red-500 mb-4">Please fill all the mandatory details in the form (*)</p>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-slate-700">
                   Email address

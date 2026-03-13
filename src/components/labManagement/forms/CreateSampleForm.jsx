@@ -39,13 +39,28 @@ export default function CreateSampleForm({ projectId, onSuccess, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!formData.projectId) {
-      toast.error('Please select a project')
+    if (!formData.projectId || formData.projectId === 0) {
+      toast.error('Please select a Project')
       return
     }
 
     if (!formData.sampleNumber.trim()) {
-      toast.error('Please enter sample number')
+      toast.error('Please enter Sample Number')
+      return
+    }
+
+    if (!formData.receivedDate) {
+      toast.error('Please select Received Date')
+      return
+    }
+
+    if (!formData.condition) {
+      toast.error('Please select Condition')
+      return
+    }
+
+    if (!formData.storageLocation.trim()) {
+      toast.error('Please enter Storage Location')
       return
     }
 
@@ -63,6 +78,7 @@ export default function CreateSampleForm({ projectId, onSuccess, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
       {!projectId && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -89,7 +105,7 @@ export default function CreateSampleForm({ projectId, onSuccess, onCancel }) {
       )}
 
       <Input
-        label="Sample Number"
+        label={<>Sample Number <span className="text-red-500">*</span></>}
         value={formData.sampleNumber}
         onChange={(e) => setFormData({ ...formData, sampleNumber: e.target.value })}
         placeholder="e.g., SAMPLE-001"
@@ -97,7 +113,11 @@ export default function CreateSampleForm({ projectId, onSuccess, onCancel }) {
       />
 
       <Input
-        label="Received Date"
+        label={
+          <span>
+            Received Date <span className="text-red-500">*</span>
+          </span>
+        }
         type="date"
         value={formData.receivedDate}
         onChange={(e) => setFormData({ ...formData, receivedDate: e.target.value })}
@@ -106,7 +126,7 @@ export default function CreateSampleForm({ projectId, onSuccess, onCancel }) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Condition
+          Condition <span className="text-red-500">*</span>
         </label>
         <select
           value={formData.condition}
@@ -121,10 +141,15 @@ export default function CreateSampleForm({ projectId, onSuccess, onCancel }) {
       </div>
 
       <Input
-        label="Storage Location"
+        label={
+          <span>
+            Storage Location <span className="text-red-500">*</span>
+          </span>
+        }
         value={formData.storageLocation}
         onChange={(e) => setFormData({ ...formData, storageLocation: e.target.value })}
         placeholder="e.g., Shelf A-12"
+        required
       />
 
       <div>

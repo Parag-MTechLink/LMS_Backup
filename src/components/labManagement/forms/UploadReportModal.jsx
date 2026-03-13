@@ -16,8 +16,13 @@ export default function UploadReportModal({ onClose }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+        if (!formData.name.trim()) {
+            toast.error('Please enter Report Name')
+            return
+        }
+
         if (!formData.file) {
-            toast.error('Please select a file')
+            toast.error('Please upload a Report File')
             return
         }
 
@@ -55,8 +60,13 @@ export default function UploadReportModal({ onClose }) {
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
                     <Input
-                        label="Report Name"
+                        label={
+                            <span>
+                                Report Name <span className="text-red-500">*</span>
+                            </span>
+                        }
                         placeholder="Enter report name"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -77,7 +87,7 @@ export default function UploadReportModal({ onClose }) {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Report File
+                            Report File <span className="text-red-500">*</span>
                         </label>
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors relative">
                             <input
