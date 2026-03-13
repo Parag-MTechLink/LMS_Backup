@@ -4,13 +4,14 @@ import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { useLabManagementAuth } from '../contexts/LabManagementAuthContext'
 import { getApiErrorMessage } from '../utils/apiError'
-import { LogIn, Mail, Lock, ArrowRight } from 'lucide-react'
+import { LogIn, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react'
 
 export default function Login() {
   const navigate = useNavigate()
   const { login } = useLabManagementAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
@@ -111,24 +112,31 @@ export default function Login() {
                   <label htmlFor="password" className="block text-sm font-medium text-slate-700">
                     Password
                   </label>
-                  <a
-                    href="#"
-                    className="text-sm text-indigo-600 hover:text-indigo-500"
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
                   >
                     Forgot password?
-                  </a>
+                  </Link>
                 </div>
                 <div className="relative mt-2">
                   <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                   <input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-11 pr-4 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-11 pr-12 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     placeholder="••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
               </div>
 

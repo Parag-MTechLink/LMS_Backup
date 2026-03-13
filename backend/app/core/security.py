@@ -14,9 +14,9 @@ from app.core.config import settings
 # bcrypt limit; longer passwords are truncated to avoid ValueError
 BCRYPT_MAX_PASSWORD_BYTES = 72
 
-# Strong password: min 8 chars, at least one letter and one number
+# Strong password: min 8 chars, at least one uppercase, one lowercase, one number, and one symbol
 PASSWORD_MIN_LENGTH = 8
-PASSWORD_PATTERN = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{8,}$")
+PASSWORD_PATTERN = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")
 
 
 def _password_bytes(plain: str) -> bytes:
@@ -44,7 +44,7 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
     if len(password) < PASSWORD_MIN_LENGTH:
         return False, f"Password must be at least {PASSWORD_MIN_LENGTH} characters."
     if not PASSWORD_PATTERN.match(password):
-        return False, "Password must contain at least one letter and one number."
+        return False, "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character."
     return True, ""
 
 

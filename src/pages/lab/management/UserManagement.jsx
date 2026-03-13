@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, User, Mail, Shield, AlertCircle, Trash2, Edit2, RotateCw } from 'lucide-react'
+import { Plus, User, Mail, Shield, AlertCircle, Trash2, Edit2, RotateCw, Lock, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { authService } from '../../../services/labManagementApi'
 import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
@@ -29,6 +29,7 @@ export default function UserManagement() {
     password: '',
     role: 'Testing Engineer'
   })
+  const [showPassword, setShowPassword] = useState(false)
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -90,10 +91,10 @@ export default function UserManagement() {
       return
     }
     
-    // Strong password validation: min 8 chars, at least one letter and one number
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/
+    // Strong password validation (Option B): min 8 chars, uppercase, lowercase, number, symbol
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
     if (!passwordRegex.test(formData.password)) {
-      toast.error('Password must be at least 8 characters and include at least one letter and one number.')
+      toast.error('Password must include uppercase, lowercase, number, and symbol.')
       return
     }
 
@@ -215,15 +216,25 @@ export default function UserManagement() {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Password *</label>
                 <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-4 w-4 text-gray-400" />
+                  </div>
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    placeholder="Min 8 characters, letter + number"
-                    className="block w-full sm:text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 px-3 py-2 border"
+                    placeholder="Min 8 chars, A-Z, a-z, 0-9, symbol"
+                    className="block w-full pl-10 pr-10 sm:text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 py-2 border"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
               </div>
 

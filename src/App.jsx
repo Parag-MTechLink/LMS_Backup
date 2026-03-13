@@ -14,6 +14,8 @@ const ChatbotWidget = lazy(() => import('./components/chatbot').then(m => ({ def
 const Landing = lazy(() => import('./pages/Landing'))
 const Login = lazy(() => import('./pages/Login'))
 const Signup = lazy(() => import('./pages/Signup'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 
 // Lazy load lab management pages for better performance
 const LabManagementDashboard = lazy(() => import('./pages/lab/management/Dashboard'))
@@ -108,6 +110,8 @@ function AnimatedRoutes() {
         />
         <Route path="/login" element={isAuthenticated ? <Navigate to="/lab/management/dashboard" replace /> : <Suspense fallback={<RouteFallback />}><Login /></Suspense>} />
         <Route path="/signup" element={isAuthenticated ? <Navigate to="/lab/management/dashboard" replace /> : <Suspense fallback={<RouteFallback />}><Signup /></Suspense>} />
+        <Route path="/forgot-password" element={<Suspense fallback={<RouteFallback />}><ForgotPassword /></Suspense>} />
+        <Route path="/reset-password" element={<Suspense fallback={<RouteFallback />}><ResetPassword /></Suspense>} />
 
         {/* Protected: Lab Management — redirect to login if not authenticated */}
         <Route

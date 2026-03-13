@@ -14,8 +14,16 @@ from app.core.database import get_db
 from app.core.security import create_access_token
 from app.dependencies.auth_dependency import get_current_user, get_current_user_optional
 from app.models.user_model import User
-from app.services.auth_service import create_user, authenticate_user, get_all_users, delete_user
+from app.services.auth_service import (
+    create_user, 
+    authenticate_user, 
+    get_all_users, 
+    delete_user,
+    create_password_reset_token,
+    reset_password
+)
 from app.services.rbac_service import log_audit
+from app.utils.email import send_password_reset_email
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +87,13 @@ class MeResponse(BaseModel):
     full_name: str
     role: str
     is_active: bool
+
+class ResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordReset(BaseModel):
+    token: str
+    password: str
 
 
 @router.post("/signup")
@@ -212,3 +227,27 @@ def delete_user_route(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid user ID format.",
         )
+
+@router.post("/request-reset")
+def request_password_reset(body: ResetRequest, db: Session = Depends(get_db)):
+    """Generate a reset token and send email."""
+    token = create_password_reset_token(db, body.email)
+    
+    # We return success even if user not found for security (prevent email enumeration)
+    if token:
+        send_password_reset_email(body.email, token)
+        
+    return {"message": "If an account exists with this email, a reset link has been sent."}
+
+@router.post("/reset-password")
+def perform_password_reset(body: PasswordReset, db: Session = Depends(get_db)):
+    """Verify token and set new password."""
+    success, message = reset_password(db, body.token, body.password)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=message
+        )
+        
+    return {"message": message}

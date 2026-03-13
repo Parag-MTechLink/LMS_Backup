@@ -319,6 +319,10 @@ from app.routes.auth import (
     MeResponse,
     get_users as _auth_get_users,
     delete_user_route as _auth_delete_user,
+    request_password_reset as _auth_request_reset,
+    perform_password_reset as _auth_reset_password,
+    ResetRequest,
+    PasswordReset,
 )
 from app.models.user_model import User
 from fastapi import Depends
@@ -351,6 +355,18 @@ def auth_users_route(current_user: User = Depends(get_current_user), db: Session
 def auth_delete_user_route(user_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Delete a user account for Admin Dashboard."""
     return _auth_delete_user(user_id, db, current_user)
+
+
+@app.post("/api/v1/auth/request-reset")
+def auth_request_reset_route(body: ResetRequest, db: Session = Depends(get_db)):
+    """Generate a reset token and send email."""
+    return _auth_request_reset(body, db)
+
+
+@app.post("/api/v1/auth/reset-password")
+def auth_reset_password_route(body: PasswordReset, db: Session = Depends(get_db)):
+    """Verify token and set new password."""
+    return _auth_reset_password(body, db)
 
 
 if __name__ == "__main__":
