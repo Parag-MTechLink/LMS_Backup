@@ -2,7 +2,7 @@ import { Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { X } from 'lucide-react'
 
-export default function Modal({ isOpen, onClose, title, children, size = 'md' }) {
+export default function Modal({ isOpen, onClose, title, children, size = 'md', showCloseIcon = true }) {
   const sizes = {
     sm: 'max-w-md',
     md: 'max-w-lg',
@@ -42,12 +42,14 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
                     <Dialog.Title className="text-xl font-bold text-gray-900">
                       {title}
                     </Dialog.Title>
-                    <button
-                      onClick={onClose}
-                      className="rounded-lg p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                    >
-                      <X className="h-6 w-6" />
-                    </button>
+                    {showCloseIcon && (
+                      <button
+                        onClick={onClose}
+                        className="rounded-lg p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      >
+                        <X className="h-6 w-6" />
+                      </button>
+                    )}
                   </div>
                 )}
                 <div className="px-6 py-4">

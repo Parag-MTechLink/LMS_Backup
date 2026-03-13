@@ -97,7 +97,7 @@ function AnimatedRoutes() {
 
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+      <Routes location={location}>
         {/* Public: landing — redirect to dashboard if authenticated */}
         <Route
           path="/"
