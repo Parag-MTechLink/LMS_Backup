@@ -45,8 +45,63 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!formData.name || !formData.manufacturer || !formData.model) {
-      toast.error('Please fill in all required fields')
+    if (!formData.instrumentId.trim()) {
+      toast.error('Please enter Instrument ID')
+      return
+    }
+
+    if (!formData.name.trim()) {
+      toast.error('Please enter Instrument Name')
+      return
+    }
+
+    if (!formData.manufacturer.trim()) {
+      toast.error('Please enter Manufacturer')
+      return
+    }
+
+    if (!formData.model.trim()) {
+      toast.error('Please enter Model')
+      return
+    }
+
+    if (!formData.serialNumber.trim()) {
+      toast.error('Please enter Serial Number')
+      return
+    }
+
+    if (!formData.labLocation.trim()) {
+      toast.error('Please enter Lab Location')
+      return
+    }
+
+    if (!formData.assignedDepartment) {
+      toast.error('Please select Assigned Department')
+      return
+    }
+
+    if (!formData.status) {
+      toast.error('Please select Status')
+      return
+    }
+
+    if (!formData.purchaseDate) {
+      toast.error('Please select Purchase Date')
+      return
+    }
+
+    if (!formData.warrantyExpiry) {
+      toast.error('Please select Warranty Expiry')
+      return
+    }
+
+    if (!formData.serviceVendor.trim()) {
+      toast.error('Please enter Service Vendor')
+      return
+    }
+
+    if (!formData.serviceVendorContact.trim()) {
+      toast.error('Please enter Service Vendor Contact')
       return
     }
 
@@ -71,49 +126,77 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
-          label="Instrument ID"
+          label={
+            <span>
+              Instrument ID <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.instrumentId}
           onChange={(e) => setFormData({ ...formData, instrumentId: e.target.value })}
           placeholder="INST-001"
+          required
         />
         <Input
-          label="Name"
+          label={
+            <span>
+              Name <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           placeholder="Spectrum Analyzer"
           required
         />
         <Input
-          label="Manufacturer"
+          label={
+            <span>
+              Manufacturer <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.manufacturer}
           onChange={(e) => setFormData({ ...formData, manufacturer: e.target.value })}
           placeholder="Keysight Technologies"
           required
         />
         <Input
-          label="Model"
+          label={
+            <span>
+              Model <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.model}
           onChange={(e) => setFormData({ ...formData, model: e.target.value })}
           placeholder="N9020B"
           required
         />
         <Input
-          label="Serial Number"
+          label={
+            <span>
+              Serial Number <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.serialNumber}
           onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
           placeholder="US12345678"
+          required
         />
         <Input
-          label="Lab Location"
+          label={
+            <span>
+              Lab Location <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.labLocation}
           onChange={(e) => setFormData({ ...formData, labLocation: e.target.value })}
           placeholder="Lab A - Room 101"
+          required
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Assigned Department
+            Assigned Department <span className="text-red-500">*</span>
           </label>
           <select
             value={formData.assignedDepartment}
@@ -128,7 +211,7 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Status
+            Status <span className="text-red-500">*</span>
           </label>
           <select
             value={formData.status}
@@ -141,29 +224,49 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
           </select>
         </div>
         <Input
-          label="Purchase Date"
+          label={
+            <span>
+              Purchase Date <span className="text-red-500">*</span>
+            </span>
+          }
           type="date"
           value={formData.purchaseDate}
           onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
+          required
         />
         <Input
-          label="Warranty Expiry"
+          label={
+            <span>
+              Warranty Expiry <span className="text-red-500">*</span>
+            </span>
+          }
           type="date"
           value={formData.warrantyExpiry}
           onChange={(e) => setFormData({ ...formData, warrantyExpiry: e.target.value })}
+          required
         />
         <Input
-          label="Service Vendor"
+          label={
+            <span>
+              Service Vendor <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.serviceVendor}
           onChange={(e) => setFormData({ ...formData, serviceVendor: e.target.value })}
           placeholder="Keysight Service Center"
+          required
         />
         <Input
-          label="Service Vendor Contact"
+          label={
+            <span>
+              Service Vendor Contact <span className="text-red-500">*</span>
+            </span>
+          }
           type="email"
           value={formData.serviceVendorContact}
           onChange={(e) => setFormData({ ...formData, serviceVendorContact: e.target.value })}
           placeholder="service@keysight.com"
+          required
         />
       </div>
       

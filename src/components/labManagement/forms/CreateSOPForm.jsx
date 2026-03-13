@@ -49,8 +49,43 @@ export default function CreateSOPForm({ sop, onSuccess, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!formData.title || !formData.effectiveDate || !formData.approvedBy) {
-      toast.error('Please fill in all required fields')
+    if (!formData.sopId.trim()) {
+      toast.error('Please enter SOP ID')
+      return
+    }
+
+    if (!formData.title.trim()) {
+      toast.error('Please enter Title')
+      return
+    }
+
+    if (!formData.category) {
+      toast.error('Please select Category')
+      return
+    }
+
+    if (!formData.version.trim()) {
+      toast.error('Please enter Version')
+      return
+    }
+
+    if (!formData.effectiveDate) {
+      toast.error('Please select Effective Date')
+      return
+    }
+
+    if (!formData.nextReviewDate) {
+      toast.error('Please select Next Review Date')
+      return
+    }
+
+    if (!formData.approvedBy.trim()) {
+      toast.error('Please enter Approved By')
+      return
+    }
+
+    if (!formData.documentUrl) {
+      toast.error('Please upload SOP Document')
       return
     }
 
@@ -128,15 +163,25 @@ export default function CreateSOPForm({ sop, onSuccess, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
-          label="SOP ID"
+          label={
+            <span>
+              SOP ID <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.sopId}
           onChange={(e) => setFormData({ ...formData, sopId: e.target.value })}
           placeholder="SOP-001"
+          required
         />
         <Input
-          label="Title"
+          label={
+            <span>
+              Title <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           placeholder="EMC Testing Procedure"
@@ -161,26 +206,44 @@ export default function CreateSOPForm({ sop, onSuccess, onCancel }) {
           </select>
         </div>
         <Input
-          label="Version"
+          label={
+            <span>
+              Version <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.version}
           onChange={(e) => setFormData({ ...formData, version: e.target.value })}
           placeholder="1.0"
+          required
         />
         <Input
-          label="Effective Date"
+          label={
+            <span>
+              Effective Date <span className="text-red-500">*</span>
+            </span>
+          }
           type="date"
           value={formData.effectiveDate}
           onChange={(e) => setFormData({ ...formData, effectiveDate: e.target.value })}
           required
         />
         <Input
-          label="Next Review Date"
+          label={
+            <span>
+              Next Review Date <span className="text-red-500">*</span>
+            </span>
+          }
           type="date"
           value={formData.nextReviewDate}
           onChange={(e) => setFormData({ ...formData, nextReviewDate: e.target.value })}
+          required
         />
         <Input
-          label="Approved By"
+          label={
+            <span>
+              Approved By <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.approvedBy}
           onChange={(e) => setFormData({ ...formData, approvedBy: e.target.value })}
           placeholder="Dr. John Smith"
@@ -188,7 +251,7 @@ export default function CreateSOPForm({ sop, onSuccess, onCancel }) {
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Status
+            Status <span className="text-red-500">*</span>
           </label>
           <select
             value={formData.status}
@@ -237,7 +300,7 @@ export default function CreateSOPForm({ sop, onSuccess, onCancel }) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          SOP Document (PDF, max 10MB)
+          SOP Document (PDF, max 10MB) <span className="text-red-500">*</span>
         </label>
         <input
           type="file"

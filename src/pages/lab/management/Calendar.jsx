@@ -722,6 +722,7 @@ function Calendar() {
 
   const renderEventForm = (isEdit = false) => (
     <form onSubmit={isEdit ? handleUpdateEvent : handleCreateEvent} className="space-y-4">
+      <p className="text-sm text-red-500 mb-4">Please fill all the mandatory details in the form (*)</p>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
         <input

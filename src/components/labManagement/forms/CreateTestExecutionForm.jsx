@@ -38,8 +38,23 @@ export default function CreateTestExecutionForm({ testPlanId, onSuccess, onCance
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!formData.testPlanId) {
-      toast.error('Please select a test plan')
+    if (!formData.testPlanId || formData.testPlanId === 0) {
+      toast.error('Please select a Test Plan')
+      return
+    }
+
+    if (!formData.name.trim()) {
+      toast.error('Please enter Execution Name')
+      return
+    }
+
+    if (!formData.startTime) {
+      toast.error('Please select Start Date & Time')
+      return
+    }
+
+    if (!formData.endTime) {
+      toast.error('Please select End Date & Time')
       return
     }
 
@@ -72,6 +87,7 @@ export default function CreateTestExecutionForm({ testPlanId, onSuccess, onCance
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
       {/* Test Plan selector (only when no testPlanId is pre-set) */}
       {!testPlanId && (
         <div>
@@ -100,15 +116,22 @@ export default function CreateTestExecutionForm({ testPlanId, onSuccess, onCance
 
       {/* Execution Name */}
       <Input
-        label="Execution Name"
+        label={
+          <span>
+            Execution Name <span className="text-red-500">*</span>
+          </span>
+        }
         value={formData.name}
         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-        placeholder="e.g. EMC Run #1 (optional)"
+        placeholder="e.g. EMC Run #1"
+        required
       />
 
       {/* Start Date & Time */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Start Date & Time</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Start Date & Time <span className="text-red-500">*</span>
+        </label>
         <input
           type="datetime-local"
           value={formData.startTime}
@@ -119,7 +142,9 @@ export default function CreateTestExecutionForm({ testPlanId, onSuccess, onCance
 
       {/* End Date & Time */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">End Date & Time</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          End Date & Time <span className="text-red-500">*</span>
+        </label>
         <input
           type="datetime-local"
           value={formData.endTime}

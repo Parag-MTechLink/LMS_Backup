@@ -45,12 +45,22 @@ function UploadTestResultForm({ onSuccess, onCancel }) {
         e.preventDefault()
 
         if (!testExecutionId) {
-            toast.error('Please select a test execution')
+            toast.error('Please select a Test Execution')
+            return
+        }
+
+        if (!testParameter.trim()) {
+            toast.error('Please enter Test Parameter')
+            return
+        }
+
+        if (!passFail) {
+            toast.error('Please select Status')
             return
         }
 
         if (!file) {
-            toast.error('Please select a result file')
+            toast.error('Please upload a Result File')
             return
         }
 
@@ -95,6 +105,7 @@ function UploadTestResultForm({ onSuccess, onCancel }) {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500 mb-4">Please fill all the mandatory details in the form (*)</p>
 
             {/* Test Execution Selection */}
             <div>
@@ -145,6 +156,7 @@ function UploadTestResultForm({ onSuccess, onCancel }) {
                         value={passFail}
                         onChange={(e) => setPassFail(e.target.value)}
                         className="w-full border rounded-lg px-3 py-2 bg-white"
+                        required
                     >
                         <option value="true">Pass</option>
                         <option value="false">Fail</option>
@@ -170,7 +182,7 @@ function UploadTestResultForm({ onSuccess, onCancel }) {
             <div className="border-2 border-dashed rounded-xl p-6 text-center hover:bg-gray-50 transition-colors">
                 <Upload className="mx-auto h-10 w-10 text-gray-400" />
                 <label className="cursor-pointer text-primary font-medium block mt-2">
-                    {file ? 'Change file' : 'Upload Result File'}
+                    {file ? 'Change file' : <>Upload Result File <span className="text-red-500">*</span></>}
                     <input
                         type="file"
                         className="hidden"

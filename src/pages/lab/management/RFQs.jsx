@@ -59,6 +59,12 @@ function RFQs() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (!formData.customerId || formData.customerId === 0) {
+      toast.error('Please select a customer')
+      return
+    }
+
     try {
       await rfqsService.create(formData)
       toast.success('RFQ created successfully')
@@ -580,6 +586,7 @@ function RFQs() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <p className="text-sm text-red-500 mb-4">Please fill all the mandatory details in the form (*)</p>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Customer <span className="text-red-500">*</span>

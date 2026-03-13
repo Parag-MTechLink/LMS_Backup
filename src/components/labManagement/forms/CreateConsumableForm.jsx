@@ -43,8 +43,58 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!formData.itemName || !formData.category) {
-      toast.error('Please fill in all required fields')
+    if (!formData.itemId.trim()) {
+      toast.error('Please enter Item ID')
+      return
+    }
+
+    if (!formData.itemName.trim()) {
+      toast.error('Please enter Item Name')
+      return
+    }
+
+    if (!formData.category) {
+      toast.error('Please select Category')
+      return
+    }
+
+    if (!formData.batchLotNumber.trim()) {
+      toast.error('Please enter Batch/Lot Number')
+      return
+    }
+
+    if (formData.quantityAvailable === undefined || formData.quantityAvailable === null) {
+      toast.error('Please enter Quantity Available')
+      return
+    }
+
+    if (!formData.unit) {
+      toast.error('Please select Unit')
+      return
+    }
+
+    if (!formData.expiryDate) {
+      toast.error('Please select Expiry Date')
+      return
+    }
+
+    if (!formData.storageConditions.trim()) {
+      toast.error('Please enter Storage Conditions')
+      return
+    }
+
+    if (!formData.supplier.trim()) {
+      toast.error('Please enter Supplier')
+      return
+    }
+
+    if (!formData.supplierContact.trim()) {
+      toast.error('Please enter Supplier Contact')
+      return
+    }
+
+    if (formData.lowStockThreshold === undefined || formData.lowStockThreshold === null) {
+      toast.error('Please enter Low Stock Threshold')
       return
     }
 
@@ -67,12 +117,18 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
-          label="Item ID"
+          label={
+            <span>
+              Item ID <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.itemId}
           onChange={(e) => setFormData({ ...formData, itemId: e.target.value })}
           placeholder="CONS-001"
+          required
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -89,20 +145,33 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
           </select>
         </div>
         <Input
-          label="Item Name"
+          label={
+            <span>
+              Item Name <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.itemName}
           onChange={(e) => setFormData({ ...formData, itemName: e.target.value })}
           placeholder="EMC Test Probes"
           required
         />
         <Input
-          label="Batch/Lot Number"
+          label={
+            <span>
+              Batch/Lot Number <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.batchLotNumber}
           onChange={(e) => setFormData({ ...formData, batchLotNumber: e.target.value })}
           placeholder="BATCH-2024-001"
+          required
         />
         <Input
-          label="Quantity Available"
+          label={
+            <span>
+              Quantity Available <span className="text-red-500">*</span>
+            </span>
+          }
           type="number"
           value={formData.quantityAvailable}
           onChange={(e) => setFormData({ ...formData, quantityAvailable: parseInt(e.target.value) || 0 })}
@@ -111,7 +180,7 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Unit
+            Unit <span className="text-red-500">*</span>
           </label>
           <select
             value={formData.unit}
@@ -127,37 +196,62 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
           </select>
         </div>
         <Input
-          label="Expiry Date"
+          label={
+            <span>
+              Expiry Date <span className="text-red-500">*</span>
+            </span>
+          }
           type="date"
           value={formData.expiryDate}
           onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+          required
         />
         <Input
-          label="Storage Conditions"
+          label={
+            <span>
+              Storage Conditions <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.storageConditions}
           onChange={(e) => setFormData({ ...formData, storageConditions: e.target.value })}
           placeholder="Room Temperature"
+          required
         />
         <Input
-          label="Supplier"
+          label={
+            <span>
+              Supplier <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.supplier}
           onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
           placeholder="Test Equipment Suppliers"
+          required
         />
         <Input
-          label="Supplier Contact"
+          label={
+            <span>
+              Supplier Contact <span className="text-red-500">*</span>
+            </span>
+          }
           type="email"
           value={formData.supplierContact}
           onChange={(e) => setFormData({ ...formData, supplierContact: e.target.value })}
           placeholder="sales@supplier.com"
+          required
         />
         <Input
-          label="Low Stock Threshold"
+          label={
+            <span>
+              Low Stock Threshold <span className="text-red-500">*</span>
+            </span>
+          }
           type="number"
           value={formData.lowStockThreshold}
           onChange={(e) => setFormData({ ...formData, lowStockThreshold: parseInt(e.target.value) || 0 })}
           min="0"
           placeholder="10"
+          required
         />
       </div>
       

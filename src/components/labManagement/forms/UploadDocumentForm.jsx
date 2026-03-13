@@ -23,12 +23,17 @@ function UploadDocumentForm({ onSuccess, onCancel }) {
     e.preventDefault()
 
     if (!name.trim()) {
-      toast.error('Please enter document name')
+      toast.error('Please enter Document Name')
+      return
+    }
+
+    if (!type) {
+      toast.error('Please select Document Type')
       return
     }
 
     if (!file) {
-      toast.error('Please select a file')
+      toast.error('Please upload a Document File')
       return
     }
 
@@ -55,6 +60,7 @@ function UploadDocumentForm({ onSuccess, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500 mb-4">Please fill all mandatory details (*) in red</p>
 
       {/* Document Name */}
       <div>
@@ -72,7 +78,7 @@ function UploadDocumentForm({ onSuccess, onCancel }) {
       {/* Document Type */}
       <div>
         <label className="block text-sm font-medium mb-1">
-          Document Type
+          Document Type <span className="text-red-500">*</span>
         </label>
         <select
           value={type}
@@ -101,6 +107,9 @@ function UploadDocumentForm({ onSuccess, onCancel }) {
 
       {/* File Upload */}
       <div className="border-2 border-dashed rounded-xl p-6 text-center">
+        <label className="block text-sm font-medium mb-2 text-gray-700">
+          Document File (PDF, max 10MB) <span className="text-red-500">*</span>
+        </label>
         <Upload className="mx-auto h-10 w-10 text-gray-400" />
         <label className="cursor-pointer text-primary font-medium">
           Upload file

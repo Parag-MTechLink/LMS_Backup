@@ -12,7 +12,7 @@ export default function RecordQCResultForm({ qcCheck, onSuccess, onCancel }) {
     e.preventDefault()
     
     if (!result) {
-      toast.error('Please enter a result value')
+      toast.error('Please enter Result Value')
       return
     }
 
@@ -41,6 +41,7 @@ export default function RecordQCResultForm({ qcCheck, onSuccess, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
       <div className="p-4 bg-gray-50 rounded-lg mb-4">
         <div className="text-sm space-y-1">
           <div className="flex justify-between">
@@ -61,7 +62,11 @@ export default function RecordQCResultForm({ qcCheck, onSuccess, onCancel }) {
       </div>
 
       <Input
-        label={`Result Value (${qcCheck?.unit})`}
+        label={
+          <span>
+            Result Value ({qcCheck?.unit}) <span className="text-red-500">*</span>
+          </span>
+        }
         type="number"
         step="0.01"
         value={result}

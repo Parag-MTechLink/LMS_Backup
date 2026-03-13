@@ -42,6 +42,26 @@ export default function EditTestExecutionForm({ execution, onSuccess, onCancel }
     const handleSubmit = async (e) => {
         e.preventDefault()
 
+        if (!formData.name.trim()) {
+            toast.error('Please enter Execution Name')
+            return
+        }
+
+        if (!formData.startTime) {
+            toast.error('Please select Start Date & Time')
+            return
+        }
+
+        if (!formData.endTime) {
+            toast.error('Please select End Date & Time')
+            return
+        }
+
+        if (!formData.status) {
+            toast.error('Please select Status')
+            return
+        }
+
         // Encode name into notes
         const notesStr = formData.name
             ? `[${formData.name}]${formData.notes ? ' ' + formData.notes : ''}`
@@ -71,12 +91,18 @@ export default function EditTestExecutionForm({ execution, onSuccess, onCancel }
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
+            <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
             {/* Execution Name */}
             <Input
-                label="Execution Name"
+                label={
+                    <span>
+                        Execution Name <span className="text-red-500">*</span>
+                    </span>
+                }
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. EMC Run #1"
+                required
             />
 
             {/* Status */}
@@ -99,9 +125,10 @@ export default function EditTestExecutionForm({ execution, onSuccess, onCancel }
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Start Date & Time */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Start Date & Time</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Start Date & Time <span className="text-red-500">*</span>
+                    </label>
                     <input
                         type="datetime-local"
                         value={formData.startTime}
@@ -110,9 +137,10 @@ export default function EditTestExecutionForm({ execution, onSuccess, onCancel }
                     />
                 </div>
 
-                {/* End Date & Time */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">End Date & Time</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        End Date & Time <span className="text-red-500">*</span>
+                    </label>
                     <input
                         type="datetime-local"
                         value={formData.endTime}

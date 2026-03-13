@@ -39,8 +39,33 @@ export default function CreateTransactionForm({ onSuccess, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!formData.itemId || !formData.quantity || !formData.usedBy) {
-      toast.error('Please fill in all required fields')
+    if (!formData.transactionId.trim()) {
+      toast.error('Please enter Transaction ID')
+      return
+    }
+
+    if (!formData.itemId) {
+      toast.error('Please select an Item')
+      return
+    }
+
+    if (!formData.quantity || formData.quantity <= 0) {
+      toast.error('Please enter a valid Quantity')
+      return
+    }
+
+    if (!formData.usedBy.trim()) {
+      toast.error('Please enter Used By')
+      return
+    }
+
+    if (!formData.purpose.trim()) {
+      toast.error('Please enter Purpose')
+      return
+    }
+
+    if (!formData.date) {
+      toast.error('Please select Date')
       return
     }
 
@@ -58,12 +83,18 @@ export default function CreateTransactionForm({ onSuccess, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
-          label="Transaction ID"
+          label={
+            <span>
+              Transaction ID <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.transactionId}
           onChange={(e) => setFormData({ ...formData, transactionId: e.target.value })}
           placeholder="TXN-001"
+          required
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -103,7 +134,11 @@ export default function CreateTransactionForm({ onSuccess, onCancel }) {
           )}
         </div>
         <Input
-          label="Quantity"
+          label={
+            <span>
+              Quantity <span className="text-red-500">*</span>
+            </span>
+          }
           type="number"
           value={formData.quantity}
           onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
@@ -111,24 +146,37 @@ export default function CreateTransactionForm({ onSuccess, onCancel }) {
           required
         />
         <Input
-          label="Used By"
+          label={
+            <span>
+              Used By <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.usedBy}
           onChange={(e) => setFormData({ ...formData, usedBy: e.target.value })}
           placeholder="John Doe"
           required
         />
         <Input
-          label="Date"
+          label={
+            <span>
+              Date <span className="text-red-500">*</span>
+            </span>
+          }
           type="date"
           value={formData.date}
           onChange={(e) => setFormData({ ...formData, date: e.target.value })}
           required
         />
         <Input
-          label="Purpose"
+          label={
+            <span>
+              Purpose <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.purpose}
           onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
           placeholder="EMC Testing - Project Alpha"
+          required
         />
         <Input
           label="Linked Test ID (Optional)"

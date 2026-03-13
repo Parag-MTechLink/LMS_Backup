@@ -56,6 +56,7 @@ export default function CreateTRFForm({ projectId, onSuccess, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500 mb-4">Please fill all the mandatory details in the form (*)</p>
       {!projectId && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">

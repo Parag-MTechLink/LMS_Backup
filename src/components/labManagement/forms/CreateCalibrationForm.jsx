@@ -39,8 +39,48 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!formData.instrumentId || !formData.lastCalibrationDate || !formData.nextDueDate) {
-      toast.error('Please fill in all required fields')
+    if (!formData.calibrationId.trim()) {
+      toast.error('Please enter Calibration ID')
+      return
+    }
+
+    if (!formData.instrumentId) {
+      toast.error('Please select an Instrument')
+      return
+    }
+
+    if (!formData.lastCalibrationDate) {
+      toast.error('Please select Last Calibration Date')
+      return
+    }
+
+    if (!formData.nextDueDate) {
+      toast.error('Please select Next Due Date')
+      return
+    }
+
+    if (!formData.calibrationFrequency) {
+      toast.error('Please select Calibration Frequency')
+      return
+    }
+
+    if (!formData.calibrationMethod) {
+      toast.error('Please select Calibration Method')
+      return
+    }
+
+    if (!formData.certifiedBy.trim()) {
+      toast.error('Please enter Certified By')
+      return
+    }
+
+    if (!formData.certificateNumber.trim()) {
+      toast.error('Please enter Certificate Number')
+      return
+    }
+
+    if (!formData.certificateUrl) {
+      toast.error('Please upload Calibration Certificate')
       return
     }
 
@@ -74,12 +114,18 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
-          label="Calibration ID"
+          label={
+            <span>
+              Calibration ID <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.calibrationId}
           onChange={(e) => setFormData({ ...formData, calibrationId: e.target.value })}
           placeholder="CAL-001"
+          required
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -100,14 +146,22 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
           </select>
         </div>
         <Input
-          label="Last Calibration Date"
+          label={
+            <span>
+              Last Calibration Date <span className="text-red-500">*</span>
+            </span>
+          }
           type="date"
           value={formData.lastCalibrationDate}
           onChange={(e) => setFormData({ ...formData, lastCalibrationDate: e.target.value })}
           required
         />
         <Input
-          label="Next Due Date"
+          label={
+            <span>
+              Next Due Date <span className="text-red-500">*</span>
+            </span>
+          }
           type="date"
           value={formData.nextDueDate}
           onChange={(e) => setFormData({ ...formData, nextDueDate: e.target.value })}
@@ -115,7 +169,7 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Calibration Frequency
+            Calibration Frequency <span className="text-red-500">*</span>
           </label>
           <select
             value={formData.calibrationFrequency}
@@ -130,7 +184,7 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Calibration Method
+            Calibration Method <span className="text-red-500">*</span>
           </label>
           <select
             value={formData.calibrationMethod}
@@ -144,22 +198,32 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
           </select>
         </div>
         <Input
-          label="Certified By"
+          label={
+            <span>
+              Certified By <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.certifiedBy}
           onChange={(e) => setFormData({ ...formData, certifiedBy: e.target.value })}
           placeholder="NIST Accredited Lab"
+          required
         />
         <Input
-          label="Certificate Number"
+          label={
+            <span>
+              Certificate Number <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.certificateNumber}
           onChange={(e) => setFormData({ ...formData, certificateNumber: e.target.value })}
           placeholder="CAL-2024-001"
+          required
         />
       </div>
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Certificate Upload (PDF, max 2MB)
+          Certificate Upload (PDF, max 2MB) <span className="text-red-500">*</span>
         </label>
         <input
           type="file"
