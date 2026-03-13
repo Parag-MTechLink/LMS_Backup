@@ -14,6 +14,8 @@ CREATE TABLE users (
     name VARCHAR(255) NOT NULL,
     role VARCHAR(50) NOT NULL DEFAULT 'engineer',
     password_hash VARCHAR(255),
+    reset_token VARCHAR(255),
+    reset_token_expires TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

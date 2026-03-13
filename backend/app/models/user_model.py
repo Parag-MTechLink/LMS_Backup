@@ -24,6 +24,11 @@ class User(Base):
     password_hash = Column(Text, nullable=False)
     role = Column(Text, nullable=False)  # One of ROLES
     is_active = Column(Boolean, default=True, nullable=False)
+    
+    # Password Reset Fields
+    reset_token = Column(Text, nullable=True, index=True)
+    reset_token_expires = Column(DateTime, nullable=True)
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

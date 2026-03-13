@@ -81,6 +81,16 @@ class Settings(BaseSettings):
     RAG_TOP_K: int = 3
     RAG_SIMILARITY_THRESHOLD: float = 0.7
     EMBEDDING_DIMENSION: int = 1536
+    
+    # SMTP / Email Settings
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    MAIL_FROM: str = ""
+    
+    # Reset Password
+    RESET_TOKEN_EXPIRE_MINUTES: int = 30
 
     model_config = SettingsConfigDict(
         env_file=".env",
