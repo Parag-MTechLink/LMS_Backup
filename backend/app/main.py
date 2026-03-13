@@ -20,6 +20,7 @@ from sqlalchemy.exc import OperationalError as SQLAlchemyOperationalError
 
 from app.core.config import settings
 from app.core.database import Base, engine
+from app.core.migrations import run_all_migrations
 from app.core.logging_config import configure_logging
 from app.models import FAQKnowledgeBase, RFQRequest, User, AuditLog  # noqa: F401 - register models for create_all
 
@@ -68,6 +69,12 @@ async def lifespan(app: FastAPI):
     ensure_pgvector_extension()
     # Create database tables (in production, use Alembic migrations)
     Base.metadata.create_all(bind=engine)
+
+    # Run custom standard migrations (our .py scripts)
+    try:
+        run_all_migrations()
+    except Exception as e:
+        logging.getLogger("app").error(f"Startup migrations failed: {e}")
 
     # Verify database connectivity (fail fast if DB unreachable, e.g. Neon)
     try:
