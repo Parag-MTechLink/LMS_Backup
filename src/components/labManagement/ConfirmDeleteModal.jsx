@@ -3,8 +3,8 @@ import { Dialog, Transition } from '@headlessui/react'
 import { Trash2 } from 'lucide-react'
 
 /**
- * Reusable confirmation modal for Admin delete actions.
- * Use for any entity delete; ensure backend enforces Admin-only.
+ * Reusable confirmation modal for delete actions.
+ * Use for any entity delete; ensure backend enforces role-based access.
  */
 export default function ConfirmDeleteModal({
   isOpen,

@@ -11,7 +11,7 @@ from app.core.database import Base
 
 
 # Allowed role values (stored as TEXT; no FK to avoid circular deps)
-ROLES = ("Admin", "Lab Manager", "Sales Engineer", "Testing Engineer", "Technician")
+ROLES = ("Sales Manager", "Project Manager", "Finance Manager", "Quality Manager", "Team Lead", "Sales Engineer")
 
 
 class User(Base):

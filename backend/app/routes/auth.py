@@ -59,7 +59,7 @@ class SignupRequest(BaseModel):
     full_name: str
     email: EmailStr
     password: str
-    role: str = "Testing Engineer"
+    role: str = "Sales Engineer"
 
 
 class SignupResponse(BaseModel):

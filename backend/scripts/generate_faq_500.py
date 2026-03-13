@@ -6,11 +6,12 @@ import json
 import os
 
 # Roles in LMS
-ADMIN = "Admin"
-LAB_MGR = "Lab Manager"
-SALES = "Sales Engineer"
-TEST_ENG = "Testing Engineer"
-TECH = "Technician"
+SALES_MGR = "Sales Manager"
+PROJ_MGR = "Project Manager"
+FIN_MGR = "Finance Manager"
+QUAL_MGR = "Quality Manager"
+TEAM_LEAD = "Team Lead"
+SALES_ENG = "Sales Engineer"
 ALL_ROLES = [ADMIN, LAB_MGR, SALES, TEST_ENG, TECH]
 MANAGEMENT = [ADMIN, LAB_MGR]
 VIEWERS = [ADMIN, LAB_MGR, TEST_ENG, TECH]

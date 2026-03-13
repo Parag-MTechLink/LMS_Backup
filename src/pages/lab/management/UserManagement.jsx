@@ -6,11 +6,12 @@ import { authService } from '../../../services/labManagementApi'
 import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 
 const ROLES = [
-  { value: 'Testing Engineer', label: 'Testing Engineer' },
+  { value: 'Sales Manager', label: 'Sales Manager' },
+  { value: 'Project Manager', label: 'Project Manager' },
+  { value: 'Finance Manager', label: 'Finance Manager' },
+  { value: 'Quality Manager', label: 'Quality Manager' },
+  { value: 'Team Lead', label: 'Team Lead' },
   { value: 'Sales Engineer', label: 'Sales Engineer' },
-  { value: 'Lab Manager', label: 'Lab Manager' },
-  { value: 'Technician', label: 'Technician' },
-  { value: 'Admin', label: 'Admin' },
 ]
 
 export default function UserManagement() {
@@ -27,7 +28,7 @@ export default function UserManagement() {
     full_name: '',
     email: '',
     password: '',
-    role: 'Testing Engineer'
+    role: 'Team Lead'
   })
   const [showPassword, setShowPassword] = useState(false)
 
@@ -45,7 +46,7 @@ export default function UserManagement() {
   }, [])
 
   useEffect(() => {
-    if (user?.role === 'Admin') {
+    if (user?.role === 'Team Lead') {
       fetchUsers()
     }
   }, [user, fetchUsers])
@@ -68,12 +69,12 @@ export default function UserManagement() {
     : usersList.filter(u => u.role === filterRole)
 
   // Basic authorization check
-  if (user?.role !== 'Admin') {
+  if (user?.role !== 'Team Lead') {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center">
         <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
         <h2 className="text-2xl font-bold text-gray-900">Access Denied</h2>
-        <p className="text-gray-600 mt-2">Only Administrators can manage users.</p>
+        <p className="text-gray-600 mt-2">Only Team Leads can manage users.</p>
       </div>
     )
   }
@@ -109,7 +110,7 @@ export default function UserManagement() {
         full_name: '',
         email: '',
         password: '',
-        role: 'Testing Engineer'
+        role: 'Team Lead'
       })
       
       // Refresh user list
@@ -349,8 +350,8 @@ export default function UserManagement() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center space-x-2">
-                                {u.role === 'Admin' && <Shield className="w-3.5 h-3.5 text-indigo-500" />}
-                                <span className={`text-sm font-medium ${u.role === 'Admin' ? 'text-indigo-600' : 'text-gray-700'}`}>
+                                {u.role === 'Team Lead' && <Shield className="w-3.5 h-3.5 text-indigo-500" />}
+                                <span className={`text-sm font-medium ${u.role === 'Team Lead' ? 'text-indigo-600' : 'text-gray-700'}`}>
                                   {u.role}
                                 </span>
                               </div>

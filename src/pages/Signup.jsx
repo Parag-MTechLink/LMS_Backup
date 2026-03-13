@@ -7,11 +7,12 @@ import { getApiErrorMessage } from '../utils/apiError'
 import { User, Mail, Lock, Briefcase, ArrowRight, X, Eye, EyeOff } from 'lucide-react'
 
 const ROLES = [
-  { value: 'Testing Engineer', label: 'Testing Engineer' },
+  { value: 'Sales Manager', label: 'Sales Manager' },
+  { value: 'Project Manager', label: 'Project Manager' },
+  { value: 'Finance Manager', label: 'Finance Manager' },
+  { value: 'Quality Manager', label: 'Quality Manager' },
+  { value: 'Team Lead', label: 'Team Lead' },
   { value: 'Sales Engineer', label: 'Sales Engineer' },
-  { value: 'Lab Manager', label: 'Lab Manager' },
-  { value: 'Technician', label: 'Technician' },
-  { value: 'Admin', label: 'Admin' },
 ]
 
 export default function Signup() {
@@ -20,7 +21,7 @@ export default function Signup() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [role, setRole] = useState('Testing Engineer')
+  const [role, setRole] = useState('Sales Engineer')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
