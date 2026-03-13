@@ -20,6 +20,7 @@ from sqlalchemy.exc import OperationalError as SQLAlchemyOperationalError
 
 from app.core.config import settings
 from app.core.database import Base, engine
+from app.core.migrations import run_all_migrations
 from app.core.logging_config import configure_logging
 from app.models import FAQKnowledgeBase, RFQRequest, User, AuditLog  # noqa: F401 - register models for create_all
 
@@ -68,6 +69,12 @@ async def lifespan(app: FastAPI):
     ensure_pgvector_extension()
     # Create database tables (in production, use Alembic migrations)
     Base.metadata.create_all(bind=engine)
+
+    # Run custom standard migrations (our .py scripts)
+    try:
+        run_all_migrations()
+    except Exception as e:
+        logging.getLogger("app").error(f"Startup migrations failed: {e}")
 
     # Verify database connectivity (fail fast if DB unreachable, e.g. Neon)
     try:
@@ -191,6 +198,17 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 # Auth: require JWT for /api/v1/* except /api/v1/auth
 from app.middleware.auth_middleware import AuthRequiredMiddleware
 app.add_middleware(AuthRequiredMiddleware)
+
+# Security Headers Middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    # Strict-Transport-Security (optional, but good for production)
+    # response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
 
 # CORS Middleware
 app.add_middleware(
@@ -317,10 +335,17 @@ from app.routes.auth import (
     SignupRequest,
     SignupResponse,
     MeResponse,
+    get_users as _auth_get_users,
+    delete_user_route as _auth_delete_user,
+    request_password_reset as _auth_request_reset,
+    perform_password_reset as _auth_reset_password,
+    ResetRequest,
+    PasswordReset,
 )
 from app.models.user_model import User
 from fastapi import Depends
 from sqlalchemy.orm import Session
+from typing import List
 
 
 @app.post("/api/v1/auth/login", response_model=LoginResponse)
@@ -336,6 +361,30 @@ def auth_signup_route(body: SignupRequest, request: Request, db: Session = Depen
 @app.get("/api/v1/auth/me", response_model=MeResponse)
 def auth_me_route(current_user: User = Depends(get_current_user)):
     return _auth_me(current_user)
+
+
+@app.get("/api/v1/auth/users", response_model=List[MeResponse])
+def auth_users_route(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Return all users for Admin Dashboard."""
+    return _auth_get_users(current_user, db)
+
+
+@app.delete("/api/v1/auth/users/{user_id}")
+def auth_delete_user_route(user_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Delete a user account for Admin Dashboard."""
+    return _auth_delete_user(user_id, db, current_user)
+
+
+@app.post("/api/v1/auth/request-reset")
+def auth_request_reset_route(body: ResetRequest, db: Session = Depends(get_db)):
+    """Generate a reset token and send email."""
+    return _auth_request_reset(body, db)
+
+
+@app.post("/api/v1/auth/reset-password")
+def auth_reset_password_route(body: PasswordReset, db: Session = Depends(get_db)):
+    """Verify token and set new password."""
+    return _auth_reset_password(body, db)
 
 
 if __name__ == "__main__":

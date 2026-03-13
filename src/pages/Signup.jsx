@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { authService } from '../services/labManagementApi'
 import { getApiErrorMessage } from '../utils/apiError'
-import { User, Mail, Lock, Briefcase, ArrowRight, X } from 'lucide-react'
+import { User, Mail, Lock, Briefcase, ArrowRight, X, Eye, EyeOff } from 'lucide-react'
 
 const ROLES = [
   { value: 'Testing Engineer', label: 'Testing Engineer' },
@@ -19,6 +19,7 @@ export default function Signup() {
   const [full_name, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [role, setRole] = useState('Testing Engineer')
   const [loading, setLoading] = useState(false)
 
@@ -28,6 +29,7 @@ export default function Signup() {
       toast.error('Please fill in all required fields.')
       return
     }
+<<<<<<< HEAD
     
     // Stricter password validation
     const hasLetter = /[a-zA-Z]/.test(password)
@@ -36,6 +38,11 @@ export default function Signup() {
     const hasSpecial = /[^a-zA-Z\d]/.test(password)
     if (password.length < 8 || !hasLetter || !hasNumber || !hasUpper || !hasSpecial) {
       toast.error('Password must be at least 8 characters and include a letter, a number, an uppercase letter, and a special character.')
+=======
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+    if (!passwordRegex.test(password)) {
+      toast.error('Password must be at least 8 characters and include uppercase, lowercase, a number, and a symbol.')
+>>>>>>> 8149f32925f9cfcdade842169b4f70f56a4e9366
       return
     }
     setLoading(true)
@@ -161,13 +168,25 @@ export default function Signup() {
                   <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                   <input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+<<<<<<< HEAD
                     className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-11 pr-4 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     placeholder="Min. 8 chars, 1 uppercase, 1 special, 1 number"
+=======
+                    className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-11 pr-12 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="Min. 8 characters, letter + number"
+>>>>>>> 8149f32925f9cfcdade842169b4f70f56a4e9366
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
                 {password.length > 0 && (password.length < 8 || !/[a-zA-Z]/.test(password) || !/\d/.test(password) || !/[A-Z]/.test(password) || !/[^a-zA-Z\d]/.test(password)) && (
                   <p className="mt-1.5 text-xs font-medium text-amber-600">
@@ -175,7 +194,11 @@ export default function Signup() {
                   </p>
                 )}
                 <p className="mt-1.5 text-xs text-slate-500">
+<<<<<<< HEAD
                   Min. 8 chars, 1 letter, 1 number, 1 uppercase, &amp; 1 special.
+=======
+                  Min. 8 characters with Uppercase, Lowercase, Number, and Symbol.
+>>>>>>> 8149f32925f9cfcdade842169b4f70f56a4e9366
                 </p>
               </div>
 

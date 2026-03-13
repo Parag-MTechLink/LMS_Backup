@@ -14,7 +14,12 @@ const ChatbotWidget = lazy(() => import('./components/chatbot').then(m => ({ def
 const Landing = lazy(() => import('./pages/Landing'))
 const Login = lazy(() => import('./pages/Login'))
 const Signup = lazy(() => import('./pages/Signup'))
+<<<<<<< HEAD
 const GetStarted = lazy(() => import('./pages/GetStarted'))
+=======
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+>>>>>>> 8149f32925f9cfcdade842169b4f70f56a4e9366
 
 // Lazy load lab management pages for better performance
 const LabManagementDashboard = lazy(() => import('./pages/lab/management/Dashboard'))
@@ -54,6 +59,7 @@ const QANCCAPA = lazy(() => import('./pages/lab/management/QANCCAPA'))
 const QADocumentControl = lazy(() => import('./pages/lab/management/QADocumentControl'))
 const QAAReports = lazy(() => import('./pages/lab/management/QAAReports'))
 const Payment = lazy(() => import('./pages/lab/management/Payment'))
+const UserManagement = lazy(() => import('./pages/lab/management/UserManagement'))
 
 // Non-blocking skeleton for lazy routes (faster perceived load)
 const RouteFallback = () => <RouteSkeleton />
@@ -108,7 +114,12 @@ function AnimatedRoutes() {
         />
         <Route path="/login" element={isAuthenticated ? <Navigate to="/lab/management/dashboard" replace /> : <Suspense fallback={<RouteFallback />}><Login /></Suspense>} />
         <Route path="/signup" element={isAuthenticated ? <Navigate to="/lab/management/dashboard" replace /> : <Suspense fallback={<RouteFallback />}><Signup /></Suspense>} />
+<<<<<<< HEAD
         <Route path="/get-started" element={isAuthenticated ? <Navigate to="/lab/management/dashboard" replace /> : <Suspense fallback={<RouteFallback />}><GetStarted /></Suspense>} />
+=======
+        <Route path="/forgot-password" element={<Suspense fallback={<RouteFallback />}><ForgotPassword /></Suspense>} />
+        <Route path="/reset-password" element={<Suspense fallback={<RouteFallback />}><ResetPassword /></Suspense>} />
+>>>>>>> 8149f32925f9cfcdade842169b4f70f56a4e9366
 
         {/* Protected: Lab Management — redirect to login if not authenticated */}
         <Route
@@ -148,6 +159,7 @@ function AnimatedRoutes() {
           <Route path="certifications" element={<Suspense fallback={<RouteFallback />}><LabManagementCertifications /></Suspense>} />
           <Route path="calendar" element={<Suspense fallback={<RouteFallback />}><LabManagementCalendar /></Suspense>} />
           <Route path="lab-recommendations" element={<Suspense fallback={<RouteFallback />}><LabManagementRecommendations /></Suspense>} />
+          <Route path="users" element={<Suspense fallback={<RouteFallback />}><UserManagement /></Suspense>} />
 
           {/* Inventory Management */}
           <Route path="inventory" element={<Suspense fallback={<RouteFallback />}><Inventory /></Suspense>} />
@@ -258,7 +270,7 @@ function App() {
     <ErrorBoundary>
       <LabManagementAuthProvider>
         <LabDataProvider>
-          <Router>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AppContent />
           </Router>
         </LabDataProvider>

@@ -19,8 +19,33 @@ export default function CreateCertificationForm({ onSuccess, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!formData.certificateNumber || !formData.standard || !formData.issueDate) {
-      toast.error('Please fill in all required fields')
+    if (!formData.certificateNumber.trim()) {
+      toast.error('Please enter Certificate Number')
+      return
+    }
+
+    if (!formData.standard.trim()) {
+      toast.error('Please enter Standard')
+      return
+    }
+
+    if (!formData.issueDate) {
+      toast.error('Please select Issue Date')
+      return
+    }
+
+    if (!formData.expiryDate) {
+      toast.error('Please select Expiry Date')
+      return
+    }
+
+    if (!formData.status) {
+      toast.error('Please select Status')
+      return
+    }
+
+    if (!formData.issuingBody.trim()) {
+      toast.error('Please enter Issuing Body')
       return
     }
 
@@ -38,8 +63,13 @@ export default function CreateCertificationForm({ onSuccess, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
       <Input
-        label="Certificate Number"
+        label={
+          <span>
+            Certificate Number <span className="text-red-500">*</span>
+          </span>
+        }
         value={formData.certificateNumber}
         onChange={(e) => setFormData({ ...formData, certificateNumber: e.target.value })}
         placeholder="Enter certificate number"
@@ -47,7 +77,11 @@ export default function CreateCertificationForm({ onSuccess, onCancel }) {
       />
 
       <Input
-        label="Standard"
+        label={
+          <span>
+            Standard <span className="text-red-500">*</span>
+          </span>
+        }
         value={formData.standard}
         onChange={(e) => setFormData({ ...formData, standard: e.target.value })}
         placeholder="e.g., ISO 9001, ISO 17025"
@@ -55,7 +89,11 @@ export default function CreateCertificationForm({ onSuccess, onCancel }) {
       />
 
       <Input
-        label="Issue Date"
+        label={
+          <span>
+            Issue Date <span className="text-red-500">*</span>
+          </span>
+        }
         type="date"
         value={formData.issueDate}
         onChange={(e) => setFormData({ ...formData, issueDate: e.target.value })}
@@ -63,16 +101,21 @@ export default function CreateCertificationForm({ onSuccess, onCancel }) {
       />
 
       <Input
-        label="Expiry Date"
+        label={
+          <span>
+            Expiry Date <span className="text-red-500">*</span>
+          </span>
+        }
         type="date"
         value={formData.expiryDate}
         onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
         placeholder="Enter expiry date"
+        required
       />
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Status
+          Status <span className="text-red-500">*</span>
         </label>
         <select
           value={formData.status}
@@ -87,10 +130,15 @@ export default function CreateCertificationForm({ onSuccess, onCancel }) {
       </div>
 
       <Input
-        label="Issuing Body"
+        label={
+          <span>
+            Issuing Body <span className="text-red-500">*</span>
+          </span>
+        }
         value={formData.issuingBody}
         onChange={(e) => setFormData({ ...formData, issuingBody: e.target.value })}
         placeholder="Enter issuing body name"
+        required
       />
 
       <div>

@@ -43,8 +43,48 @@ export default function CreateNCCAPAForm({ ncCapa, onSuccess, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!formData.description || !formData.impactedArea || !formData.actionOwner || !formData.dueDate) {
-      toast.error('Please fill in all required fields')
+    if (!formData.ncId.trim()) {
+      toast.error('Please enter NC ID')
+      return
+    }
+
+    if (!formData.severity) {
+      toast.error('Please select Severity')
+      return
+    }
+
+    if (!formData.description.trim()) {
+      toast.error('Please enter Description')
+      return
+    }
+
+    if (!formData.impactedArea.trim()) {
+      toast.error('Please enter Impacted Area')
+      return
+    }
+
+    if (!formData.actionOwner.trim()) {
+      toast.error('Please enter Action Owner')
+      return
+    }
+
+    if (!formData.dueDate) {
+      toast.error('Please select Due Date')
+      return
+    }
+
+    if (!formData.status) {
+      toast.error('Please select Status')
+      return
+    }
+
+    if (!formData.rootCause.trim()) {
+      toast.error('Please enter Root Cause')
+      return
+    }
+
+    if (!formData.correctiveAction.trim()) {
+      toast.error('Please enter Corrective Action')
       return
     }
 
@@ -86,12 +126,18 @@ export default function CreateNCCAPAForm({ ncCapa, onSuccess, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
-          label="NC ID"
+          label={
+            <span>
+              NC ID <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.ncId}
           onChange={(e) => setFormData({ ...formData, ncId: e.target.value })}
           placeholder="NC-2024-001"
+          required
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -122,21 +168,33 @@ export default function CreateNCCAPAForm({ ncCapa, onSuccess, onCancel }) {
           />
         </div>
         <Input
-          label="Impacted Area"
+          label={
+            <span>
+              Impacted Area <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.impactedArea}
           onChange={(e) => setFormData({ ...formData, impactedArea: e.target.value })}
           placeholder="EMC Testing"
           required
         />
         <Input
-          label="Action Owner"
+          label={
+            <span>
+              Action Owner <span className="text-red-500">*</span>
+            </span>
+          }
           value={formData.actionOwner}
           onChange={(e) => setFormData({ ...formData, actionOwner: e.target.value })}
           placeholder="John Doe"
           required
         />
         <Input
-          label="Due Date"
+          label={
+            <span>
+              Due Date <span className="text-red-500">*</span>
+            </span>
+          }
           type="date"
           value={formData.dueDate}
           onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
@@ -144,7 +202,7 @@ export default function CreateNCCAPAForm({ ncCapa, onSuccess, onCancel }) {
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Status
+            Status <span className="text-red-500">*</span>
           </label>
           <select
             value={formData.status}

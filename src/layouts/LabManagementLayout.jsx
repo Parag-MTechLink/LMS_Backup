@@ -34,6 +34,8 @@ import {
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useLabManagementAuth } from '../contexts/LabManagementAuthContext'
 import logo from '../assets/techlink-logo.svg'
+import LiveClock from '../components/labManagement/LiveClock'
+
 
 const allNavItems = [
   { name: 'Dashboard', href: '/lab/management/dashboard', icon: LayoutDashboard },
@@ -57,6 +59,7 @@ const allNavItems = [
   { name: 'Inventory Management', href: '/lab/management/inventory', icon: Package, hideForRoles: ['Sales Engineer'] },
   { name: 'Quality Assurance', href: '/lab/management/qa', icon: Shield, hideForRoles: ['Sales Engineer', 'Technician'] },
   { name: 'Lab Recommendations', href: '/lab/management/lab-recommendations', icon: TrendingUp },
+  { name: 'User Management', href: '/lab/management/users', icon: Users, roles: ['Admin'] },
 ]
 
 function getNavigationForRole(role) {
@@ -226,6 +229,8 @@ function LabManagementLayout() {
                   <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
+                    id="global-search"
+                    name="global-search"
                     placeholder="Search projects, customers..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -234,7 +239,11 @@ function LabManagementLayout() {
                 </form>
               </div>
               <div className="flex items-center gap-4 ml-4">
+                <div className="hidden md:block">
+                  <LiveClock />
+                </div>
                 <div className="relative" ref={notificationRef}>
+
                   <button
                     onClick={() => setNotificationsOpen(!notificationsOpen)}
                     className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
