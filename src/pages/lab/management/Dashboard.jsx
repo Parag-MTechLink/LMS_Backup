@@ -24,7 +24,9 @@ import {
   PieChart as PieChartIcon,
   RefreshCw,
   TrendingDown,
-  Settings
+  Settings,
+  Info,
+  X
 } from 'lucide-react'
 import { 
   projectsService, 
@@ -90,6 +92,22 @@ function LabManagementDashboard() {
     spaceTarget: 70,
     storageTarget: 50
   })
+  const [activeInfoPopup, setActiveInfoPopup] = useState(null)
+  const [rawLists, setRawLists] = useState({
+    projects: [],
+    customers: [],
+    testPlans: [],
+    rfqs: []
+  })
+
+  // Close info popup when clicking outside
+  useEffect(() => {
+    const handleGlobalClick = () => setActiveInfoPopup(null)
+    if (activeInfoPopup) {
+      document.addEventListener('click', handleGlobalClick)
+    }
+    return () => document.removeEventListener('click', handleGlobalClick)
+  }, [activeInfoPopup])
 
   useEffect(() => {
     const savedTargets = localStorage.getItem('dashboardTargets')
@@ -133,6 +151,13 @@ function LabManagementDashboard() {
         inventoryReportsService.getSummary().catch(() => ({})),
         instrumentsService.getAll().catch(() => [])
       ])
+
+      setRawLists({
+        projects: projects.slice(0, 5),
+        customers: customers.slice(0, 5),
+        testPlans: testPlans.slice(0, 5),
+        rfqs: rfqs.slice(0, 5)
+      })
 
       setStats({
         projects: projects.length,
@@ -315,40 +340,68 @@ function LabManagementDashboard() {
 
   const statsData = [
     {
+      id: 'projects',
       name: 'Active Projects',
       value: stats.projects.toString(),
       change: `${stats.projects} total projects`,
       icon: FolderKanban,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
-      link: '/lab/management/projects'
+      link: '/lab/management/projects',
+      renderDetails: (list) => list.map(item => (
+        <div key={item.id} className="text-sm border-b border-gray-100 py-2 last:border-0 flex justify-between items-center gap-2">
+           <span className="font-medium text-gray-800 truncate">{item.name}</span>
+           <span className="text-xs text-gray-500 whitespace-nowrap">{item.clientName || 'N/A'}</span>
+        </div>
+      ))
     },
     {
+      id: 'customers',
       name: 'Customers',
       value: stats.customers.toString(),
       change: `${stats.customers} total customers`,
       icon: Users,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
-      link: '/lab/management/customers'
+      link: '/lab/management/customers',
+      renderDetails: (list) => list.map(item => (
+        <div key={item.id} className="text-sm border-b border-gray-100 py-2 last:border-0 flex justify-between items-center gap-2">
+           <span className="font-medium text-gray-800 truncate">{item.companyName}</span>
+           <span className="text-xs text-gray-500 whitespace-nowrap">{item.industry || 'Unknown'}</span>
+        </div>
+      ))
     },
     {
+      id: 'testPlans',
       name: 'Test Plans',
       value: stats.testPlans.toString(),
       change: `${stats.completedTests} completed`,
       icon: FlaskConical,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
-      link: '/lab/management/test-plans'
+      link: '/lab/management/test-plans',
+      renderDetails: (list) => list.map(item => (
+        <div key={item.id} className="text-sm border-b border-gray-100 py-2 last:border-0 flex justify-between items-center gap-2">
+           <span className="font-medium text-gray-800 truncate">{item.name}</span>
+           <span className="text-xs text-blue-600 font-medium whitespace-nowrap">{item.status}</span>
+        </div>
+      ))
     },
     {
+      id: 'rfqs',
       name: 'RFQs',
       value: stats.rfqs.toString(),
       change: `${stats.estimations} estimations`,
       icon: FileText,
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-50',
-      link: '/lab/management/rfqs'
+      link: '/lab/management/rfqs',
+      renderDetails: (list) => list.map(item => (
+        <div key={item.id} className="text-sm border-b border-gray-100 py-2 last:border-0 flex justify-between items-center gap-2">
+           <span className="font-medium text-gray-800 truncate">{item.companyName || 'Unknown'}</span>
+           <span className="text-xs text-gray-500 whitespace-nowrap">{item.expectedDate ? new Date(item.expectedDate).toLocaleDateString() : 'N/A'}</span>
+        </div>
+      ))
     },
   ]
 
@@ -406,11 +459,28 @@ function LabManagementDashboard() {
             transition={{ delay: index * 0.1 }}
             whileHover={{ y: -4, scale: 1.02 }}
             onClick={() => navigate(stat.link)}
-            className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-lg hover:border-primary transition-all cursor-pointer group relative overflow-hidden"
+            className="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-primary transition-all cursor-pointer group relative"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors"></div>
-            <div className="relative z-10 flex items-center justify-between">
-              <div className="flex-1">
+            <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary-dark opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </div>
+            
+            <div className="absolute top-3 right-3 z-30">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setActiveInfoPopup(activeInfoPopup === stat.id ? null : stat.id)
+                }}
+                className={`p-1.5 rounded-full hover:bg-white/90 transition-colors backdrop-blur-sm ${activeInfoPopup === stat.id ? 'text-primary bg-primary/10' : 'text-gray-400'}`}
+                title="View details"
+              >
+                <Info className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="relative z-10 p-6 flex items-center justify-between pointer-events-none">
+              <div className="flex-1 pointer-events-auto pr-8">
                 <p className="text-sm font-medium text-gray-600">{stat.name}</p>
                 <motion.p 
                   key={stat.value}
@@ -425,11 +495,36 @@ function LabManagementDashboard() {
                   {stat.change}
                 </p>
               </div>
-              <div className={`${stat.bgColor} rounded-xl p-4 group-hover:scale-110 transition-transform`}>
+              <div className={`${stat.bgColor} rounded-xl p-4 group-hover:scale-110 transition-transform pointer-events-auto`}>
                 <stat.icon className={`w-6 h-6 ${stat.color}`} />
               </div>
             </div>
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary-dark opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+            <AnimatePresence>
+              {activeInfoPopup === stat.id && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-12 right-0 w-64 md:w-72 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+                >
+                   <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
+                     <h4 className="font-semibold text-gray-900 text-sm">Recent {stat.name}</h4>
+                     <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600">
+                       <X className="w-4 h-4" />
+                     </button>
+                   </div>
+                   <div className="max-h-60 overflow-y-auto pr-1">
+                      {rawLists[stat.id] && rawLists[stat.id].length > 0 ? (
+                        stat.renderDetails(rawLists[stat.id])
+                      ) : (
+                        <p className="text-xs text-gray-500 py-2 text-center">No recent data found.</p>
+                      )}
+                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         ))}
       </div>
@@ -440,8 +535,37 @@ function LabManagementDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200"
+          className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200 relative"
         >
+          <div className="absolute top-2 right-2 z-30">
+            <button
+               onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_completion' ? null : 'perf_completion') }}
+               className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_completion' ? 'text-blue-700 bg-blue-200' : 'text-blue-400'}`}
+               title="View logic"
+            >
+               <Info className="w-4 h-4" />
+            </button>
+          </div>
+          <AnimatePresence>
+            {activeInfoPopup === 'perf_completion' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                onClick={(e) => e.stopPropagation()}
+                className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+              >
+                 <div className="flex justify-between items-center mb-2">
+                   <h4 className="font-semibold text-gray-900 text-sm">Completion Rate</h4>
+                   <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                 </div>
+                 <p className="text-xs text-gray-600 mb-2">Percentage of all projects marked as completed.</p>
+                 <div className="bg-blue-50 p-2 rounded text-xs font-mono text-blue-800 break-all">
+                    (Completed Projects / Total) × 100
+                 </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-blue-500 rounded-lg">
               <Target className="w-6 h-6 text-white" />
@@ -467,8 +591,37 @@ function LabManagementDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200"
+          className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200 relative"
         >
+          <div className="absolute top-2 right-2 z-30">
+            <button
+               onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_ontime' ? null : 'perf_ontime') }}
+               className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_ontime' ? 'text-green-700 bg-green-200' : 'text-green-400'}`}
+               title="View logic"
+            >
+               <Info className="w-4 h-4" />
+            </button>
+          </div>
+          <AnimatePresence>
+            {activeInfoPopup === 'perf_ontime' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                onClick={(e) => e.stopPropagation()}
+                className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+              >
+                 <div className="flex justify-between items-center mb-2">
+                   <h4 className="font-semibold text-gray-900 text-sm">On-Time Delivery</h4>
+                   <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                 </div>
+                 <p className="text-xs text-gray-600 mb-2">Percentage of test plans completed on or before schedule.</p>
+                 <div className="bg-green-50 p-2 rounded text-xs font-mono text-green-800 break-all">
+                    (Completed Tests / Total Tests) × 100
+                 </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-green-500 rounded-lg">
               <Zap className="w-6 h-6 text-white" />
@@ -494,8 +647,37 @@ function LabManagementDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200"
+          className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200 relative"
         >
+          <div className="absolute top-2 right-2 z-30">
+            <button
+               onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_cycletime' ? null : 'perf_cycletime') }}
+               className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_cycletime' ? 'text-purple-700 bg-purple-200' : 'text-purple-400'}`}
+               title="View logic"
+            >
+               <Info className="w-4 h-4" />
+            </button>
+          </div>
+          <AnimatePresence>
+            {activeInfoPopup === 'perf_cycletime' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                onClick={(e) => e.stopPropagation()}
+                className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+              >
+                 <div className="flex justify-between items-center mb-2">
+                   <h4 className="font-semibold text-gray-900 text-sm">Avg Cycle Time</h4>
+                   <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                 </div>
+                 <p className="text-xs text-gray-600 mb-2">Average duration from test initialization to completion.</p>
+                 <div className="bg-purple-50 p-2 rounded text-xs font-mono text-purple-800 break-all">
+                    Σ(Completion Date - Start Date) / Completed Tests
+                 </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-purple-500 rounded-lg">
               <Clock className="w-6 h-6 text-white" />
@@ -514,8 +696,37 @@ function LabManagementDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200"
+          className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200 relative"
         >
+          <div className="absolute top-2 right-2 z-30">
+            <button
+               onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_passrate' ? null : 'perf_passrate') }}
+               className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_passrate' ? 'text-orange-700 bg-orange-200' : 'text-orange-400'}`}
+               title="View logic"
+            >
+               <Info className="w-4 h-4" />
+            </button>
+          </div>
+          <AnimatePresence>
+            {activeInfoPopup === 'perf_passrate' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                onClick={(e) => e.stopPropagation()}
+                className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+              >
+                 <div className="flex justify-between items-center mb-2">
+                   <h4 className="font-semibold text-gray-900 text-sm">Pass Rate</h4>
+                   <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                 </div>
+                 <p className="text-xs text-gray-600 mb-2">Percentage of all processed test results marked as Passed.</p>
+                 <div className="bg-orange-50 p-2 rounded text-xs font-mono text-orange-800 break-all">
+                    (Passed Results / Total Results) × 100
+                 </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-orange-500 rounded-lg">
               <Award className="w-6 h-6 text-white" />
