@@ -146,10 +146,14 @@ def reset_password(db: Session, token: str, new_password: str) -> tuple[bool, st
         db.commit()
         return False, "Reset token has expired."
     
-    # Validate new password
+    # Validate new password strength
     valid, msg = validate_password_strength(new_password)
     if not valid:
         return False, msg
+    
+    # NEW: Prevent resetting to the current password
+    if verify_password(new_password, user.password_hash):
+        return False, "New password cannot be the same as your current password."
     
     # Update password and clear token
     user.password_hash = hash_password(new_password)

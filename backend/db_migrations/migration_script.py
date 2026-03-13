@@ -5,8 +5,8 @@ Usage: python migration_script.py
 import sys
 import os
 
-# Add the current directory to sys.path so we can import from app
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+# Add the backend directory to sys.path so we can import from app
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from sqlalchemy import text
 from app.core.database import engine
