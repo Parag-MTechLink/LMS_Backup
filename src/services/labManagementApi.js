@@ -168,6 +168,8 @@ export const authService = {
   },
   getAllUsers: () => apiService.get('/api/v1/auth/users'),
   deleteUser: (userId) => apiService.delete(`/api/v1/auth/users/${userId}`),
+  verifyMfa: (email, code) =>
+    apiService.post('/api/v1/auth/verify-mfa', { email, code }),
 }
 
 // Lab recommendations (engine under /api/v1/labs; requires LAB_ENGINE_DATABASE_URL on backend)

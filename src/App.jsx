@@ -17,6 +17,7 @@ const Signup = lazy(() => import('./pages/Signup'))
 const GetStarted = lazy(() => import('./pages/GetStarted'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+const VerifyMFA = lazy(() => import('./pages/VerifyMFA'))
 
 // Lazy load lab management pages for better performance
 const LabManagementDashboard = lazy(() => import('./pages/lab/management/Dashboard'))
@@ -114,6 +115,7 @@ function AnimatedRoutes() {
         <Route path="/get-started" element={isAuthenticated ? <Navigate to="/lab/management/dashboard" replace /> : <Suspense fallback={<RouteFallback />}><GetStarted /></Suspense>} />
         <Route path="/forgot-password" element={<Suspense fallback={<RouteFallback />}><ForgotPassword /></Suspense>} />
         <Route path="/reset-password" element={<Suspense fallback={<RouteFallback />}><ResetPassword /></Suspense>} />
+        <Route path="/verify-mfa" element={<Suspense fallback={<RouteFallback />}><VerifyMFA /></Suspense>} />
 
         {/* Protected: Lab Management — redirect to login if not authenticated */}
         <Route

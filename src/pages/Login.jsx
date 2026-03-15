@@ -22,7 +22,14 @@ export default function Login() {
     }
     setLoading(true)
     try {
-      await login(email.trim(), password)
+      const res = await login(email.trim(), password)
+      
+      if (res?.mfa_required) {
+        toast.success(res.message || 'Verification required.')
+        navigate('/verify-mfa', { state: { email: email.trim() } })
+        return
+      }
+
       toast.success('Welcome back.')
       navigate('/lab/management/dashboard', { replace: true })
     } catch (err) {

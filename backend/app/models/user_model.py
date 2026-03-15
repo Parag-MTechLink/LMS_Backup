@@ -28,6 +28,10 @@ class User(Base):
     # Password Reset Fields
     reset_token = Column(Text, nullable=True, index=True)
     reset_token_expires = Column(DateTime, nullable=True)
+
+    # Multi-Factor Authentication Fields
+    mfa_code = Column(Text, nullable=True, index=True)
+    mfa_code_expires = Column(DateTime, nullable=True)
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
