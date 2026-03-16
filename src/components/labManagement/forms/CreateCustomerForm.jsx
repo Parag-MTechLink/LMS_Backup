@@ -12,7 +12,8 @@ export default function CreateCustomerForm({ onSuccess, onCancel, initialData = 
     email: initialData?.email || '',
     phone: initialData?.phone ? initialData.phone.replace(/^\+\d+-/, '') : '',
     address: initialData?.address || '',
-    contactPerson: initialData?.contactPerson || ''
+    contactPerson: initialData?.contactPerson || '',
+    region: initialData?.region || ''
   })
   const [errors, setErrors] = useState({})
   const [countryCode, setCountryCode] = useState(() => {
@@ -72,6 +73,10 @@ export default function CreateCustomerForm({ onSuccess, onCancel, initialData = 
       newErrors.contactPerson = 'Contact person is required'
     } else if (formData.contactPerson.trim().split(/\s+/).length < 2) {
       newErrors.contactPerson = 'Please enter at least first and last name'
+    }
+
+    if (!formData.region) {
+      newErrors.region = 'Region is required'
     }
 
     setErrors(newErrors)
@@ -231,17 +236,45 @@ export default function CreateCustomerForm({ onSuccess, onCancel, initialData = 
       </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Address
-        </label>
-        <textarea
-          value={formData.address}
-          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-          placeholder="Enter address"
-          rows={3}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Region <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <select
+              value={formData.region}
+              onChange={(e) => {
+                setFormData({ ...formData, region: e.target.value })
+                if (errors.region) setErrors(prev => ({ ...prev, region: null }))
+              }}
+              className={`w-full px-4 py-2.5 rounded-xl border ${errors.region ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary focus:ring-primary'} focus:outline-none focus:ring-2 bg-white transition-colors appearance-none`}
+            >
+              <option value="" disabled>Select region</option>
+              <option value="North">North</option>
+              <option value="South">South</option>
+              <option value="East">East</option>
+              <option value="West">West</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+              <ChevronDown className="h-4 w-4" />
+            </div>
+          </div>
+          {errors.region && <p className="mt-1 text-sm text-red-600">{errors.region}</p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Address
+          </label>
+          <textarea
+            value={formData.address}
+            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            placeholder="Enter address"
+            rows={3}
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+          />
+        </div>
       </div>
 
       <div className="flex gap-3 pt-4">

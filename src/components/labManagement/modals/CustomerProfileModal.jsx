@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Mail, Phone, MapPin, FileText, Loader2, Edit2 } from 'lucide-react'
+import { Mail, Phone, MapPin, Globe, FileText, Loader2, Edit2 } from 'lucide-react'
 import Button from '../Button'
 import Badge from '../Badge'
 import { projectsService, rfqsService, estimationsService } from '../../../services/labManagementApi'
@@ -129,6 +129,12 @@ function CustomerProfileModal({ isOpen, onClose, customer, onUpdate }) {
                         <MapPin className="w-4 h-4 text-indigo-400 shrink-0" />
                         <span className="truncate">{profile.address}</span>
                     </div>
+                    {profile.region && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-gray-100 text-sm text-gray-600 shadow-sm max-w-full">
+                            <Globe className="w-4 h-4 text-indigo-400 shrink-0" />
+                            <span className="truncate">Region: {profile.region}</span>
+                        </div>
+                    )}
                 </div>
             </div>
 
