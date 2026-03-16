@@ -1,10 +1,8 @@
-import { useState, useEffect } from 'react'
-import { consumablesService } from '../../../services/labManagementApi'
-import toast from 'react-hot-toast'
-import Button from '../Button'
-import Input from '../Input'
+import { useLabManagementAuth } from '../../contexts/LabManagementAuthContext'
 
 export default function CreateConsumableForm({ consumable, onSuccess, onCancel }) {
+  const { user } = useLabManagementAuth()
+  const isReadOnly = user?.role === 'Quality Manager'
   const [formData, setFormData] = useState({
     itemId: '',
     category: 'Consumable',
@@ -129,6 +127,7 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, itemId: e.target.value })}
           placeholder="CONS-001"
           required
+          disabled={isReadOnly}
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -137,8 +136,9 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
           <select
             value={formData.category}
             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:cursor-not-allowed"
             required
+            disabled={isReadOnly}
           >
             <option value="Consumable">Consumable</option>
             <option value="Accessory">Accessory</option>
@@ -154,6 +154,7 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, itemName: e.target.value })}
           placeholder="EMC Test Probes"
           required
+          disabled={isReadOnly}
         />
         <Input
           label={
@@ -165,6 +166,7 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, batchLotNumber: e.target.value })}
           placeholder="BATCH-2024-001"
           required
+          disabled={isReadOnly}
         />
         <Input
           label={
@@ -177,6 +179,7 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, quantityAvailable: parseInt(e.target.value) || 0 })}
           min="0"
           required
+          disabled={isReadOnly}
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -185,7 +188,8 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
           <select
             value={formData.unit}
             onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:cursor-not-allowed"
+            disabled={isReadOnly}
           >
             <option value="pieces">Pieces</option>
             <option value="kits">Kits</option>
@@ -205,6 +209,7 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
           value={formData.expiryDate}
           onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
           required
+          disabled={isReadOnly}
         />
         <Input
           label={
@@ -216,6 +221,7 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, storageConditions: e.target.value })}
           placeholder="Room Temperature"
           required
+          disabled={isReadOnly}
         />
         <Input
           label={
@@ -227,6 +233,7 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
           placeholder="Test Equipment Suppliers"
           required
+          disabled={isReadOnly}
         />
         <Input
           label={
@@ -239,6 +246,7 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, supplierContact: e.target.value })}
           placeholder="sales@supplier.com"
           required
+          disabled={isReadOnly}
         />
         <Input
           label={
@@ -252,6 +260,7 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
           min="0"
           placeholder="10"
           required
+          disabled={isReadOnly}
         />
       </div>
       
@@ -264,7 +273,8 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           placeholder="Additional notes about the item"
           rows={3}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none disabled:bg-gray-50 disabled:cursor-not-allowed"
+          disabled={isReadOnly}
         />
       </div>
 
@@ -275,15 +285,17 @@ export default function CreateConsumableForm({ consumable, onSuccess, onCancel }
           variant="outline"
           className="flex-1"
         >
-          Cancel
+          {isReadOnly ? 'Close' : 'Cancel'}
         </Button>
-        <Button
-          type="submit"
-          isLoading={loading}
-          className="flex-1"
-        >
-          {consumable ? 'Update Item' : 'Create Item'}
-        </Button>
+        {!isReadOnly && (
+          <Button
+            type="submit"
+            isLoading={loading}
+            className="flex-1"
+          >
+            {consumable ? 'Update Item' : 'Create Item'}
+          </Button>
+        )}
       </div>
     </form>
   )

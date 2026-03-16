@@ -5,8 +5,11 @@ import { estimationsService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Button from '../Button'
 import Input from '../Input'
+import { useLabManagementAuth } from '../../contexts/LabManagementAuthContext'
 
 export default function CreateProjectForm({ onSuccess, onCancel, estimationId, customerId }) {
+  const { user } = useLabManagementAuth()
+  const isReadOnly = user?.role === 'Quality Manager'
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -83,6 +86,8 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
     }
   }
 
+  const inputClass = "w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="text-sm text-red-500 mb-4">Please fill all the mandatory details in the form (*)</p>
@@ -97,8 +102,9 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
             <select
               value={formData.clientId}
               onChange={(e) => setFormData({ ...formData, clientId: parseInt(e.target.value) })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+              className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed`}
               required
+              disabled={isReadOnly}
             >
               <option value={0}>Select a customer</option>
               {customers.map(customer => (
@@ -112,19 +118,21 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
       )}
 
       <Input
-        label={<>Project Name <span className="text-red-500">*</span></>}
+        label={<span>Project Name <span className="text-red-500">*</span></span>}
         value={formData.name}
         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         placeholder="Enter project name"
         required
+        disabled={isReadOnly}
       />
 
       <Input
-        label={<>Project Code <span className="text-red-500">*</span></>}
+        label={<span>Project Code <span className="text-red-500">*</span></span>}
         value={formData.code}
         onChange={(e) => setFormData({ ...formData, code: e.target.value })}
         placeholder="Enter project code"
         required
+        disabled={isReadOnly}
       />
 
       <Input
@@ -132,6 +140,7 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
         value={formData.oem}
         onChange={(e) => setFormData({ ...formData, oem: e.target.value })}
         placeholder="Enter OEM name (optional)"
+        disabled={isReadOnly}
       />
 
       <div>
@@ -141,7 +150,8 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
         <select
           value={formData.status}
           onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+          className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed`}
+          disabled={isReadOnly}
         >
           <option value="pending">Pending</option>
           <option value="active">Active</option>
@@ -158,7 +168,8 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           placeholder="Enter project description"
           rows={4}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+          className={`${inputClass} resize-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed`}
+          disabled={isReadOnly}
         />
       </div>
 
@@ -169,15 +180,17 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
           variant="outline"
           className="flex-1"
         >
-          Cancel
+          {isReadOnly ? 'Close' : 'Cancel'}
         </Button>
-        <Button
-          type="submit"
-          isLoading={loading}
-          className="flex-1"
-        >
-          Create Project
-        </Button>
+        {!isReadOnly && (
+          <Button
+            type="submit"
+            isLoading={loading}
+            className="flex-1"
+          >
+            Create Project
+          </Button>
+        )}
       </div>
     </form>
   )

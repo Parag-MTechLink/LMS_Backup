@@ -7,11 +7,10 @@ import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext
 
 const ROLES = [
   { value: 'Sales Manager', label: 'Sales Manager' },
-  { value: 'Project Manager', label: 'Project Manager' },
   { value: 'Finance Manager', label: 'Finance Manager' },
   { value: 'Quality Manager', label: 'Quality Manager' },
   { value: 'Team Lead', label: 'Team Lead' },
-  { value: 'Sales Engineer', label: 'Sales Engineer' },
+  { value: 'Project Manager', label: 'Project Manager' },
 ]
 
 export default function UserManagement() {
@@ -30,6 +29,7 @@ export default function UserManagement() {
     password: '',
     role: 'Team Lead'
   })
+  const [pmLimitReached, setPmLimitReached] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
   const fetchUsers = useCallback(async () => {
@@ -37,6 +37,9 @@ export default function UserManagement() {
       setLoadingUsers(true)
       const data = await authService.getAllUsers()
       setUsersList(data)
+      // Check if subordinate PM limit (2) is reached for the current PM.
+      const subPMCount = data.filter(u => u.role === 'Project Manager' && u.parent_id === String(user.id)).length
+      setPmLimitReached(subPMCount >= 2)
     } catch (err) {
       console.error('Failed to fetch users:', err)
       toast.error('Could not load user directory.')
@@ -46,7 +49,7 @@ export default function UserManagement() {
   }, [])
 
   useEffect(() => {
-    if (user?.role === 'Team Lead') {
+    if (user?.role === 'Project Manager') {
       fetchUsers()
     }
   }, [user, fetchUsers])
@@ -69,12 +72,12 @@ export default function UserManagement() {
     : usersList.filter(u => u.role === filterRole)
 
   // Basic authorization check
-  if (user?.role !== 'Team Lead') {
+  if (user?.role !== 'Project Manager') {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center">
         <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
         <h2 className="text-2xl font-bold text-gray-900">Access Denied</h2>
-        <p className="text-gray-600 mt-2">Only Team Leads can manage users.</p>
+        <p className="text-gray-600 mt-2">Only Project Managers can manage users.</p>
       </div>
     )
   }
@@ -207,11 +210,25 @@ export default function UserManagement() {
                     onChange={handleInputChange}
                     className="block w-full pl-10 sm:text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 p-2 border bg-white"
                   >
-                    {ROLES.map((r) => (
-                      <option key={r.value} value={r.value}>{r.label}</option>
-                    ))}
+                    {ROLES.map((r) => {
+                      // Only PMs can add other PMs
+                      if (r.value === 'Project Manager' && user.role !== 'Project Manager') return null
+                      // Limit subordinate PMs to 2
+                      if (r.value === 'Project Manager' && pmLimitReached) return null
+                      return <option key={r.value} value={r.value}>{r.label}</option>
+                    })}
                   </select>
                 </div>
+                {pmLimitReached && (
+                  <p className="mt-1.5 text-xs text-orange-600 font-medium">
+                    Maximum limit of 2 subordinate Project Managers reached.
+                  </p>
+                )}
+                {user.role === 'Project Manager' && !pmLimitReached && (
+                  <p className="mt-1.5 text-xs text-indigo-500 font-medium">
+                    You can add up to 2 subordinate Project Managers.
+                  </p>
+                )}
               </div>
 
               <div>
@@ -276,8 +293,14 @@ export default function UserManagement() {
                       className="bg-transparent text-sm font-medium text-gray-700 border-none focus:ring-0 cursor-pointer"
                     >
                       <option value="All">All Roles</option>
-                      {ROLES.map(role => (
-                        <option key={role.value} value={role.value}>{role.label}</option>
+                      {ROLES.map((role) => (
+                        <option 
+                          key={role.value} 
+                          value={role.value}
+                          disabled={role.value === 'Project Manager' && (!user?.is_main || pmLimitReached)}
+                        >
+                          {role.label} {role.value === 'Project Manager' && pmLimitReached ? '(Limit Reached)' : ''}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -350,8 +373,8 @@ export default function UserManagement() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center space-x-2">
-                                {u.role === 'Team Lead' && <Shield className="w-3.5 h-3.5 text-indigo-500" />}
-                                <span className={`text-sm font-medium ${u.role === 'Team Lead' ? 'text-indigo-600' : 'text-gray-700'}`}>
+                                {u.role === 'Project Manager' && <Shield className="w-3.5 h-3.5 text-indigo-500" />}
+                                <span className={`text-sm font-medium ${u.role === 'Project Manager' ? 'text-indigo-600' : 'text-gray-700'}`}>
                                   {u.role}
                                 </span>
                               </div>

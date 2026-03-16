@@ -16,11 +16,12 @@ import { projectsService } from '../../../services/labManagementApi'
 import { samplesService } from '../../../services/labManagementApi'
 import { trfsService } from '../../../services/labManagementApi'
 import { testPlansService } from '../../../services/labManagementApi'
-import toast from 'react-hot-toast'
-import Card from '../../../components/labManagement/Card'
 import Badge from '../../../components/labManagement/Badge'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 
 function ProjectDetail() {
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
   const { id } = useParams()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
@@ -209,12 +210,14 @@ function ProjectDetail() {
                 <div className="text-center py-12">
                   <FlaskConical className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">No test plans for this project</p>
-                  <button
-                    onClick={() => navigate('/lab/management/test-plans')}
-                    className="mt-4 text-primary hover:underline"
-                  >
-                    Create Test Plan
-                  </button>
+                  {canCreate && (
+                    <button
+                      onClick={() => navigate('/lab/management/test-plans')}
+                      className="mt-4 text-primary hover:underline"
+                    >
+                      Create Test Plan
+                    </button>
+                  )}
                 </div>
               </Card>
             ) : (
@@ -256,12 +259,14 @@ function ProjectDetail() {
                 <div className="text-center py-12">
                   <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">No samples for this project</p>
-                  <button
-                    onClick={() => navigate('/lab/management/samples')}
-                    className="mt-4 text-primary hover:underline"
-                  >
-                    Add Sample
-                  </button>
+                  {canCreate && (
+                    <button
+                      onClick={() => navigate('/lab/management/samples')}
+                      className="mt-4 text-primary hover:underline"
+                    >
+                      Add Sample
+                    </button>
+                  )}
                 </div>
               </Card>
             ) : (
@@ -309,12 +314,14 @@ function ProjectDetail() {
                 <div className="text-center py-12">
                   <FileCheck className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">No TRFs for this project</p>
-                  <button
-                    onClick={() => navigate('/lab/management/trfs')}
-                    className="mt-4 text-primary hover:underline"
-                  >
-                    Create TRF
-                  </button>
+                  {canCreate && (
+                    <button
+                      onClick={() => navigate('/lab/management/trfs')}
+                      className="mt-4 text-primary hover:underline"
+                    >
+                      Create TRF
+                    </button>
+                  )}
                 </div>
               </Card>
             ) : (

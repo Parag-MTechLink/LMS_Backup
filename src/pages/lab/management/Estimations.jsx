@@ -8,7 +8,8 @@ import { Plus, X, Trash2, ExternalLink } from 'lucide-react'
 
 function Estimations() {
   const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
   const [estimations, setEstimations] = useState([])
   const [rfqs, setRfqs] = useState([])
   const [testTypes, setTestTypes] = useState([])
@@ -171,13 +172,15 @@ function Estimations() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Estimations</h1>
           <p className="text-gray-600">Project cost estimations and proposals</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center space-x-2"
-        >
-          <Plus className="w-5 h-5" />
-          <span>New Estimation</span>
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center space-x-2"
+          >
+            <Plus className="w-5 h-5" />
+            <span>New Estimation</span>
+          </button>
+        )}
       </div>
 
       {/* Budget Tracking Summary */}
@@ -311,7 +314,7 @@ function Estimations() {
                       >
                         View
                       </button>
-                      {estimation.status?.toLowerCase() === 'accepted' && (
+                      {canCreate && estimation.status?.toLowerCase() === 'accepted' && (
                         <button
                           onClick={() => {
                             // Navigate to create project from accepted estimation

@@ -40,6 +40,7 @@ import {
   instrumentsService
 } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import RouteSkeleton from '../../../components/RouteSkeleton'
 import Modal from '../../../components/labManagement/Modal'
 import Button from '../../../components/labManagement/Button'
@@ -47,6 +48,8 @@ import Input from '../../../components/labManagement/Input'
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area, RadialBarChart, RadialBar } from 'recharts'
 
 function LabManagementDashboard() {
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
@@ -553,13 +556,15 @@ function LabManagementDashboard() {
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
               Live System
             </span>
-            <button 
-              onClick={() => setIsTargetModalOpen(true)}
-              className="p-2 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
-              title="Configure Targets"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
+            {canCreate && (
+              <button 
+                onClick={() => setIsTargetModalOpen(true)}
+                className="p-2 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
+                title="Configure Targets"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 

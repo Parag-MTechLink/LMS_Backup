@@ -18,6 +18,8 @@ function InventoryCalibration() {
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedCalibration, setSelectedCalibration] = useState(null)
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
 
   useEffect(() => {
     loadData()
@@ -94,12 +96,14 @@ function InventoryCalibration() {
           </h1>
           <p className="text-gray-600 mt-1">Track calibration schedules, certificates, and compliance</p>
         </div>
-        <Button
-          onClick={() => setShowCreateModal(true)}
-          icon={<Plus className="w-5 h-5" />}
-        >
-          Add Calibration
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            icon={<Plus className="w-5 h-5" />}
+          >
+            Add Calibration
+          </Button>
+        )}
       </motion.div>
 
       {/* Filters */}
@@ -206,7 +210,7 @@ function InventoryCalibration() {
                       }}
                       className="w-full"
                     >
-                      View Details
+                      {canCreate ? 'View Details' : 'View Record'}
                     </Button>
                   </div>
                 </Card>

@@ -18,6 +18,8 @@ function InventoryConsumables() {
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedConsumable, setSelectedConsumable] = useState(null)
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
 
   useEffect(() => {
     loadConsumables()
@@ -97,12 +99,14 @@ function InventoryConsumables() {
           </h1>
           <p className="text-gray-600 mt-1">Manage consumables, track stock levels, and expiry dates</p>
         </div>
-        <Button
-          onClick={() => setShowCreateModal(true)}
-          icon={<Plus className="w-5 h-5" />}
-        >
-          Add Item
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            icon={<Plus className="w-5 h-5" />}
+          >
+            Add Item
+          </Button>
+        )}
       </motion.div>
 
       {/* Filters */}
@@ -239,7 +243,7 @@ function InventoryConsumables() {
                       }}
                       className="w-full"
                     >
-                      View Details
+                      {canCreate ? 'View Details' : 'View Item'}
                     </Button>
                   </div>
                 </Card>

@@ -5,6 +5,9 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import Optional
 
+from app.dependencies.auth_dependency import require_permission
+from app.models.user_model import User
+
 from app.core.database import get_db
 from app.modules.document.models import Document
 from app.modules.document.schemas import DocumentResponse
@@ -25,6 +28,7 @@ def upload_document(
     description: Optional[str] = Form(None),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
+    _: User = Depends(require_permission("document:full"))
 ):
     file_path = os.path.join(UPLOAD_DIR, file.filename)
 
@@ -47,12 +51,19 @@ def upload_document(
 
 
 @router.get("", response_model=list[DocumentResponse])
-def get_documents(db: Session = Depends(get_db)):
+def get_documents(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("document:view"))
+):
     return db.query(Document).order_by(Document.created_at.desc()).all()
 
 
 @router.get("/{document_id}/download")
-def download_document(document_id: int, db: Session = Depends(get_db)):
+def download_document(
+    document_id: int, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("document:view"))
+):
     document = db.query(Document).filter(Document.id == document_id).first()
 
     if not document:

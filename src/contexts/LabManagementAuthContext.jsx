@@ -43,6 +43,7 @@ export function LabManagementAuthProvider({ children }) {
           name: data.full_name,
           role: data.role,
           is_active: data.is_active,
+          is_main: data.is_main,
         }
         setUser(u)
         localStorage.setItem(STORAGE_USER, JSON.stringify(u))
@@ -70,6 +71,7 @@ export function LabManagementAuthProvider({ children }) {
       full_name: res.user.full_name,
       name: res.user.full_name,
       role: res.user.role,
+      is_main: res.user.is_main,
     }
     localStorage.setItem(STORAGE_USER, JSON.stringify(u))
     setUser(u)

@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
 
 from app.core.database import get_db
-from app.dependencies.auth_dependency import get_current_user, require_roles
+from app.dependencies.auth_dependency import get_current_user, require_roles, require_permission
 from app.models.user_model import User
 from app.services.rbac_service import log_audit
 from . import crud, schemas
@@ -30,7 +30,11 @@ def list_customers(
 
 
 @router.get("/customers/{customer_id}", response_model=schemas.CustomerResponse, tags=["Customers"])
-def get_customer(customer_id: int, db: Session = Depends(get_db)):
+def get_customer(
+    customer_id: int, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("customer:view"))
+):
     """Get a specific customer"""
     customer = crud.get_customer(db, customer_id)
     if not customer:
@@ -39,7 +43,11 @@ def get_customer(customer_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/customers", response_model=schemas.CustomerResponse, status_code=201, tags=["Customers"])
-def create_customer(customer: schemas.CustomerCreate, db: Session = Depends(get_db)):
+def create_customer(
+    customer: schemas.CustomerCreate, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("customer:full"))
+):
     """Create a new customer"""
     try:
         return crud.create_customer(db, customer)
@@ -55,7 +63,8 @@ def create_customer(customer: schemas.CustomerCreate, db: Session = Depends(get_
 def update_customer(
     customer_id: int,
     customer: schemas.CustomerUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("customer:full"))
 ):
     """Update a customer"""
     updated_customer = crud.update_customer(db, customer_id, customer)
@@ -91,7 +100,8 @@ def list_projects(
     client_id: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("project:view"))
 ):
     """Get all projects with optional filtering"""
     return crud.get_projects(
@@ -101,7 +111,11 @@ def list_projects(
 
 
 @router.get("/projects/{project_id}", response_model=schemas.ProjectResponse, tags=["Projects"])
-def get_project(project_id: int, db: Session = Depends(get_db)):
+def get_project(
+    project_id: int, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("project:view"))
+):
     """Get a specific project"""
     project = crud.get_project(db, project_id)
     if not project:
@@ -110,7 +124,11 @@ def get_project(project_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/projects", response_model=schemas.ProjectResponse, status_code=201, tags=["Projects"])
-def create_project(project: schemas.ProjectCreate, db: Session = Depends(get_db)):
+def create_project(
+    project: schemas.ProjectCreate, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("project:full"))
+):
     """Create a new project"""
     return crud.create_project(db, project)
 
@@ -119,7 +137,8 @@ def create_project(project: schemas.ProjectCreate, db: Session = Depends(get_db)
 def update_project(
     project_id: int,
     project: schemas.ProjectUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("project:full"))
 ):
     """Update a project"""
     updated_project = crud.update_project(db, project_id, project)

@@ -12,7 +12,8 @@ import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext
 function RFQs() {
   const navigate = useNavigate()
   const { user } = useLabManagementAuth()
-  const isAdmin = user?.role === 'Admin'
+  const isAdmin = user?.role === 'Admin' || user?.role === 'Project Manager' || user?.role === 'Sales Manager'
+  const canCreate = user?.role !== 'Quality Manager' && (user?.role === 'Admin' || user?.role === 'Project Manager' || user?.role === 'Sales Manager')
   const [rfqs, setRfqs] = useState([])
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -194,22 +195,24 @@ function RFQs() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">RFQs</h1>
           <p className="text-gray-600">Request for Quotations management</p>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center space-x-2"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Create RFQ</span>
-          </button>
-          <button
-            onClick={() => { setShowUploadModal(true); setUploadError(null); setUploadMissing([]); setUploadFile(null); }}
-            className="px-6 py-3 border-2 border-primary text-primary font-semibold rounded-xl hover:bg-primary/10 transition-all duration-200 flex items-center justify-center space-x-2"
-          >
-            <FileSpreadsheet className="w-5 h-5" />
-            <span>Upload RFQ (Excel)</span>
-          </button>
-        </div>
+        {canCreate && (
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <button
+              onClick={() => setShowModal(true)}
+              className="px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center space-x-2"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Create RFQ</span>
+            </button>
+            <button
+              onClick={() => { setShowUploadModal(true); setUploadError(null); setUploadMissing([]); setUploadFile(null); }}
+              className="px-6 py-3 border-2 border-primary text-primary font-semibold rounded-xl hover:bg-primary/10 transition-all duration-200 flex items-center justify-center space-x-2"
+            >
+              <FileSpreadsheet className="w-5 h-5" />
+              <span>Upload RFQ (Excel)</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* RFQs Table */}
@@ -277,14 +280,16 @@ function RFQs() {
                       >
                         View
                       </button>
-                      <button
-                        onClick={() => {
-                          navigate(`/lab/management/estimations?createFromRfq=${rfq.id}`)
-                        }}
-                        className="text-green-600 hover:text-green-800 transition-colors mr-3"
-                      >
-                        Create Estimation
-                      </button>
+                      {canCreate && (
+                        <button
+                          onClick={() => {
+                            navigate(`/lab/management/estimations?createFromRfq=${rfq.id}`)
+                          }}
+                          className="text-green-600 hover:text-green-800 transition-colors mr-3"
+                        >
+                          Create Estimation
+                        </button>
+                      )}
                       {isAdmin && (
                         <button
                           onClick={(e) => handleDeleteClick(e, rfq)}
@@ -499,46 +504,48 @@ function RFQs() {
                 )}
 
                 {/* ── Status Change ── */}
-                <div className="border border-gray-200 rounded-xl p-4 space-y-3">
-                  <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                    Change Status
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { value: 'pending', label: 'Pending', border: 'border-yellow-200 bg-yellow-50 text-yellow-800' },
-                      { value: 'pending review', label: 'Pending Review', border: 'border-blue-200 bg-blue-50 text-blue-800' },
-                      { value: 'approved', label: 'Approved', border: 'border-green-200 bg-green-50 text-green-800' },
-                      { value: 'rejected', label: 'Rejected', border: 'border-red-200 bg-red-50 text-red-800' },
-                    ].map(opt => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setRfqStatus(opt.value)}
-                        className={`px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all duration-150
-                          ${rfqStatus === opt.value
-                            ? 'ring-2 ring-offset-1 ring-primary border-primary bg-primary/10 text-primary'
-                            : `${opt.border} hover:opacity-80`
-                          }`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
+                {canCreate && (
+                  <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+                    <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                      Change Status
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { value: 'pending', label: 'Pending', border: 'border-yellow-200 bg-yellow-50 text-yellow-800' },
+                        { value: 'pending review', label: 'Pending Review', border: 'border-blue-200 bg-blue-50 text-blue-800' },
+                        { value: 'approved', label: 'Approved', border: 'border-green-200 bg-green-50 text-green-800' },
+                        { value: 'rejected', label: 'Rejected', border: 'border-red-200 bg-red-50 text-red-800' },
+                      ].map(opt => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setRfqStatus(opt.value)}
+                          className={`px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all duration-150
+                            ${rfqStatus === opt.value
+                              ? 'ring-2 ring-offset-1 ring-primary border-primary bg-primary/10 text-primary'
+                              : `${opt.border} hover:opacity-80`
+                            }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      rows={2}
+                      value={rfqComment}
+                      onChange={e => setRfqComment(e.target.value)}
+                      placeholder="Optional comment"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all"
+                    />
+                    <button
+                      onClick={handleSaveRfqStatus}
+                      disabled={savingRfqStatus || rfqStatus === (displayRfq?.status ?? viewRfq?.status ?? '')}
+                      className="w-full py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold rounded-xl shadow hover:shadow-md hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-150"
+                    >
+                      {savingRfqStatus ? 'Saving…' : 'Save Status'}
+                    </button>
                   </div>
-                  <textarea
-                    rows={2}
-                    value={rfqComment}
-                    onChange={e => setRfqComment(e.target.value)}
-                    placeholder="Optional comment"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all"
-                  />
-                  <button
-                    onClick={handleSaveRfqStatus}
-                    disabled={savingRfqStatus || rfqStatus === (displayRfq?.status ?? viewRfq?.status ?? '')}
-                    className="w-full py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold rounded-xl shadow hover:shadow-md hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-150"
-                  >
-                    {savingRfqStatus ? 'Saving…' : 'Save Status'}
-                  </button>
-                </div>
+                )}
 
                 {/* Footer actions */}
                 <div className="flex gap-3 pt-2 border-t border-gray-100">

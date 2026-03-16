@@ -22,6 +22,8 @@ function TRFs() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
 
   const projectId = searchParams.get('projectId')
 
@@ -105,12 +107,14 @@ function TRFs() {
           </h1>
           <p className="text-gray-600 mt-1">Test Request Forms management</p>
         </div>
-        <Button
-          onClick={() => setShowCreateModal(true)}
-          icon={<Plus className="w-5 h-5" />}
-        >
-          New TRF
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            icon={<Plus className="w-5 h-5" />}
+          >
+            New TRF
+          </Button>
+        )}
       </motion.div>
 
       {/* Filters */}

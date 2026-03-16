@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from app.dependencies.auth_dependency import require_permission
+from app.models.user_model import User
 from app.core.database import SessionLocal
 from app.modules.estimations.models import Estimation, EstimationTestItem
 from app.modules.estimations.schemas import EstimationCreate, EstimationOut, EstimationReview, TestTypeOut
@@ -19,7 +21,10 @@ def get_db():
 
 # 🔹 GET ALL ESTIMATIONS
 @router.get("", response_model=List[EstimationOut])
-def get_estimations(db: Session = Depends(get_db)):
+def get_estimations(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("estimation:view"))
+):
     estimations = db.query(Estimation).all()
     
     response = []
@@ -52,7 +57,11 @@ def get_estimations(db: Session = Depends(get_db)):
 
 # 🔹 GET ESTIMATION BY ID
 @router.get("/{id}", response_model=EstimationOut)
-def get_estimation(id: int, db: Session = Depends(get_db)):
+def get_estimation(
+    id: int, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("estimation:view"))
+):
     e = db.query(Estimation).filter(Estimation.id == id).first()
     if not e:
         raise HTTPException(status_code=404, detail="Estimation not found")
@@ -88,7 +97,11 @@ def get_test_types():
 
 # 🔹 CREATE ESTIMATION
 @router.post("")
-def create_estimation(data: EstimationCreate, db: Session = Depends(get_db)):
+def create_estimation(
+    data: EstimationCreate, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("estimation:full"))
+):
     # 🔸 calculate totals
     total_hours = sum(t.hours * t.numberOfDUT for t in data.tests)
     subtotal = sum(t.hours * t.ratePerHour * t.numberOfDUT for t in data.tests)
@@ -131,7 +144,12 @@ def create_estimation(data: EstimationCreate, db: Session = Depends(get_db)):
 
 # 🔹 REVIEW ESTIMATION
 @router.post("/{id}/review")
-def review_estimation(id: int, review: EstimationReview, db: Session = Depends(get_db)):
+def review_estimation(
+    id: int, 
+    review: EstimationReview, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("estimation:full"))
+):
     estimation = db.query(Estimation).filter(Estimation.id == id).first()
     if not estimation:
         raise HTTPException(status_code=404, detail="Estimation not found")

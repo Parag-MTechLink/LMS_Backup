@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
-from app.dependencies.auth_dependency import require_roles
+from app.dependencies.auth_dependency import require_roles, require_permission
 from app.models.user_model import User
 from app.services.rbac_service import log_audit
 from app.modules.rfqs.models import RFQ
@@ -26,7 +26,10 @@ def get_db():
 
 # 🔹 GET ALL RFQs (exclude soft-deleted)
 @router.get("")
-def get_rfqs(db: Session = Depends(get_db)):
+def get_rfqs(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("rfq:view"))
+):
     rfqs = (
         db.query(
             RFQ.id,
@@ -56,7 +59,11 @@ def get_rfqs(db: Session = Depends(get_db)):
 
 # 🔹 CREATE RFQ
 @router.post("")
-def create_rfq(data: RFQCreate, db: Session = Depends(get_db)):
+def create_rfq(
+    data: RFQCreate, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("rfq:full"))
+):
     new_rfq = RFQ(
         customerId=data.customerId,
         product=data.product,
@@ -83,7 +90,11 @@ def create_rfq(data: RFQCreate, db: Session = Depends(get_db)):
 
 # 🔹 GET RFQ BY ID
 @router.get("/{id}")
-def get_rfq(id: int, db: Session = Depends(get_db)):
+def get_rfq(
+    id: int, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("rfq:view"))
+):
     rfq = db.query(RFQ).filter(RFQ.id == id, RFQ.is_deleted == False).first()
     if not rfq:
         return None
@@ -116,7 +127,7 @@ def update_rfq_status(id: int, body: RFQStatusUpdate, db: Session = Depends(get_
 def delete_rfq(
     id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("Admin")),
+    current_user: User = Depends(require_permission("rfq:full")),
 ):
     rfq = db.query(RFQ).filter(RFQ.id == id, RFQ.is_deleted == False).first()
     if not rfq:

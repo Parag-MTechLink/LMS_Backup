@@ -20,6 +20,8 @@ function InventoryInstruments() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedInstrument, setSelectedInstrument] = useState(null)
   const navigate = useNavigate()
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
 
   useEffect(() => {
     loadInstruments()
@@ -101,12 +103,14 @@ function InventoryInstruments() {
           </h1>
           <p className="text-gray-600 mt-1">Manage lab instruments, maintenance, and warranty tracking</p>
         </div>
-        <Button
-          onClick={() => setShowCreateModal(true)}
-          icon={<Plus className="w-5 h-5" />}
-        >
-          Add Instrument
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            icon={<Plus className="w-5 h-5" />}
+          >
+            Add Instrument
+          </Button>
+        )}
       </motion.div>
 
       {/* Filters */}
@@ -214,25 +218,29 @@ function InventoryInstruments() {
                       <Eye className="w-4 h-4 mr-1" />
                       View
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedInstrument(instrument)
-                        setShowCreateModal(true)
-                      }}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    {instrument.status === 'Active' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeactivate(instrument.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                    {canCreate && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedInstrument(instrument)
+                            setShowCreateModal(true)
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        {instrument.status === 'Active' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeactivate(instrument.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

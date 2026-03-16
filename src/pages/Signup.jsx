@@ -12,7 +12,6 @@ const ROLES = [
   { value: 'Finance Manager', label: 'Finance Manager' },
   { value: 'Quality Manager', label: 'Quality Manager' },
   { value: 'Team Lead', label: 'Team Lead' },
-  { value: 'Sales Engineer', label: 'Sales Engineer' },
 ]
 
 export default function Signup() {
@@ -21,7 +20,7 @@ export default function Signup() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [role, setRole] = useState('Sales Engineer')
+  const [role, setRole] = useState('Sales Manager')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {

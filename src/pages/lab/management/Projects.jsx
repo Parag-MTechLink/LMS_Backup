@@ -15,7 +15,8 @@ function Projects() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { user } = useLabManagementAuth()
-  const isAdmin = user?.role === 'Admin'
+  const isAdmin = user?.role === 'Sales Manager' || user?.role === 'Project Manager'
+  const canCreate = user?.role !== 'Quality Manager' && (user?.role === 'Sales Manager' || user?.role === 'Project Manager')
   const [projects, setProjects] = useState([])
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -97,13 +98,15 @@ function Projects() {
           <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
           <p className="mt-2 text-gray-600">Manage all your lab projects</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          New Project
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            New Project
+          </button>
+        )}
       </div>
 
       {/* Search and Filters */}

@@ -87,6 +87,8 @@ class MeResponse(BaseModel):
     full_name: str
     role: str
     is_active: bool
+    is_main: bool
+    parent_id: str | None = None
 
 class ResetRequest(BaseModel):
     email: EmailStr
@@ -104,7 +106,11 @@ def signup(
     current_user: User | None = Depends(get_current_user_optional),
 ):
     """Register a new user. Only Admin can create Admin accounts."""
-    created_by_admin = current_user is not None and current_user.role == "Admin"
+    created_by_admin = current_user is not None and current_user.role in ["Sales Manager", "Project Manager", "Team Lead"]
+    # Bootstrap: if no users exist, the first one becomes the main PM
+    is_bootstrap = db.query(User).count() == 0
+    is_main = is_bootstrap and body.role == "Project Manager"
+    
     user, err = create_user(
         db,
         full_name=body.full_name,
@@ -112,6 +118,8 @@ def signup(
         password=body.password,
         role=body.role.strip(),
         created_by_admin=created_by_admin,
+        creator_user=current_user,
+        is_main=is_main,
     )
     if err:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=err)
@@ -156,6 +164,7 @@ def login(
             "email": user.email,
             "full_name": user.full_name,
             "role": user.role,
+            "is_main": user.is_main,
         },
     )
 
@@ -169,16 +178,17 @@ def me(current_user: User = Depends(get_current_user)):
         full_name=current_user.full_name,
         role=current_user.role,
         is_active=current_user.is_active,
+        is_main=current_user.is_main,
     )
 
 
 @router.get("/users", response_model=List[MeResponse])
 def get_users(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Return all users in the system. Admin only."""
-    if current_user.role != "Admin":
+    if current_user.role != "Project Manager":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only administrators can view the user directory.",
+            detail="Only Project Managers can view the user directory.",
         )
     users = get_all_users(db)
     return [
@@ -188,6 +198,8 @@ def get_users(current_user: User = Depends(get_current_user), db: Session = Depe
             full_name=u.full_name,
             role=u.role,
             is_active=u.is_active,
+            is_main=u.is_main,
+            parent_id=str(u.parent_id) if u.parent_id else None,
         )
         for u in users
     ]
@@ -198,10 +210,10 @@ def delete_user_route(
     current_user: User = Depends(get_current_user),
 ):
     """Delete a user account. Admin only."""
-    if current_user.role != "Admin":
+    if current_user.role != "Project Manager":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only administrators can delete user accounts.",
+            detail="Only Project Managers can delete user accounts.",
         )
     
     # Optional: Prevent admin from deleting themselves

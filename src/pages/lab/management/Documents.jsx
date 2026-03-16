@@ -26,6 +26,8 @@ function Documents() {
   const [showUploadModal, setShowUploadModal] = useState(false)
 
   const navigate = useNavigate()
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
 
   useEffect(() => {
     loadDocuments()
@@ -131,12 +133,14 @@ function Documents() {
           </p>
         </div>
 
-        <Button
-          onClick={() => setShowUploadModal(true)}
-          icon={<Plus className="w-5 h-5" />}
-        >
-          Upload Document
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => setShowUploadModal(true)}
+            icon={<Plus className="w-5 h-5" />}
+          >
+            Upload Document
+          </Button>
+        )}
       </motion.div>
 
       {/* Filters */}

@@ -24,6 +24,8 @@ class User(Base):
     password_hash = Column(Text, nullable=False)
     role = Column(Text, nullable=False)  # One of ROLES
     is_active = Column(Boolean, default=True, nullable=False)
+    is_main = Column(Boolean, default=False, nullable=False)
+    parent_id = Column(UUID(as_uuid=True), nullable=True, index=True)
     
     # Password Reset Fields
     reset_token = Column(Text, nullable=True, index=True)

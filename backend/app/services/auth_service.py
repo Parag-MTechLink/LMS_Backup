@@ -48,6 +48,8 @@ def create_user(
     password: str,
     role: str,
     created_by_admin: bool = False,
+    creator_user: User | None = None,
+    is_main: bool = False,
 ) -> tuple[User | None, str]:
     """
     Create a new user. Returns (user, error_message).
@@ -62,16 +64,22 @@ def create_user(
     if role not in ROLES:
         return None, f"Invalid role. Must be one of: {', '.join(ROLES)}."
 
-    # Limit to 3 Admin accounts
-    if role == "Admin":
-        admin_count = db.query(User).filter(User.role == "Admin").count()
-        if admin_count >= 3:
-            return None, "Maximum limit of 3 Admin accounts has been reached."
-
-    # Bootstrap: allow first user to be Admin when no users exist
-    admin_ok = created_by_admin or (role == "Admin" and db.query(User).count() == 0)
-    if role == "Admin" and not admin_ok:
-        return None, "Only an existing Admin can create Admin accounts."
+    # Limit Project Manager creation: each PM can create up to 2 other PMs
+    if role == "Project Manager":
+        # Check if creator is a PM and count their subordinates
+        if creator_user and creator_user.role == "Project Manager":
+            sub_pm_count = db.query(User).filter(
+                User.role == "Project Manager",
+                User.parent_id == creator_user.id
+            ).count()
+            
+            if sub_pm_count >= 2:
+                return None, "You have reached your limit of 2 subordinate Project Managers."
+        
+        # If not bootstrap and no creator or creator not PM, restrict
+        elif db.query(User).count() > 0:
+            if not creator_user or creator_user.role != "Project Manager":
+                return None, "Only Project Managers can add other Project Managers."
 
     valid, msg = validate_password_strength(password)
     if not valid:
@@ -87,6 +95,8 @@ def create_user(
         password_hash=hash_password(password),
         role=role,
         is_active=True,
+        is_main=is_main,
+        parent_id=creator_user.id if creator_user else None,
     )
     db.add(user)
     db.commit()
