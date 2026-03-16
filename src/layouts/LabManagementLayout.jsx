@@ -85,8 +85,10 @@ function LabManagementLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const navigate = useNavigate()
   const notificationRef = useRef(null)
+  const profileRef = useRef(null)
   const { user, logout } = useLabManagementAuth()
   const displayName = user?.full_name || user?.name || user?.email || 'User'
   const displayRole = user?.role || ''
@@ -250,6 +252,9 @@ function LabManagementLayout() {
       if (notificationRef.current && !notificationRef.current.contains(event.target)) {
         setNotificationsOpen(false)
       }
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileDropdownOpen(false)
+      }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -345,20 +350,25 @@ function LabManagementLayout() {
 
           {/* User Profile */}
           <div className="p-6 border-t border-gray-200 bg-gray-50">
-            <div className="flex items-center space-x-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white text-sm font-semibold">
-                <span>{getInitials(displayName)}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
-                <p className="text-xs text-gray-500 truncate capitalize">{displayRole || 'Role'}</p>
-              </div>
+            <div className="flex items-center space-x-4">
+              <Link 
+                to="/lab/management/profile"
+                className="flex flex-1 items-center space-x-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md hover:border-primary transition-all duration-200"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white text-sm font-semibold">
+                  <span>{getInitials(displayName)}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
+                  <p className="text-xs text-gray-500 truncate capitalize">{displayRole || 'Role'}</p>
+                </div>
+              </Link>
               <button
                 onClick={() => {
                   logout()
                   navigate('/')
                 }}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition-colors duration-200 hover:border-primary hover:text-primary"
+                className="flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all duration-200 hover:border-primary hover:text-primary hover:shadow-md"
                 title="Logout"
               >
                 <LogOut className="w-5 h-5" />
@@ -482,6 +492,58 @@ function LabManagementLayout() {
                             </button>
                           </div>
                         )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Profile Dropdown */}
+                <div className="relative" ref={profileRef}>
+                  <button
+                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                    className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white text-xs font-semibold shadow-sm">
+                      <span>{getInitials(displayName)}</span>
+                    </div>
+                    <div className="hidden sm:block text-left">
+                      <p className="text-xs font-semibold text-gray-900 leading-none">{displayName}</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5 leading-none capitalize">{displayRole}</p>
+                    </div>
+                  </button>
+
+                  <AnimatePresence>
+                    {profileDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 z-[9999] overflow-hidden"
+                      >
+                        <div className="p-3 border-b border-gray-200 bg-gray-50/50">
+                          <p className="text-xs font-semibold text-gray-900 truncate">{displayName}</p>
+                          <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
+                        </div>
+                        <div className="p-1">
+                          <Link 
+                            to="/lab/management/profile" 
+                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                            onClick={() => setProfileDropdownOpen(false)}
+                          >
+                            <User className="w-4 h-4" />
+                            <span>My Profile</span>
+                          </Link>
+                          <button
+                            onClick={() => {
+                              logout()
+                              navigate('/')
+                            }}
+                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            <span>Sign out</span>
+                          </button>
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>

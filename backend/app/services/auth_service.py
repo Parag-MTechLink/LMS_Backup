@@ -205,3 +205,49 @@ def verify_mfa_code(db: Session, email: str, code: str) -> User | None:
     user.mfa_code_expires = None
     db.commit()
     return user
+
+def update_user_profile(db: Session, user_id: str, profile_data: dict) -> tuple[User | None, str]:
+    """
+    Update user profile fields.
+    """
+    user = get_user_by_id(db, UUID(user_id))
+    if not user:
+        return None, "User not found."
+
+    # Update fields if present in profile_data
+    allowed_fields = [
+        "full_name", "gender", "country", "language", "address", 
+        "company_name", "phone_no", "designation", "industry", "account_type"
+    ]
+    
+    for field in allowed_fields:
+        if field in profile_data:
+            setattr(user, field, profile_data[field])
+    
+    user.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(user)
+    return user, ""
+
+def change_user_password(db: Session, user_id: str, current_password: str, new_password: str) -> tuple[bool, str]:
+    """
+    Change user password after verifying current password.
+    """
+    user = get_user_by_id(db, UUID(user_id))
+    if not user:
+        return False, "User not found."
+
+    if not verify_password(current_password, user.password_hash):
+        return False, "Incorrect current password."
+
+    valid, msg = validate_password_strength(new_password)
+    if not valid:
+        return False, msg
+
+    if verify_password(new_password, user.password_hash):
+        return False, "New password cannot be same as current password."
+
+    user.password_hash = hash_password(new_password)
+    user.updated_at = datetime.utcnow()
+    db.commit()
+    return True, "Password changed successfully."

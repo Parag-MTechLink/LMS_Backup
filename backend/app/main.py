@@ -343,6 +343,10 @@ from app.routes.auth import (
     PasswordReset,
     verify_mfa as _auth_verify_mfa,
     VerifyMFARequest,
+    update_profile as _auth_update_profile,
+    change_password as _auth_change_password,
+    UpdateProfileRequest,
+    ChangePasswordRequest,
 )
 from app.models.user_model import User
 from fastapi import Depends
@@ -363,6 +367,16 @@ def auth_signup_route(body: SignupRequest, request: Request, db: Session = Depen
 @app.get("/api/v1/auth/me", response_model=MeResponse)
 def auth_me_route(current_user: User = Depends(get_current_user)):
     return _auth_me(current_user)
+
+
+@app.put("/api/v1/auth/profile", response_model=MeResponse)
+def auth_update_profile_route(body: UpdateProfileRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return _auth_update_profile(body, db, current_user)
+
+
+@app.post("/api/v1/auth/change-password")
+def auth_change_password_route(body: ChangePasswordRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return _auth_change_password(body, db, current_user)
 
 
 @app.get("/api/v1/auth/users", response_model=List[MeResponse])
