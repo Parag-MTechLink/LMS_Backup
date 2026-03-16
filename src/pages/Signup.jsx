@@ -29,7 +29,6 @@ export default function Signup() {
       toast.error('Please fill in all required fields.')
       return
     }
-<<<<<<< HEAD
     
     // Stricter password validation
     const hasLetter = /[a-zA-Z]/.test(password)
@@ -38,11 +37,6 @@ export default function Signup() {
     const hasSpecial = /[^a-zA-Z\d]/.test(password)
     if (password.length < 8 || !hasLetter || !hasNumber || !hasUpper || !hasSpecial) {
       toast.error('Password must be at least 8 characters and include a letter, a number, an uppercase letter, and a special character.')
-=======
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
-    if (!passwordRegex.test(password)) {
-      toast.error('Password must be at least 8 characters and include uppercase, lowercase, a number, and a symbol.')
->>>>>>> 8149f32925f9cfcdade842169b4f70f56a4e9366
       return
     }
     setLoading(true)
@@ -172,13 +166,8 @@ export default function Signup() {
                     autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-<<<<<<< HEAD
                     className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-11 pr-4 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     placeholder="Min. 8 chars, 1 uppercase, 1 special, 1 number"
-=======
-                    className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-11 pr-12 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    placeholder="Min. 8 characters, letter + number"
->>>>>>> 8149f32925f9cfcdade842169b4f70f56a4e9366
                   />
                   <button
                     type="button"
@@ -194,11 +183,7 @@ export default function Signup() {
                   </p>
                 )}
                 <p className="mt-1.5 text-xs text-slate-500">
-<<<<<<< HEAD
                   Min. 8 chars, 1 letter, 1 number, 1 uppercase, &amp; 1 special.
-=======
-                  Min. 8 characters with Uppercase, Lowercase, Number, and Symbol.
->>>>>>> 8149f32925f9cfcdade842169b4f70f56a4e9366
                 </p>
               </div>
 
