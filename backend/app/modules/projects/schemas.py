@@ -15,6 +15,10 @@ class CustomerBase(BaseModel):
     phone: Optional[str] = None
     contact_person: Optional[str] = Field(None, alias="contactPerson")
     address: Optional[str] = None
+    region: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
 
 
 class CustomerCreate(CustomerBase):
@@ -29,7 +33,11 @@ class CustomerUpdate(BaseModel):
     phone: Optional[str] = None
     contact_person: Optional[str] = Field(None, alias="contactPerson")
     address: Optional[str] = None
+    region: Optional[str] = None
     status: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
 
 
 class CustomerResponse(BaseModel):
@@ -40,6 +48,7 @@ class CustomerResponse(BaseModel):
     phone: Optional[str] = None
     contact_person: Optional[str] = Field(None, alias="contactPerson")
     address: Optional[str] = None
+    region: Optional[str] = None
     status: str
     created_at: datetime = Field(..., alias="createdAt")
     updated_at: datetime = Field(..., alias="updatedAt")

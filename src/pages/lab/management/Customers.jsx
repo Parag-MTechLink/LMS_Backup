@@ -122,6 +122,9 @@ function Customers() {
                   Contact
                 </th>
                 <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                  Region
+                </th>
+                <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-center">
@@ -164,6 +167,12 @@ function Customers() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-[13px] font-medium text-gray-700">
                         {customer.contactPerson || 'Primary Contact'}
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-[13px] font-medium text-gray-700">
+                        {customer.region || '-'}
                       </div>
                     </td>
 
