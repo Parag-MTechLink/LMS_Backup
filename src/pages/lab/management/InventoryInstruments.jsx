@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Plus, Search, Wrench, Edit, Trash2, Eye, AlertCircle } from 'lucide-react'
 import { instrumentsService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
@@ -12,9 +12,10 @@ import Modal from '../../../components/labManagement/Modal'
 import CreateInstrumentForm from '../../../components/labManagement/forms/CreateInstrumentForm'
 
 function InventoryInstruments() {
+  const [searchParams] = useSearchParams()
   const [instruments, setInstruments] = useState([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [selectedDepartment, setSelectedDepartment] = useState('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -24,6 +25,12 @@ function InventoryInstruments() {
   useEffect(() => {
     loadInstruments()
   }, [])
+
+  // Support deep-linking from notifications
+  useEffect(() => {
+    const s = searchParams.get('search')
+    if (s) setSearchTerm(s)
+  }, [searchParams])
 
   const loadInstruments = async () => {
     try {
