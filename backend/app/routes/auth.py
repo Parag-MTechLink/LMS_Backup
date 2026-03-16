@@ -22,7 +22,9 @@ from app.services.auth_service import (
     create_password_reset_token,
     reset_password,
     create_mfa_code,
-    verify_mfa_code
+    verify_mfa_code,
+    update_user_profile,
+    change_user_password
 )
 from app.services.rbac_service import log_audit
 from app.utils.email import send_password_reset_email, send_mfa_code_email
@@ -97,6 +99,31 @@ class MeResponse(BaseModel):
     full_name: str
     role: str
     is_active: bool
+    gender: str | None = None
+    country: str | None = None
+    language: str | None = None
+    address: str | None = None
+    company_name: str | None = None
+    phone_no: str | None = None
+    designation: str | None = None
+    industry: str | None = None
+    account_type: str | None = None
+
+class UpdateProfileRequest(BaseModel):
+    full_name: str | None = None
+    gender: str | None = None
+    country: str | None = None
+    language: str | None = None
+    address: str | None = None
+    company_name: str | None = None
+    phone_no: str | None = None
+    designation: str | None = None
+    industry: str | None = None
+    account_type: str | None = None
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
 
 class ResetRequest(BaseModel):
     email: EmailStr
@@ -180,6 +207,15 @@ def login(
             "email": user.email,
             "full_name": user.full_name,
             "role": user.role,
+            "gender": user.gender,
+            "country": user.country,
+            "language": user.language,
+            "address": user.address,
+            "company_name": user.company_name,
+            "phone_no": user.phone_no,
+            "designation": user.designation,
+            "industry": user.industry,
+            "account_type": user.account_type,
         },
     )
 
@@ -204,6 +240,15 @@ def verify_mfa(body: VerifyMFARequest, db: Session = Depends(get_db)):
             "email": user.email,
             "full_name": user.full_name,
             "role": user.role,
+            "gender": user.gender,
+            "country": user.country,
+            "language": user.language,
+            "address": user.address,
+            "company_name": user.company_name,
+            "phone_no": user.phone_no,
+            "designation": user.designation,
+            "industry": user.industry,
+            "account_type": user.account_type,
         },
         message="Verification successful. Logged in."
     )
@@ -218,7 +263,62 @@ def me(current_user: User = Depends(get_current_user)):
         full_name=current_user.full_name,
         role=current_user.role,
         is_active=current_user.is_active,
+        gender=current_user.gender,
+        country=current_user.country,
+        language=current_user.language,
+        address=current_user.address,
+        company_name=current_user.company_name,
+        phone_no=current_user.phone_no,
+        designation=current_user.designation,
+        industry=current_user.industry,
+        account_type=current_user.account_type
     )
+
+
+@router.put("/profile", response_model=MeResponse)
+def update_profile(
+    body: UpdateProfileRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update current user's profile information."""
+    updated_user, err = update_user_profile(db, str(current_user.id), body.dict(exclude_unset=True))
+    if err:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=err)
+    return MeResponse(
+        id=str(updated_user.id),
+        email=updated_user.email,
+        full_name=updated_user.full_name,
+        role=updated_user.role,
+        is_active=updated_user.is_active,
+        gender=updated_user.gender,
+        country=updated_user.country,
+        language=updated_user.language,
+        address=updated_user.address,
+        company_name=updated_user.company_name,
+        phone_no=updated_user.phone_no,
+        designation=updated_user.designation,
+        industry=updated_user.industry,
+        account_type=updated_user.account_type
+    )
+
+
+@router.post("/change-password")
+def change_password(
+    body: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Change current user's password."""
+    success, message = change_user_password(
+        db, 
+        str(current_user.id), 
+        body.current_password, 
+        body.new_password
+    )
+    if not success:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
+    return {"message": message}
 
 
 @router.get("/users", response_model=List[MeResponse])
@@ -237,6 +337,15 @@ def get_users(current_user: User = Depends(get_current_user), db: Session = Depe
             full_name=u.full_name,
             role=u.role,
             is_active=u.is_active,
+            gender=u.gender,
+            country=u.country,
+            language=u.language,
+            address=u.address,
+            company_name=u.company_name,
+            phone_no=u.phone_no,
+            designation=u.designation,
+            industry=u.industry,
+            account_type=u.account_type
         )
         for u in users
     ]

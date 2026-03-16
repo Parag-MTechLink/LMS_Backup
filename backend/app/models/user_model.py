@@ -33,6 +33,17 @@ class User(Base):
     mfa_code = Column(Text, nullable=True, index=True)
     mfa_code_expires = Column(DateTime, nullable=True)
     
+    # Profile Fields
+    gender = Column(Text, nullable=True)
+    country = Column(Text, nullable=True)
+    language = Column(Text, nullable=True)
+    address = Column(Text, nullable=True)
+    company_name = Column(Text, nullable=True)
+    phone_no = Column(Text, nullable=True)
+    designation = Column(Text, nullable=True)
+    industry = Column(Text, nullable=True)
+    account_type = Column(Text, nullable=True)
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

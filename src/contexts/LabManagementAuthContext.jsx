@@ -37,12 +37,8 @@ export function LabManagementAuthProvider({ children }) {
       .me()
       .then((data) => {
         const u = {
-          id: data.id,
-          email: data.email,
-          full_name: data.full_name,
-          name: data.full_name,
-          role: data.role,
-          is_active: data.is_active,
+          ...data,
+          name: data.full_name, // fallback for components using .name
         }
         setUser(u)
         localStorage.setItem(STORAGE_USER, JSON.stringify(u))
@@ -70,11 +66,8 @@ export function LabManagementAuthProvider({ children }) {
 
     localStorage.setItem(STORAGE_TOKEN, res.access_token)
     const u = {
-      id: res.user.id,
-      email: res.user.email,
-      full_name: res.user.full_name,
+      ...res.user,
       name: res.user.full_name,
-      role: res.user.role,
     }
     localStorage.setItem(STORAGE_USER, JSON.stringify(u))
     setUser(u)
@@ -85,11 +78,8 @@ export function LabManagementAuthProvider({ children }) {
     const res = await authService.verifyMfa(email, code)
     localStorage.setItem(STORAGE_TOKEN, res.access_token)
     const u = {
-      id: res.user.id,
-      email: res.user.email,
-      full_name: res.user.full_name,
+      ...res.user,
       name: res.user.full_name,
-      role: res.user.role,
     }
     localStorage.setItem(STORAGE_USER, JSON.stringify(u))
     setUser(u)
