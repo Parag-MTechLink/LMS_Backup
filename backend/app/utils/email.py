@@ -84,3 +84,28 @@ def send_password_reset_email(to_email: str, token: str):
     """
     
     return send_email(to_email, subject, body, html_body)
+
+def send_mfa_code_email(to_email: str, code: str):
+    """Send a 6-digit MFA verification code to the user."""
+    subject = f"{code} is your LMS verification code"
+    body = f"Hello,\n\nYour 6-digit verification code is: {code}\n\nThis code will expire in 5 minutes. If you did not request this, please ignore this email."
+    
+    html_body = f"""
+        <body>
+            <div style="font-family: sans-serif; max-width: 500px; margin: auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px;">
+                <h2 style="color: #4f46e5; text-align: center;">Verification Code</h2>
+                <p>Hello,</p>
+                <p>Your 6-digit verification code for logging into LMS is:</p>
+                <div style="background-color: #f3f4f6; text-align: center; padding: 20px; border-radius: 8px; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #111827; margin: 20px 0;">
+                    {code}
+                </div>
+                <p>This code will expire in <strong>5 minutes</strong>.</p>
+                <p style="color: #6b7280; font-size: 14px;">If you did not request this, please ignore this email.</p>
+                <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+                <p style="color: #9ca3af; font-size: 12px; text-align: center;">LMS Security Team</p>
+            </div>
+        </body>
+    </html>
+    """
+    
+    return send_email(to_email, subject, body, html_body)

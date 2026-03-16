@@ -341,6 +341,8 @@ from app.routes.auth import (
     perform_password_reset as _auth_reset_password,
     ResetRequest,
     PasswordReset,
+    verify_mfa as _auth_verify_mfa,
+    VerifyMFARequest,
 )
 from app.models.user_model import User
 from fastapi import Depends
@@ -385,6 +387,12 @@ def auth_request_reset_route(body: ResetRequest, db: Session = Depends(get_db)):
 def auth_reset_password_route(body: PasswordReset, db: Session = Depends(get_db)):
     """Verify token and set new password."""
     return _auth_reset_password(body, db)
+
+
+@app.post("/api/v1/auth/verify-mfa", response_model=LoginResponse)
+def auth_verify_mfa_route(body: VerifyMFARequest, db: Session = Depends(get_db)):
+    """Verify the 6-digit MFA code and issue the final access token."""
+    return _auth_verify_mfa(body, db)
 
 
 if __name__ == "__main__":

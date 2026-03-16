@@ -20,10 +20,12 @@ from app.services.auth_service import (
     get_all_users, 
     delete_user,
     create_password_reset_token,
-    reset_password
+    reset_password,
+    create_mfa_code,
+    verify_mfa_code
 )
 from app.services.rbac_service import log_audit
-from app.utils.email import send_password_reset_email
+from app.utils.email import send_password_reset_email, send_mfa_code_email
 
 logger = logging.getLogger(__name__)
 
@@ -76,9 +78,17 @@ class LoginRequest(BaseModel):
 
 
 class LoginResponse(BaseModel):
-    access_token: str
+    access_token: str | None = None
     token_type: str = "bearer"
-    user: dict
+    user: dict | None = None
+    mfa_required: bool = False
+    email: str | None = None
+    message: str | None = None
+
+
+class VerifyMFARequest(BaseModel):
+    email: EmailStr
+    code: str
 
 
 class MeResponse(BaseModel):
@@ -147,6 +157,20 @@ def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
+    
+    # 1. Generate and Save MFA Code
+    code = create_mfa_code(db, user.email)
+    if code:
+        # 2. Send MFA Email
+        send_mfa_code_email(user.email, code)
+        
+        return LoginResponse(
+            mfa_required=True,
+            email=user.email,
+            message="A 6-digit verification code has been sent to your email."
+        )
+
+    # Fallback to direct login if MFA logic fails (not expected)
     token = create_access_token(user_id=str(user.id), role=user.role, email=user.email)
     return LoginResponse(
         access_token=token,
@@ -157,6 +181,31 @@ def login(
             "full_name": user.full_name,
             "role": user.role,
         },
+    )
+
+
+@router.post("/verify-mfa", response_model=LoginResponse)
+def verify_mfa(body: VerifyMFARequest, db: Session = Depends(get_db)):
+    """Verify the 6-digit MFA code and issue the final access token."""
+    user = verify_mfa_code(db, body.email, body.code)
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired verification code."
+        )
+    
+    token = create_access_token(user_id=str(user.id), role=user.role, email=user.email)
+    return LoginResponse(
+        access_token=token,
+        token_type="bearer",
+        user={
+            "id": str(user.id),
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role,
+        },
+        message="Verification successful. Logged in."
     )
 
 

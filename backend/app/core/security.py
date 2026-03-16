@@ -6,6 +6,8 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+import secrets
+import string
 import bcrypt
 import jwt
 
@@ -17,6 +19,11 @@ BCRYPT_MAX_PASSWORD_BYTES = 72
 # Strong password: min 8 chars, at least one uppercase, one lowercase, one number, and one symbol
 PASSWORD_MIN_LENGTH = 8
 PASSWORD_PATTERN = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")
+
+
+def generate_mfa_code(length: int = 6) -> str:
+    """Generate a high-entropy numeric string of fixed length (6 digits by default)."""
+    return "".join(secrets.choice(string.digits) for _ in range(length))
 
 
 def _password_bytes(plain: str) -> bytes:

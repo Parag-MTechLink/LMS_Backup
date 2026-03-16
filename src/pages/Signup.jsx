@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { authService } from '../services/labManagementApi'
+import { useLabManagementAuth } from '../contexts/LabManagementAuthContext'
 import { getApiErrorMessage } from '../utils/apiError'
 import { User, Mail, Lock, Briefcase, ArrowRight, X, Eye, EyeOff } from 'lucide-react'
 
@@ -21,6 +22,7 @@ export default function Signup() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [role, setRole] = useState('Testing Engineer')
+  const { login } = useLabManagementAuth()
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
@@ -29,21 +31,28 @@ export default function Signup() {
       toast.error('Please fill in all required fields.')
       return
     }
-    
-    // Stricter password validation
-    const hasLetter = /[a-zA-Z]/.test(password)
-    const hasNumber = /\d/.test(password)
-    const hasUpper = /[A-Z]/.test(password)
-    const hasSpecial = /[^a-zA-Z\d]/.test(password)
-    if (password.length < 8 || !hasLetter || !hasNumber || !hasUpper || !hasSpecial) {
-      toast.error('Password must be at least 8 characters and include a letter, a number, an uppercase letter, and a special character.')
+    // Universal password validation: 8+ chars, 1 upper, 1 lower, 1 number, 1 any symbol
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{8,}$/
+    if (!passwordRegex.test(password)) {
+      toast.error('Password must be at least 8 characters and include uppercase, lowercase, a number, and a symbol.')
       return
     }
     setLoading(true)
     try {
+      // 1. Create the account
       await authService.signup({ full_name: full_name.trim(), email: email.trim(), password, role })
-      toast.success('Account created. Please sign in.')
-      navigate('/login', { replace: true })
+
+      // 2. Automatically log them in to trigger MFA
+      const res = await login(email.trim(), password)
+
+      // 3. Check if MFA started
+      if (res.mfa_required) {
+        toast.success('Account created! Please verify your identity.')
+        navigate('/verify-mfa', { state: { email: email.trim() } })
+      } else {
+        toast.success('Account created and logged in!')
+        navigate('/dashboard')
+      }
     } catch (err) {
       const status = err.response?.status
       let msg = status === 404
@@ -166,8 +175,8 @@ export default function Signup() {
                     autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-11 pr-4 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    placeholder="Min. 8 chars, 1 uppercase, 1 special, 1 number"
+                    className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-11 pr-12 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="Min. 8 characters, 1 uppercase, 1 special, 1 number"
                   />
                   <button
                     type="button"
@@ -183,7 +192,7 @@ export default function Signup() {
                   </p>
                 )}
                 <p className="mt-1.5 text-xs text-slate-500">
-                  Min. 8 chars, 1 letter, 1 number, 1 uppercase, &amp; 1 special.
+                  Min. 8 characters with Uppercase, Lowercase, Number, and Symbol.
                 </p>
               </div>
 
