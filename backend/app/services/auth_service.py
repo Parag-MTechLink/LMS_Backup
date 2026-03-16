@@ -10,6 +10,7 @@ from app.core.security import (
     hash_password,
     validate_password_strength,
     verify_password,
+    generate_mfa_code,
 )
 from app.models.user_model import User, ROLES
 
@@ -162,3 +163,45 @@ def reset_password(db: Session, token: str, new_password: str) -> tuple[bool, st
     
     db.commit()
     return True, "Password has been reset successfully."
+
+def create_mfa_code(db: Session, email: str) -> str | None:
+    """
+    Generate a 6-digit MFA code for the user and save it to the DB with expiry.
+    Returns the code if successful, else None.
+    """
+    user = get_user_by_email(db, email)
+    if not user:
+        return None
+    
+    code = generate_mfa_code()
+    user.mfa_code = code
+    # MFA code expires in 5 minutes
+    user.mfa_code_expires = datetime.utcnow() + timedelta(minutes=5)
+    
+    db.commit()
+    return code
+
+def verify_mfa_code(db: Session, email: str, code: str) -> User | None:
+    """
+    Validate the MFA code and return the user if successful.
+    Clears the code upon success.
+    """
+    user = get_user_by_email(db, email)
+    if not user:
+        return None
+    
+    if not user.mfa_code or user.mfa_code != code:
+        return None
+    
+    if user.mfa_code_expires < datetime.utcnow():
+        # Clear expired code
+        user.mfa_code = None
+        user.mfa_code_expires = None
+        db.commit()
+        return None
+    
+    # Success: clear code and return user
+    user.mfa_code = None
+    user.mfa_code_expires = None
+    db.commit()
+    return user

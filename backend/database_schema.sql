@@ -9,16 +9,23 @@
 -- ============================================
 
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL DEFAULT 'engineer',
-    password_hash VARCHAR(255),
-    reset_token VARCHAR(255),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT UNIQUE NOT NULL,
+    full_name TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'Testing Engineer',
+    is_active BOOLEAN DEFAULT TRUE NOT NULL,
+    reset_token TEXT,
     reset_token_expires TIMESTAMP,
+    mfa_code TEXT,
+    mfa_code_expires TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_reset_token ON users(reset_token);
+CREATE INDEX idx_users_mfa_code ON users(mfa_code);
 
 CREATE TABLE sessions (
     id SERIAL PRIMARY KEY,
