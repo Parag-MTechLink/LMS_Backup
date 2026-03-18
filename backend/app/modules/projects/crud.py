@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from typing import List, Optional
 
-from .models import Customer, Project
+from .models import Customer, Project, ProjectActivity
 from .schemas import CustomerCreate, CustomerUpdate, ProjectCreate, ProjectUpdate
 from app.models.user_model import User
 
@@ -143,8 +143,8 @@ def get_project_with_details(db: Session, project_id: int) -> Optional[dict]:
     }
 
 
-def create_project(db: Session, project: ProjectCreate) -> Project:
-    """Create a new project"""
+def create_project(db: Session, project: ProjectCreate, current_user: User = None) -> Project:
+    """Create a new project and log the initial activity"""
     # Get client name for denormalization
     client = get_customer(db, project.client_id)
     client_name = client.company_name if client else None
@@ -154,6 +154,18 @@ def create_project(db: Session, project: ProjectCreate) -> Project:
     db.add(db_project)
     db.commit()
     db.refresh(db_project)
+
+    # Log initial activity
+    if current_user:
+        log_project_activity(
+            db, 
+            db_project.id, 
+            "Customer request recorded", 
+            f"Project {db_project.name} created", 
+            current_user
+        )
+        db.commit()
+    
     return db_project
 
 
@@ -188,3 +200,31 @@ def delete_project(db: Session, project_id: int) -> bool:
     db_project.is_deleted = True
     db.commit()
     return True
+
+
+# Project Activity Logging
+def log_project_activity(
+    db: Session,
+    project_id: int,
+    process_step: str,
+    action: str,
+    user: User
+) -> ProjectActivity:
+    """Log a workflow activity for a project"""
+    activity = ProjectActivity(
+        project_id=project_id,
+        process_step=process_step,
+        action=action,
+        user_name=user.full_name,
+        user_role=user.role
+    )
+    db.add(activity)
+    db.flush()
+    return activity
+
+
+def get_project_activities(db: Session, project_id: int) -> List[ProjectActivity]:
+    """Get all activities for a project ordered by timestamp"""
+    return db.query(ProjectActivity).filter(
+        ProjectActivity.project_id == project_id
+    ).order_by(ProjectActivity.timestamp.asc()).all()

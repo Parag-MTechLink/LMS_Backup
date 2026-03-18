@@ -72,8 +72,7 @@ def create_notification(
         triggered_by_name=triggered_by.full_name if triggered_by else None,
     )
     db.add(n)
-    db.commit()
-    db.refresh(n)
+    db.flush()
     logger.info("Notification created → role=%s title=%s", recipient_role, title)
     return n
 

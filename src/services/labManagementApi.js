@@ -299,8 +299,24 @@ export const rfqsService = {
     clearCache('rfqs:')
     return await apiService.delete(`/api/v1/rfqs/${id}`)
   },
-  feasibilityCheck: (id, notes) => apiService.post(`/api/v1/rfqs/${id}/feasibility`, { notes }),
-  prepareQuotation: (id, notes) => apiService.post(`/api/v1/rfqs/${id}/quotation`, { notes }),
+  feasibilityCheck: (id, notes, file) => {
+    const formData = new FormData()
+    formData.append('notes', notes)
+    if (file) formData.append('file', file)
+    
+    return apiService.client.post(`/api/v1/rfqs/${id}/feasibility`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  },
+  prepareQuotation: (id, notes, file) => {
+    const formData = new FormData()
+    formData.append('notes', notes)
+    if (file) formData.append('file', file)
+    
+    return apiService.client.post(`/api/v1/rfqs/${id}/quotation`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  },
   approve: (id) => apiService.post(`/api/v1/rfqs/${id}/approve`),
   updateStatus: (id, status) => apiService.patch(`/api/v1/rfqs/${id}/status`, { status }),
 }
@@ -353,6 +369,7 @@ export const projectsService = {
     }
   },
   getById: (id) => apiService.get(`/api/v1/projects/${id}`),
+  getActivities: (id) => apiService.get(`/api/v1/projects/${id}/activities`),
   create: async (data) => {
     clearCache('projects:')
     return await apiService.post('/api/v1/projects', data)

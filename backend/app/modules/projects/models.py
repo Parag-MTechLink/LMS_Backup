@@ -1,7 +1,7 @@
 """
 Database models for Projects and Customers
 """
-
+import uuid
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -62,3 +62,16 @@ class Project(Base):
     
     # Relationships
     client = relationship("Customer", back_populates="projects")
+
+
+class ProjectActivity(Base):
+    """Chronological workflow activities for projects"""
+    __tablename__ = "project_activities"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    process_step = Column(Text, nullable=False)
+    action = Column(Text, nullable=False)
+    user_name = Column(Text, nullable=False)
+    user_role = Column(Text, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)

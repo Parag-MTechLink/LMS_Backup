@@ -102,8 +102,9 @@ function LabManagementLayout() {
   }, [])
 
   useEffect(() => {
+    // Check immediately, then every 10s
     fetchNotifications()
-    const interval = setInterval(fetchNotifications, 30000) // poll every 30s
+    const interval = setInterval(fetchNotifications, 10000) // poll every 10s
     return () => clearInterval(interval)
   }, [fetchNotifications])
 
@@ -347,7 +348,7 @@ function LabManagementLayout() {
                           )}
                         </div>
                         {notifications.length > 0 && (
-                          <div className="p-3 border-t border-gray-200">
+                          <div className="p-3 border-t border-gray-200 flex items-center justify-between">
                             <button
                               onClick={async () => {
                                 try {
@@ -356,10 +357,17 @@ function LabManagementLayout() {
                                 } catch {/* ignore */}
                                 setNotificationsOpen(false)
                               }}
-                              className="w-full text-sm text-primary hover:text-primary-dark font-medium"
+                              className="text-sm text-primary hover:text-primary-dark font-medium"
                             >
-                              Mark all as read
+                              Mark all read
                             </button>
+                            <Link
+                              to="/lab/management/notifications"
+                              onClick={() => setNotificationsOpen(false)}
+                              className="text-sm text-gray-500 hover:text-primary font-medium"
+                            >
+                              View All
+                            </Link>
                           </div>
                         )}
                       </motion.div>

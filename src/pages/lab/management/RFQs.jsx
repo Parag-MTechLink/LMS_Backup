@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { rfqsService, customersService, notificationsService } from '../../../services/labManagementApi'
@@ -33,11 +33,13 @@ function RFQs() {
   // Status change inside view modal
   const [rfqStatus, setRfqStatus] = useState('')
   const [rfqComment, setRfqComment] = useState('')
+  const [rfqFile, setRfqFile] = useState(null)
   const [savingRfqStatus, setSavingRfqStatus] = useState(false)
   const [formData, setFormData] = useState({
     customerId: 0,
     product: '',
     receivedDate: new Date().toISOString().split('T')[0],
+    description: '',
   })
 
   useEffect(() => {
@@ -118,6 +120,7 @@ function RFQs() {
     setViewDetails(null)
     setRfqStatus(rfq.status ?? 'pending')
     setRfqComment('')
+    setRfqFile(null)
     setViewLoading(true)
     try {
       const details = await rfqsService.getById(rfq.id)
@@ -152,7 +155,7 @@ function RFQs() {
     if (!viewRfq) return
     setSavingRfqStatus(true)
     try {
-      await rfqsService.feasibilityCheck(viewRfq.id, rfqComment)
+      await rfqsService.feasibilityCheck(viewRfq.id, rfqComment, rfqFile)
       toast.success('Feasibility check completed')
       loadData()
       setViewRfq(null)
@@ -167,7 +170,7 @@ function RFQs() {
     if (!viewRfq) return
     setSavingRfqStatus(true)
     try {
-      await rfqsService.prepareQuotation(viewRfq.id, rfqComment)
+      await rfqsService.prepareQuotation(viewRfq.id, rfqComment, rfqFile)
       toast.success('Quotation prepared')
       loadData()
       setViewRfq(null)
@@ -231,6 +234,21 @@ function RFQs() {
     }
   }
 
+  // Since rfqs is state, I should use useMemo instead of useState for derivation
+  const processedRfqs = useMemo(() => {
+    return [...rfqs]
+      .map(r => {
+        const created = new Date(r.createdAt || r.created_at || r.receivedDate)
+        const isNew = (new Date() - created) < 24 * 60 * 60 * 1000
+        return { ...r, isNew }
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.updatedAt || a.updated_at || a.createdAt || a.created_at || a.receivedDate)
+        const dateB = new Date(b.updatedAt || b.updated_at || b.createdAt || b.created_at || b.receivedDate)
+        return dateB - dateA
+      })
+  }, [rfqs])
+
   if (loading) {
     return <RouteSkeleton />
   }
@@ -291,8 +309,8 @@ function RFQs() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {rfqs.length > 0 ? (
-                rfqs.map((rfq, index) => (
+              {processedRfqs.length > 0 ? (
+                processedRfqs.map((rfq, index) => (
                   <motion.tr
                     key={rfq.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -302,8 +320,16 @@ function RFQs() {
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-sm shadow-md">
-                          {rfq.customerName.substring(0, 2).toUpperCase()}
+                        <div className="relative">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-sm shadow-md">
+                            {rfq.customerName.substring(0, 2).toUpperCase()}
+                          </div>
+                          {rfq.isNew && (
+                            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-3 w-3 bg-primary border border-white"></span>
+                            </span>
+                          )}
                         </div>
                         <span className="ml-3 text-sm font-medium text-gray-900">{rfq.customerName}</span>
                       </div>
@@ -414,11 +440,26 @@ function RFQs() {
                 {(() => {
                   const statusLower = (displayRfq?.status ?? viewRfq.status)?.toLowerCase() ?? ''
                   return (
-                    <div className="flex items-center gap-2">
-                      <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full bg-gradient-to-r ${getStatusColor(statusLower)} text-white shadow-sm`}>
-                        {getStatusIcon(statusLower)}
-                        {displayRfq?.status ?? viewRfq.status}
-                      </span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full bg-gradient-to-r ${getStatusColor(statusLower)} text-white shadow-sm`}>
+                          {getStatusIcon(statusLower)}
+                          {displayRfq?.status ?? viewRfq.status}
+                        </span>
+                      </div>
+                      {canCreate && statusLower === 'approved' && (
+                        <button
+                          onClick={() => {
+                            setViewRfq(null)
+                            setViewDetails(null)
+                            navigate(`/lab/management/projects?createFromRfq=${displayRfq?.id || viewRfq.id}`)
+                          }}
+                          className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Create Project
+                        </button>
+                      )}
                     </div>
                   )
                 })()}
@@ -518,9 +559,24 @@ function RFQs() {
                       <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
                         <Shield className="w-4 h-4 text-blue-600" />
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-blue-600 font-medium uppercase tracking-wide">Feasibility Notes (TM)</p>
-                        <p className="text-sm text-gray-800 mt-1 whitespace-pre-wrap">{displayRfq.feasibility_notes}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] text-blue-500 font-medium mt-1">
+                          Feasibility remark added — {displayRfq.feasibility_done_by_name || 'System'} – {displayRfq.feasibility_done_by_role || 'Technical Manager'} — {displayRfq.feasibility_done_at ? new Date(displayRfq.feasibility_done_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Pending'}
+                        </p>
+                        <p className="text-sm text-gray-800 mt-2 whitespace-pre-wrap">
+                          <span className="font-semibold">Remark:</span> {displayRfq.feasibility_notes}
+                        </p>
+                        {displayRfq.feasibility_attachment_url && (
+                          <a 
+                            href={`${import.meta.env.VITE_API_URL}${displayRfq.feasibility_attachment_url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-blue-700 bg-white px-3 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            View Feasibility Document
+                          </a>
+                        )}
                       </div>
                     </div>
                   )}
@@ -531,9 +587,24 @@ function RFQs() {
                       <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
                         <Package className="w-4 h-4 text-purple-600" />
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-purple-600 font-medium uppercase tracking-wide">Quotation Remarks (FM)</p>
-                        <p className="text-sm text-gray-800 mt-1 whitespace-pre-wrap">{displayRfq.quotation_notes}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] text-purple-500 font-medium mt-1">
+                          Quotation remark added — {displayRfq.quotation_done_by_name || 'System'} – {displayRfq.quotation_done_by_role || 'Finance Manager'} — {displayRfq.quotation_done_at ? new Date(displayRfq.quotation_done_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Pending'}
+                        </p>
+                        <p className="text-sm text-gray-800 mt-2 whitespace-pre-wrap">
+                          <span className="font-semibold">Remark:</span> {displayRfq.quotation_notes}
+                        </p>
+                        {displayRfq.quotation_attachment_url && (
+                          <a 
+                            href={`${import.meta.env.VITE_API_URL}${displayRfq.quotation_attachment_url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-purple-700 bg-white px-3 py-1.5 rounded-lg border border-purple-200 hover:bg-purple-50 transition-colors"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            View Quotation Document
+                          </a>
+                        )}
                       </div>
                     </div>
                   )}
@@ -609,6 +680,22 @@ function RFQs() {
                               placeholder="Feasibility notes..."
                               className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all"
                             />
+                            <div className="flex items-center gap-2">
+                              <label className="flex-1 flex items-center gap-2 px-4 py-2 border border-gray-300 border-dashed rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                                <FileSpreadsheet className="w-4 h-4 text-gray-400" />
+                                <span className="text-xs text-gray-500 truncate">{rfqFile ? rfqFile.name : 'Attach supporting document (Optional)'}</span>
+                                <input 
+                                  type="file" 
+                                  className="hidden" 
+                                  onChange={e => setRfqFile(e.target.files[0])}
+                                />
+                              </label>
+                              {rfqFile && (
+                                <button onClick={() => setRfqFile(null)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                                  <X className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
                             <button
                               onClick={handleFeasibility}
                               disabled={savingRfqStatus || !rfqComment.trim()}
@@ -631,6 +718,22 @@ function RFQs() {
                               placeholder="Quotation remarks..."
                               className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all"
                             />
+                            <div className="flex items-center gap-2">
+                              <label className="flex-1 flex items-center gap-2 px-4 py-2 border border-gray-300 border-dashed rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                                <FileSpreadsheet className="w-4 h-4 text-gray-400" />
+                                <span className="text-xs text-gray-500 truncate">{rfqFile ? rfqFile.name : 'Attach quotation document (Optional)'}</span>
+                                <input 
+                                  type="file" 
+                                  className="hidden" 
+                                  onChange={e => setRfqFile(e.target.files[0])}
+                                />
+                              </label>
+                              {rfqFile && (
+                                <button onClick={() => setRfqFile(null)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                                  <X className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
                             <button
                               onClick={handleQuotation}
                               disabled={savingRfqStatus || !rfqComment.trim()}
@@ -695,6 +798,18 @@ function RFQs() {
                   >
                     Close
                   </button>
+                  {canCreate && (displayRfq?.status ?? viewRfq.status) === 'approved' && (
+                    <button
+                      onClick={() => {
+                        setViewRfq(null)
+                        setViewDetails(null)
+                        navigate(`/lab/management/projects?createFromRfq=${viewRfq.id}`)
+                      }}
+                      className="flex-1 px-4 py-3 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
+                    >
+                      Create Project
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       setViewRfq(null)
@@ -754,16 +869,29 @@ function RFQs() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Product <span className="text-red-500">*</span>
-                </label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Product / Service</label>
+                </div>
                 <input
                   type="text"
-                  required
                   value={formData.product}
-                  onChange={(e) => setFormData({ ...formData, product: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                  placeholder="Enter product name"
+                  onChange={e => setFormData({ ...formData, product: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
+                  placeholder="e.g. Oscilloscope Calibration"
+                  required
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</label>
+                </div>
+                <textarea
+                  value={formData.description}
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm resize-none"
+                  placeholder="Detailed project description..."
+                  rows={3}
                 />
               </div>
 

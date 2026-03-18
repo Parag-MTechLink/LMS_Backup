@@ -10,6 +10,14 @@ from app.services.rbac_service import log_audit
 from app.modules.rfqs.models import RFQ
 from app.modules.projects.models import Customer
 from app.modules.rfqs.schemas import RFQCreate, NoteRequest
+import os
+import shutil
+from fastapi import File, UploadFile, Form
+from typing import Optional
+from datetime import datetime
+
+UPLOAD_DIR = "uploads/rfqs"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 class RFQStatusUpdate(BaseModel):
@@ -39,9 +47,20 @@ def get_rfqs(
             Customer.company_name.label("customerName"),
             RFQ.product,
             RFQ.receivedDate,
+            RFQ.description,
             RFQ.status,
             RFQ.feasibility_notes,
+            RFQ.feasibility_attachment_url,
+            RFQ.feasibility_notes,
+            RFQ.feasibility_attachment_url,
+            RFQ.feasibility_done_by_name,
+            RFQ.feasibility_done_by_role,
+            RFQ.feasibility_done_at,
             RFQ.quotation_notes,
+            RFQ.quotation_attachment_url,
+            RFQ.quotation_done_by_name,
+            RFQ.quotation_done_by_role,
+            RFQ.quotation_done_at,
         )
         .join(Customer, RFQ.customerId == Customer.id)
         .filter(Customer.is_deleted == False, RFQ.is_deleted == False)
@@ -55,9 +74,18 @@ def get_rfqs(
             "customerName": r.customerName,
             "product": r.product,
             "receivedDate": r.receivedDate,
+            "description": r.description,
             "status": r.status,
             "feasibility_notes": r.feasibility_notes,
+            "feasibility_attachment_url": f"/{r.feasibility_attachment_url}" if r.feasibility_attachment_url else None,
             "quotation_notes": r.quotation_notes,
+            "quotation_attachment_url": f"/{r.quotation_attachment_url}" if r.quotation_attachment_url else None,
+            "feasibility_done_by_name": r.feasibility_done_by_name,
+            "feasibility_done_by_role": r.feasibility_done_by_role,
+            "feasibility_done_at": r.feasibility_done_at,
+            "quotation_done_by_name": r.quotation_done_by_name,
+            "quotation_done_by_role": r.quotation_done_by_role,
+            "quotation_done_at": r.quotation_done_at,
         }
         for r in rfqs
     ]
@@ -74,6 +102,7 @@ def create_rfq(
         customerId=data.customerId,
         product=data.product,
         receivedDate=data.receivedDate,
+        description=data.description,
         status="pending",
     )
 
@@ -102,6 +131,7 @@ def create_rfq(
             "customerName": customer.company_name if customer else "",
             "product": new_rfq.product,
             "receivedDate": new_rfq.receivedDate,
+            "description": new_rfq.description,
             "status": new_rfq.status,
         }
     }
@@ -125,9 +155,18 @@ def get_rfq(
         "customerName": customer.company_name if customer else "",
         "product": rfq.product,
         "receivedDate": rfq.receivedDate,
+        "description": rfq.description,
         "status": rfq.status,
         "feasibility_notes": rfq.feasibility_notes,
+        "feasibility_attachment_url": f"/{rfq.feasibility_attachment_url}" if rfq.feasibility_attachment_url else None,
         "quotation_notes": rfq.quotation_notes,
+        "quotation_attachment_url": f"/{rfq.quotation_attachment_url}" if rfq.quotation_attachment_url else None,
+        "feasibility_done_by_name": rfq.feasibility_done_by_name,
+        "feasibility_done_by_role": rfq.feasibility_done_by_role,
+        "feasibility_done_at": rfq.feasibility_done_at,
+        "quotation_done_by_name": rfq.quotation_done_by_name,
+        "quotation_done_by_role": rfq.quotation_done_by_role,
+        "quotation_done_at": rfq.quotation_done_at,
     }
 
 
@@ -156,11 +195,11 @@ def update_rfq_status(
     return {"success": True, "status": rfq.status}
 
 
-# 🔹 FEASIBILITY CHECK (Technical Manager)
 @router.post("/{id}/feasibility")
 def feasibility_check(
     id: int,
-    body: NoteRequest,
+    notes: str = Form(...),
+    file: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles("Technical Manager", "Admin"))
 ):
@@ -168,9 +207,18 @@ def feasibility_check(
     if not rfq:
         raise HTTPException(status_code=404, detail="RFQ not found")
     
+    if file:
+        file_path = os.path.join(UPLOAD_DIR, f"rfq_{id}_feasibility_{file.filename}")
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        rfq.feasibility_attachment_url = file_path.replace("\\", "/")
+
     rfq.status = "feasibility_done"
     rfq.technical_manager_id = current_user.id
-    rfq.feasibility_notes = body.notes
+    rfq.feasibility_notes = notes
+    rfq.feasibility_done_by_name = current_user.full_name
+    rfq.feasibility_done_by_role = current_user.role
+    rfq.feasibility_done_at = datetime.utcnow()
     db.commit()
 
     # Step 2 -> Notify Finance Manager
@@ -187,11 +235,11 @@ def feasibility_check(
     return {"success": True, "status": rfq.status}
 
 
-# 🔹 QUOTATION PREPARE (Finance Manager)
 @router.post("/{id}/quotation")
 def prepare_quotation(
     id: int,
-    body: NoteRequest,
+    notes: str = Form(...),
+    file: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles("Finance Manager", "Admin"))
 ):
@@ -199,9 +247,18 @@ def prepare_quotation(
     if not rfq:
         raise HTTPException(status_code=404, detail="RFQ not found")
     
+    if file:
+        file_path = os.path.join(UPLOAD_DIR, f"rfq_{id}_quotation_{file.filename}")
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        rfq.quotation_attachment_url = file_path.replace("\\", "/")
+
     rfq.status = "quotation_review"
     rfq.finance_manager_id = current_user.id
-    rfq.quotation_notes = body.notes
+    rfq.quotation_notes = notes
+    rfq.quotation_done_by_name = current_user.full_name
+    rfq.quotation_done_by_role = current_user.role
+    rfq.quotation_done_at = datetime.utcnow()
     db.commit()
 
     # Step 3 -> Notify Project Manager & Sales Manager

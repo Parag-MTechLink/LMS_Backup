@@ -53,23 +53,39 @@ function Projects() {
     loadCustomers()
   }, [loadProjects, loadCustomers])
 
-  // Support deep-linking from notifications
+  // Support deep-linking from notifications or redirections
   useEffect(() => {
     const s = searchParams.get('search')
     if (s) setSearchTerm(s)
-  }, [searchParams])
+
+    const rfqId = searchParams.get('createFromRfq')
+    if (rfqId && canCreate) {
+      setShowCreateModal(true)
+    }
+  }, [searchParams, canCreate])
 
   const customerId = searchParams.get('customerId')
 
   const filteredProjects = useMemo(() => {
-    return projects.filter(project => {
-      const matchesSearch = !debouncedSearchTerm ||
-        project.name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        project.clientName?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-      const matchesCustomer = !customerId || project.clientId?.toString() === customerId
-      const matchesFilter = !selectedCustomer || project.clientId?.toString() === selectedCustomer
-      return matchesSearch && matchesCustomer && matchesFilter
-    })
+    return projects
+      .filter(project => {
+        const matchesSearch = !debouncedSearchTerm ||
+          project.name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+          project.clientName?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+        const matchesCustomer = !customerId || project.clientId?.toString() === customerId
+        const matchesFilter = !selectedCustomer || project.clientId?.toString() === selectedCustomer
+        return matchesSearch && matchesCustomer && matchesFilter
+      })
+      .map(p => {
+        const created = new Date(p.createdAt || p.created_at)
+        const isNew = (new Date() - created) < 24 * 60 * 60 * 1000
+        return { ...p, isNew }
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.updatedAt || a.updated_at || a.createdAt || a.created_at)
+        const dateB = new Date(b.updatedAt || b.updated_at || b.createdAt || b.created_at)
+        return dateB - dateA
+      })
   }, [projects, debouncedSearchTerm, customerId, selectedCustomer])
 
   const handleDeleteClick = (e, project) => {
@@ -155,8 +171,16 @@ function Projects() {
             onClick={() => navigate(`/lab/management/projects/${project.id}`)}
           >
             <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <FolderKanban className="w-6 h-6 text-primary" />
+              <div className="relative">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <FolderKanban className="w-6 h-6 text-primary" />
+                </div>
+                {project.isNew && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-4 w-4 bg-primary border-2 border-white text-[8px] font-bold text-white items-center justify-center">N</span>
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 {isAdmin && (
@@ -219,6 +243,7 @@ function Projects() {
       >
         <CreateProjectForm
           estimationId={searchParams.get('createFromEstimation')}
+          rfqId={searchParams.get('createFromRfq')}
           customerId={searchParams.get('customerId')}
           onSuccess={() => {
             setShowCreateModal(false)

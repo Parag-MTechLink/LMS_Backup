@@ -3,7 +3,7 @@ Pydantic schemas for Projects and Customers
 """
 
 from pydantic import BaseModel, Field, EmailStr
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
 
@@ -116,10 +116,26 @@ class ProjectResponse(BaseModel):
     payment_completed: bool = Field(..., alias="paymentCompleted")
     team_lead_id: Optional[UUID] = Field(None, alias="teamLeadId")
     team_lead_name: Optional[str] = Field(None, alias="teamLeadName")
+    pending_approvals: List[str] = Field(default=[], alias="pendingApprovals")
     
     created_at: datetime = Field(..., alias="createdAt")
     updated_at: datetime = Field(..., alias="updatedAt")
     is_deleted: bool = Field(..., alias="isDeleted")
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+
+
+class ProjectActivityResponse(BaseModel):
+    """Schema for project activity response"""
+    id: UUID
+    project_id: int = Field(..., alias="projectId")
+    process_step: str = Field(..., alias="processStep")
+    action: str
+    user_name: str = Field(..., alias="userName")
+    user_role: str = Field(..., alias="userRole")
+    timestamp: datetime
 
     class Config:
         from_attributes = True

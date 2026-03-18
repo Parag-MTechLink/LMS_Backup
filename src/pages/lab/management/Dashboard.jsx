@@ -214,11 +214,36 @@ function LabManagementDashboard() {
       setAllTestExecutions(testExecutions)
       setAllInstruments(allInstruments)
       setAllCalibrations(allCalibrations)
+      const processList = (list) => {
+        return [...list]
+          .map(item => {
+            const created = new Date(item.createdAt || item.created_at || item.receivedDate || item.received_date)
+            const isNew = (new Date() - created) < 24 * 60 * 60 * 1000
+            return { ...item, isNew }
+          })
+          .sort((a, b) => {
+            const dateA = new Date(a.updatedAt || a.updated_at || a.createdAt || a.created_at || a.receivedDate)
+            const dateB = new Date(b.updatedAt || b.updated_at || b.createdAt || b.created_at || b.receivedDate)
+            return dateB - dateA
+          })
+      }
+
+      const processedProjects = processList(projects)
+      const processedRfqs = processList(rfqs)
+      const processedCustomers = processList(customers)
+      const processedTestPlans = processList(testPlans)
+
       setRawLists({
-        projects: projects.slice(0, 5),
-        customers: customers.slice(0, 5),
-        testPlans: testPlans.slice(0, 5),
-        rfqs: rfqs.slice(0, 5)
+        projects: processedProjects.slice(0, 5),
+        customers: processedCustomers.slice(0, 5),
+        testPlans: processedTestPlans.slice(0, 5),
+        rfqs: processedRfqs.slice(0, 5),
+        feasibility: processedRfqs.filter(r => r.status === 'pending').slice(0, 5),
+        quotations: processedRfqs.filter(r => r.status === 'quotation_review').slice(0, 5),
+        payments: processedProjects.filter(p => (p.status || '').toLowerCase() === 'report_submitted').slice(0, 5), // Adjust based on actual status for payment pending
+        approvals: processedProjects.filter(p => p.pendingApprovals && p.pendingApprovals.length > 0).slice(0, 5),
+        rfqs_sales: processedRfqs.slice(0, 5),
+        samples: processList(samples).slice(0, 5)
       })
 
       setStats({
@@ -451,6 +476,30 @@ function LabManagementDashboard() {
     const role = user?.role
     const isAdmin = role === 'Admin'
 
+    const renderRow = (title, subtitle, date, isNew, onClick) => (
+      <div 
+        key={title + date} 
+        className="flex items-center justify-between text-xs p-2.5 hover:bg-primary/5 rounded-lg border border-transparent hover:border-primary/10 transition-all cursor-pointer mb-1 group"
+        onClick={onClick}
+      >
+        <div className="flex flex-col min-w-0 pr-2">
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-gray-900 truncate">{title}</span>
+            {isNew && (
+              <span className="flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              </span>
+            )}
+          </div>
+          <span className="text-gray-500 truncate text-[10px]">{subtitle}</span>
+        </div>
+        <span className="text-gray-400 whitespace-nowrap text-[10px] tabular-nums group-hover:text-primary transition-colors">
+          {new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+        </span>
+      </div>
+    )
+
     const allStats = [
       {
         id: 'projects',
@@ -461,7 +510,8 @@ function LabManagementDashboard() {
         color: 'text-blue-600',
         bgColor: 'bg-blue-50',
         link: '/lab/management/projects',
-        roles: ['Admin', 'Project Manager', 'Technical Manager', 'Team Lead', 'Technician', 'Quality Manager']
+        roles: ['Admin', 'Project Manager', 'Technical Manager', 'Team Lead', 'Technician', 'Quality Manager'],
+        renderDetails: (list) => list.map(p => renderRow(p.name, p.clientName || 'Project', p.updatedAt || p.updated_at || p.createdAt || p.created_at, p.isNew, () => navigate(`/lab/management/projects/${p.id}`)))
       },
       {
         id: 'feasibility',
@@ -472,7 +522,8 @@ function LabManagementDashboard() {
         color: 'text-amber-600',
         bgColor: 'bg-amber-50',
         link: '/lab/management/rfqs',
-        roles: ['Technical Manager']
+        roles: ['Technical Manager'],
+        renderDetails: (list) => list.map(r => renderRow(r.product, r.customerName || 'RFQ', r.updatedAt || r.updated_at || r.receivedDate, r.isNew, () => navigate('/lab/management/rfqs')))
       },
       {
         id: 'quotations',
@@ -483,7 +534,8 @@ function LabManagementDashboard() {
         color: 'text-purple-600',
         bgColor: 'bg-purple-50',
         link: '/lab/management/rfqs',
-        roles: ['Finance Manager', 'Project Manager']
+        roles: ['Finance Manager', 'Project Manager'],
+        renderDetails: (list) => list.map(r => renderRow(r.product, r.customerName || 'RFQ', r.updatedAt || r.updated_at || r.receivedDate, r.isNew, () => navigate('/lab/management/rfqs')))
       },
       {
         id: 'payments',
@@ -494,7 +546,8 @@ function LabManagementDashboard() {
         color: 'text-emerald-600',
         bgColor: 'bg-emerald-50',
         link: '/lab/management/projects',
-        roles: ['Finance Manager']
+        roles: ['Finance Manager'],
+        renderDetails: (list) => list.map(p => renderRow(p.name, p.clientName || 'Project', p.updatedAt || p.updated_at || p.createdAt || p.created_at, p.isNew, () => navigate(`/lab/management/projects/${p.id}`)))
       },
       {
         id: 'approvals',
@@ -505,7 +558,8 @@ function LabManagementDashboard() {
         color: 'text-rose-600',
         bgColor: 'bg-rose-50',
         link: '/lab/management/projects',
-        roles: ['Quality Manager', 'Project Manager', 'Technical Manager']
+        roles: ['Quality Manager', 'Project Manager', 'Technical Manager'],
+        renderDetails: (list) => list.map(p => renderRow(p.name, `${p.pendingApprovals?.length || 0} pending`, p.updatedAt || p.updated_at || p.createdAt || p.created_at, p.isNew, () => navigate(`/lab/management/projects/${p.id}`)))
       },
       {
         id: 'customers',
@@ -516,7 +570,8 @@ function LabManagementDashboard() {
         color: 'text-green-600',
         bgColor: 'bg-green-50',
         link: '/lab/management/customers',
-        roles: ['Admin', 'Sales Manager']
+        roles: ['Admin', 'Sales Manager'],
+        renderDetails: (list) => list.map(c => renderRow(c.companyName, c.contactPerson || 'Customer', c.updatedAt || c.updated_at || c.createdAt || c.created_at, c.isNew, () => navigate('/lab/management/customers')))
       },
       {
         id: 'rfqs_sales',
@@ -527,7 +582,8 @@ function LabManagementDashboard() {
         color: 'text-indigo-600',
         bgColor: 'bg-indigo-50',
         link: '/lab/management/rfqs',
-        roles: ['Sales Manager']
+        roles: ['Sales Manager'],
+        renderDetails: (list) => list.map(r => renderRow(r.product, r.customerName || 'RFQ', r.updatedAt || r.updated_at || r.receivedDate, r.isNew, () => navigate('/lab/management/rfqs')))
       },
       {
         id: 'revenue',
@@ -538,7 +594,8 @@ function LabManagementDashboard() {
         color: 'text-emerald-600',
         bgColor: 'bg-emerald-50',
         link: '/lab/management/estimations',
-        roles: ['Admin', 'Sales Manager']
+        roles: ['Admin', 'Sales Manager'],
+        renderDetails: (list) => <p className="text-xs text-gray-500 py-2 text-center">Revenue details shown in chart below.</p>
       },
       {
         id: 'samples',
@@ -549,7 +606,8 @@ function LabManagementDashboard() {
         color: 'text-orange-600',
         bgColor: 'bg-orange-50',
         link: '/lab/management/samples',
-        roles: ['Technician', 'Team Lead']
+        roles: ['Technician', 'Team Lead'],
+        renderDetails: (list) => list.map(s => renderRow(s.name || s.sampleName, s.clientName || 'Sample', s.updatedAt || s.updated_at || s.createdAt || s.created_at, s.isNew, () => navigate('/lab/management/samples')))
       }
     ]
 
