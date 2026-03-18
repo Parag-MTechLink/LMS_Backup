@@ -8,6 +8,7 @@ from typing import List, Optional
 
 from .models import Customer, Project
 from .schemas import CustomerCreate, CustomerUpdate, ProjectCreate, ProjectUpdate
+from app.models.user_model import User
 
 
 # Customer CRUD
@@ -105,6 +106,41 @@ def get_project(db: Session, project_id: int) -> Optional[Project]:
     return db.query(Project).filter(
         and_(Project.id == project_id, Project.is_deleted == False)
     ).first()
+
+def get_project_with_details(db: Session, project_id: int) -> Optional[dict]:
+    """Get a specific project with Team Lead name"""
+    result = db.query(
+        Project,
+        User.full_name.label("team_lead_name")
+    ).outerjoin(User, Project.team_lead_id == User.id).filter(
+        and_(Project.id == project_id, Project.is_deleted == False)
+    ).first()
+    
+    if not result:
+        return None
+        
+    project, team_lead_name = result
+    # Convert Project model to dict and add team_lead_name
+    from .schemas import ProjectResponse
+    return {
+        "id": project.id,
+        "name": project.name,
+        "code": project.code,
+        "clientId": project.client_id,
+        "clientName": project.client_name,
+        "status": project.status,
+        "oem": project.oem,
+        "description": project.description,
+        "qualityManagerApproved": project.quality_manager_approved,
+        "projectManagerApproved": project.project_manager_approved,
+        "technicalManagerApproved": project.technical_manager_approved,
+        "paymentCompleted": project.payment_completed,
+        "teamLeadId": project.team_lead_id,
+        "teamLeadName": team_lead_name,
+        "createdAt": project.created_at,
+        "updatedAt": project.updated_at,
+        "isDeleted": project.is_deleted
+    }
 
 
 def create_project(db: Session, project: ProjectCreate) -> Project:

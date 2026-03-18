@@ -163,14 +163,14 @@ function Projects() {
                   </button>
                 )}
                 <span
-                  className={`px-3 py-1 text-xs font-medium rounded-full ${project.status === 'active'
-                    ? 'text-blue-700 bg-blue-50'
-                    : project.status === 'completed'
-                      ? 'text-green-700 bg-green-50'
+                  className={`px-3 py-1 text-xs font-medium rounded-full ${project.status === 'approved' || project.status === 'completed'
+                    ? 'text-green-700 bg-green-50'
+                    : project.status === 'testing_in_progress'
+                      ? 'text-blue-700 bg-blue-50'
                       : 'text-yellow-700 bg-yellow-50'
                     }`}
                 >
-                  {project.status}
+                  {project.status.replace(/_/g, ' ')}
                 </span>
               </div>
             </div>

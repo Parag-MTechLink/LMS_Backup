@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Building2,

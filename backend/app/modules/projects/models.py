@@ -3,6 +3,7 @@ Database models for Projects and Customers
 """
 
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
@@ -39,7 +40,17 @@ class Project(Base):
     code = Column(String(100), nullable=True, unique=True, index=True)
     client_id = Column(Integer, ForeignKey("customers.id", ondelete="CASCADE"), nullable=False, index=True)
     client_name = Column(String(255), nullable=True)  # Denormalized for performance
-    status = Column(String(50), nullable=False, default="pending")
+    status = Column(String(50), nullable=False, default="pending_team_lead") # pending_team_lead, testing_in_progress, report_submitted, tl_reviewed, approved, payment_pending, completed
+    
+    # Multi-stage Approval
+    quality_manager_approved = Column(Boolean, default=False, nullable=False)
+    project_manager_approved = Column(Boolean, default=False, nullable=False)
+    technical_manager_approved = Column(Boolean, default=False, nullable=False)
+    payment_completed = Column(Boolean, default=False, nullable=False)
+    
+    # Execution Info
+    team_lead_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    
     oem = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
     

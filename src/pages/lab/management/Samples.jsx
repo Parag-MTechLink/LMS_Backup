@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import { motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search, Package, Calendar, MapPin, CheckCircle, ExternalLink } from 'lucide-react'

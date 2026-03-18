@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import { motion } from 'framer-motion'
 import { Plus, Search, Package, AlertTriangle, CheckCircle } from 'lucide-react'
 import { consumablesService } from '../../../services/labManagementApi'

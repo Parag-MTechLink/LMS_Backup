@@ -170,6 +170,53 @@ export const authService = {
   deleteUser: (userId) => apiService.delete(`/api/v1/auth/users/${userId}`),
 }
 
+// Notifications Service — workflow-driven in-app notifications
+export const notificationsService = {
+  /** Fetch unread notifications for the current user's role */
+  getMyNotifications: (unreadOnly = true) =>
+    apiService.get('/api/v1/notifications', { params: { unread_only: unreadOnly } }),
+
+  /** Get count of unread notifications */
+  getUnreadCount: () =>
+    apiService.get('/api/v1/notifications/count'),
+
+  /** Mark a specific notification as read */
+  markAsRead: (id) =>
+    apiService.patch(`/api/v1/notifications/${id}/read`),
+
+  /** Mark all notifications for this role as read */
+  markAllRead: () =>
+    apiService.patch('/api/v1/notifications/mark-all-read'),
+
+  /**
+   * Trigger a workflow notification for the next role.
+   * Call this after completing a workflow step.
+   *
+   * @param {string} recipientRole - The role to notify (e.g., "Project Manager")
+   * @param {string} title - Short title for the notification
+   * @param {string} message - Descriptive message
+   * @param {string|null} entityType - e.g., "rfq", "project", "test_result"
+   * @param {string|null} entityId - UUID of the entity
+   * @param {string|null} entityUrl - Frontend route to navigate to on click
+   */
+  triggerWorkflowNotification: ({
+    recipientRole,
+    title,
+    message,
+    entityType = null,
+    entityId = null,
+    entityUrl = null,
+  }) =>
+    apiService.post('/api/v1/notifications/trigger', {
+      recipient_role: recipientRole,
+      title,
+      message,
+      entity_type: entityType,
+      entity_id: entityId,
+      entity_url: entityUrl,
+    }),
+}
+
 // Lab recommendations (engine under /api/v1/labs; requires LAB_ENGINE_DATABASE_URL on backend)
 export const labsService = {
   health: () => apiService.get('/api/v1/labs/health'),
@@ -244,6 +291,10 @@ export const rfqsService = {
     clearCache('rfqs:')
     return await apiService.delete(`/api/v1/rfqs/${id}`)
   },
+  feasibilityCheck: (id, notes) => apiService.post(`/api/v1/rfqs/${id}/feasibility`, { notes }),
+  prepareQuotation: (id, notes) => apiService.post(`/api/v1/rfqs/${id}/quotation`, { notes }),
+  approve: (id) => apiService.post(`/api/v1/rfqs/${id}/approve`),
+  updateStatus: (id, status) => apiService.patch(`/api/v1/rfqs/${id}/status`, { status }),
 }
 
 // Estimations Service
@@ -298,6 +349,13 @@ export const projectsService = {
     clearCache('projects:')
     return await apiService.post('/api/v1/projects', data)
   },
+  approveQuality: (id) => apiService.post(`/api/v1/projects/${id}/approve/quality`),
+  approveProject: (id) => apiService.post(`/api/v1/projects/${id}/approve/project`),
+  approveTechnical: (id) => apiService.post(`/api/v1/projects/${id}/approve/technical`),
+  assignTL: (id, teamLeadId) => apiService.post(`/api/v1/projects/${id}/assign-tl?team_lead_id=${teamLeadId}`),
+  submitReport: (id) => apiService.post(`/api/v1/projects/${id}/submit-report`),
+  tlReview: (id) => apiService.post(`/api/v1/projects/${id}/tl-review`),
+  verifyPayment: (id) => apiService.post(`/api/v1/projects/${id}/payment-verify`),
   update: async (id, data) => {
     clearCache('projects:')
     return await apiService.put(`/api/v1/projects/${id}`, data)

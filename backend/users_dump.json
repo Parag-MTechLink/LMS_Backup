@@ -1,0 +1,188 @@
+[
+    {
+        "id": "b1f767dc-acb2-4e08-96b6-6bb55c3e7704",
+        "email": "sam@gmail.com",
+        "role": "Project Manager",
+        "is_active": true
+    },
+    {
+        "id": "c887da93-b6dd-4c6f-b678-7191f1318ae5",
+        "email": "shruti@gmail.com",
+        "role": "Project Manager",
+        "is_active": true
+    },
+    {
+        "id": "bcff506d-27e1-4c39-9efb-4c3ec4199ef6",
+        "email": "shruti.n@mt.com",
+        "role": "Lab Manager",
+        "is_active": true
+    },
+    {
+        "id": "bc6b5816-b395-46c8-aa94-d0ae5ca192cb",
+        "email": "test@example.com",
+        "role": "Testing Engineer",
+        "is_active": true
+    },
+    {
+        "id": "a76bdcec-dfe1-4607-98c0-3f0c399495e3",
+        "email": "tanishkap@gmail.com",
+        "role": "Sales Engineer",
+        "is_active": true
+    },
+    {
+        "id": "8be21190-7f55-4579-b4f9-0e4185a3a148",
+        "email": "parag@mt.com",
+        "role": "Finance Manager",
+        "is_active": true
+    },
+    {
+        "id": "1982c8d9-c6f4-48ec-8e4b-9914b3ef9e8e",
+        "email": "aditya1@gmail.com",
+        "role": "Quality Manager",
+        "is_active": true
+    },
+    {
+        "id": "13584d6d-55b1-4db6-99e4-8f289d7d504b",
+        "email": "om@gmail.com",
+        "role": "Project Manager",
+        "is_active": true
+    },
+    {
+        "id": "7bb69d42-b2e5-4b44-8929-78dc54ff2992",
+        "email": "aditya@techlink.com",
+        "role": "Team Lead",
+        "is_active": true
+    },
+    {
+        "id": "25c47814-6918-4cf1-82c5-e938562dd38d",
+        "email": "tanishka@millenniumtechlink.com",
+        "role": "Admin",
+        "is_active": true
+    },
+    {
+        "id": "5eec7b84-bc07-48e6-864f-be9138f31b98",
+        "email": "vaishnavi@millenniumtechlink.com",
+        "role": "Admin",
+        "is_active": true
+    },
+    {
+        "id": "f867fdb2-f222-45c6-b6b1-2a9f734fe373",
+        "email": "pranav@mtl.com",
+        "role": "Testing Engineer",
+        "is_active": true
+    },
+    {
+        "id": "bda7f91d-9d24-48f4-980d-5b1fd0e99f1c",
+        "email": "pranav@mtl1.com",
+        "role": "Testing Engineer",
+        "is_active": true
+    },
+    {
+        "id": "9753a469-2dc7-4b49-bb2e-55f492280f0f",
+        "email": "pranav@mtltechnician.com",
+        "role": "Technician",
+        "is_active": true
+    },
+    {
+        "id": "7b80ae92-52b2-4ee9-ae3c-44b5088629a5",
+        "email": "pranav@mtllabmanager.com",
+        "role": "Lab Manager",
+        "is_active": true
+    },
+    {
+        "id": "9e6c9508-706d-4531-88f6-985e806146bc",
+        "email": "aditya.sahu@millenniumtechlink.com",
+        "role": "Lab Manager",
+        "is_active": true
+    },
+    {
+        "id": "4a16ba0e-7e2e-4f78-b191-68251ed44182",
+        "email": "vaishnavi@gmail.com",
+        "role": "Technical Manager",
+        "is_active": true
+    },
+    {
+        "id": "e8f07604-75dc-40ae-83e3-a1fc9266fea6",
+        "email": "adsfad@sdfsdf.com",
+        "role": "Technician",
+        "is_active": true
+    },
+    {
+        "id": "6535e74d-7629-4cba-8df0-cda9c844c5b4",
+        "email": "asdasd@asdasd.com",
+        "role": "Testing Engineer",
+        "is_active": true
+    },
+    {
+        "id": "85951d2e-3985-433f-a8d5-d25912571dfc",
+        "email": "afsdfdf@adfdf.com",
+        "role": "Testing Engineer",
+        "is_active": true
+    },
+    {
+        "id": "c32d5660-0b6b-4828-8ba5-f78ae6f25612",
+        "email": "asdfdaf@adfdf.com",
+        "role": "Testing Engineer",
+        "is_active": true
+    },
+    {
+        "id": "14353f04-cf8a-4ec9-bac4-1090eccee260",
+        "email": "sfadfdsaf@afadf.com",
+        "role": "Testing Engineer",
+        "is_active": true
+    },
+    {
+        "id": "7171b30f-591e-452c-b3d7-f0da8f3b4fe4",
+        "email": "dafadf@adfsdf.com",
+        "role": "Testing Engineer",
+        "is_active": true
+    },
+    {
+        "id": "07576de5-03f2-4cbd-a457-deb5978c25bd",
+        "email": "tanishka.pitale@millenniumtechlink.com",
+        "role": "Team Lead",
+        "is_active": true
+    },
+    {
+        "id": "b4840736-7821-4fbc-a76f-ed34a56b5231",
+        "email": "tanishka@gmail.com",
+        "role": "Team Lead",
+        "is_active": true
+    },
+    {
+        "id": "dcdf0554-0068-4f5a-abf7-aa650f213129",
+        "email": "parag@gmail.com",
+        "role": "Sales Engineer",
+        "is_active": true
+    },
+    {
+        "id": "c325d66a-cb17-43b8-9d0e-fe48990b2016",
+        "email": "adfdf@adfdsf.com",
+        "role": "Testing Engineer",
+        "is_active": true
+    },
+    {
+        "id": "dc882b68-ed5e-4ce8-835b-4d047b937762",
+        "email": "cloud988889@gmail.com",
+        "role": "Testing Engineer",
+        "is_active": true
+    },
+    {
+        "id": "db80bca0-9b29-42de-a35d-042ba99b064d",
+        "email": "admin@example.com",
+        "role": "Technician",
+        "is_active": true
+    },
+    {
+        "id": "f2511ae3-cffb-49ae-bb7a-34b35646a761",
+        "email": "parag@millenniumtechlink.com",
+        "role": "Admin",
+        "is_active": true
+    },
+    {
+        "id": "97058552-af1c-4d23-a629-b43dc051604a",
+        "email": "vivaan@gmail.com",
+        "role": "Sales Manager",
+        "is_active": true
+    }
+]

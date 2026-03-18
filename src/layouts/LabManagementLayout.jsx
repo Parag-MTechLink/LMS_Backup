@@ -35,6 +35,7 @@ import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useLabManagementAuth } from '../contexts/LabManagementAuthContext'
 import logo from '../assets/techlink-logo.svg'
 import LiveClock from '../components/labManagement/LiveClock'
+import { notificationsService } from '../services/labManagementApi'
 
 
 const allNavItems = [
@@ -58,7 +59,7 @@ const allNavItems = [
   { name: 'Inventory Management', href: '/lab/management/inventory', icon: Package, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
   { name: 'Quality Assurance', href: '/lab/management/qa', icon: Shield, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
   { name: 'Lab Recommendations', href: '/lab/management/lab-recommendations', icon: TrendingUp, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
-  { name: 'User Management', href: '/lab/management/users', icon: Users, roles: ['Project Manager'] },
+  { name: 'User Management', href: '/lab/management/users', icon: Users, roles: ['Project Manager', 'Admin'] },
 ]
 
 function getNavigationForRole(role) {
@@ -83,15 +84,26 @@ function LabManagementLayout() {
 
   const navItems = useMemo(() => getNavigationForRole(displayRole), [displayRole])
 
-  // Mock notifications
-  const notifications = [
-    { id: 1, type: 'success', title: 'Test Plan Completed', message: 'Test Plan TP-001 has been completed', time: '2 hours ago', read: false },
-    { id: 2, type: 'info', title: 'New RFQ Received', message: 'A new RFQ has been received from TechCorp', time: '5 hours ago', read: false },
-    { id: 3, type: 'warning', title: 'Sample Review Due', message: 'Sample SAMPLE-2024-045 needs review', time: '1 day ago', read: true },
-    { id: 4, type: 'info', title: 'Project Update', message: 'Project EMC-2024-001 status updated', time: '2 days ago', read: true },
-  ]
+  const [notifications, setNotifications] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [loadingNotifs, setLoadingNotifs] = useState(false)
 
-  const unreadCount = notifications.filter(n => !n.read).length
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const data = await notificationsService.getMyNotifications(false) // get all, not just unread
+      setNotifications(Array.isArray(data) ? data : [])
+      setUnreadCount((Array.isArray(data) ? data : []).filter(n => !n.is_read).length)
+    } catch (err) {
+      // Silently fail — notifications are non-critical
+      console.warn('Notifications fetch failed:', err)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 30000) // poll every 30s
+    return () => clearInterval(interval)
+  }, [fetchNotifications])
 
   // Close notifications when clicking outside
   useEffect(() => {
@@ -280,10 +292,17 @@ function LabManagementLayout() {
                             notifications.map((notification) => (
                               <div
                                 key={notification.id}
-                                className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.read ? 'bg-blue-50/50' : ''
-                                  }`}
-                                onClick={() => {
-                                  // Mark as read and handle click
+                                className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${
+                                  !notification.is_read ? 'bg-blue-50/50' : ''
+                                }`}
+                                onClick={async () => {
+                                  try {
+                                    await notificationsService.markAsRead(notification.id)
+                                    fetchNotifications()
+                                  } catch {/* ignore */}
+                                  if (notification.entity_url) {
+                                    navigate(notification.entity_url)
+                                  }
                                   setNotificationsOpen(false)
                                 }}
                               >
@@ -297,17 +316,18 @@ function LabManagementLayout() {
                                     {notification.type === 'info' && <Info className="w-4 h-4" />}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <p className={`text-sm font-medium ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
+                                    <p className={`text-sm font-medium ${!notification.is_read ? 'text-gray-900' : 'text-gray-700'}`}>
                                       {notification.title}
                                     </p>
                                     <p className="text-xs text-gray-500 mt-1 line-clamp-2">
                                       {notification.message}
                                     </p>
                                     <p className="text-xs text-gray-400 mt-1">
-                                      {notification.time}
+                                      {notification.triggered_by_name ? `From: ${notification.triggered_by_name} (${notification.triggered_by_role})` : ''}
+                                      {notification.created_at ? ' · ' + new Date(notification.created_at).toLocaleString() : ''}
                                     </p>
                                   </div>
-                                  {!notification.read && (
+                                  {!notification.is_read && (
                                     <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
                                   )}
                                 </div>
@@ -316,17 +336,20 @@ function LabManagementLayout() {
                           )}
                         </div>
                         {notifications.length > 0 && (
-                          <div className="p-3 border-t border-gray-200">
-                            <button
-                              onClick={() => {
-                                // Mark all as read
-                                setNotificationsOpen(false)
-                              }}
-                              className="w-full text-sm text-primary hover:text-primary-dark font-medium"
-                            >
-                              Mark all as read
-                            </button>
-                          </div>
+                            <div className="p-3 border-t border-gray-200">
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await notificationsService.markAllRead()
+                                    fetchNotifications()
+                                  } catch {/* ignore */}
+                                  setNotificationsOpen(false)
+                                }}
+                                className="w-full text-sm text-primary hover:text-primary-dark font-medium"
+                              >
+                                Mark all as read
+                              </button>
+                            </div>
                         )}
                       </motion.div>
                     )}

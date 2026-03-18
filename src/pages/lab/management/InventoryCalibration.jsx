@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import { motion } from 'framer-motion'
 import { Plus, Search, Calendar, AlertCircle, CheckCircle, Clock } from 'lucide-react'
 import { calibrationsService, instrumentsService } from '../../../services/labManagementApi'

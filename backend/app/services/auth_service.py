@@ -54,7 +54,10 @@ def create_user(
     """
     Create a new user. Returns (user, error_message).
     If error_message is non-empty, user is None.
-    Only Admin can create Admin role unless created_by_admin is True (bootstrap).
+    Admin hierarchy:
+      - First user ever becomes Primary Admin (is_main=True, role=Admin).
+      - Only Primary Admin (is_main=True, role=Admin) can create other Admins.
+      - Maximum 2 sub-admins (is_main=False, role=Admin) allowed system-wide.
     """
     email = email.strip().lower()
     if not email or "@" not in email:
@@ -64,22 +67,37 @@ def create_user(
     if role not in ROLES:
         return None, f"Invalid role. Must be one of: {', '.join(ROLES)}."
 
-    # Limit Project Manager creation: each PM can create up to 2 other PMs
-    if role == "Project Manager":
-        # Check if creator is a PM and count their subordinates
+    existing_admins = db.query(User).filter(User.role == "Admin").count()
+
+    # ── Admin creation rules ──────────────────────────────────────────────────
+    if role == "Admin":
+        if existing_admins == 0:
+            # Bootstrap: if no admin exists, the first admin created becomes primary
+            is_main = True
+        else:
+            # Must be created by Primary Admin
+            if not creator_user or creator_user.role != "Admin" or not creator_user.is_main:
+                return None, "Only the Primary Admin can create additional Admin accounts."
+            # Count existing sub-admins (is_main=False, role=Admin)
+            sub_admin_count = db.query(User).filter(
+                User.role == "Admin",
+                User.is_main == False,  # noqa: E712
+            ).count()
+            if sub_admin_count >= 2:
+                return None, "Admin limit reached. Only 2 sub-admins are allowed under the Primary Admin."
+            is_main = False  # sub-admins are never is_main
+
+    # ── Project Manager creation rules ────────────────────────────────────────
+    elif role == "Project Manager" and db.query(User).count() > 0:
         if creator_user and creator_user.role == "Project Manager":
             sub_pm_count = db.query(User).filter(
                 User.role == "Project Manager",
                 User.parent_id == creator_user.id
             ).count()
-            
             if sub_pm_count >= 2:
                 return None, "You have reached your limit of 2 subordinate Project Managers."
-        
-        # If not bootstrap and no creator or creator not PM, restrict
-        elif db.query(User).count() > 0:
-            if not creator_user or creator_user.role != "Project Manager":
-                return None, "Only Project Managers can add other Project Managers."
+        elif not creator_user or creator_user.role not in ["Project Manager", "Admin"]:
+            return None, "Only Project Managers or Admins can add Project Managers."
 
     valid, msg = validate_password_strength(password)
     if not valid:
@@ -101,7 +119,7 @@ def create_user(
     db.add(user)
     db.commit()
     db.refresh(user)
-    logger.info("User created: id=%s email=%s role=%s", user.id, user.email, user.role)
+    logger.info("User created: id=%s email=%s role=%s is_main=%s", user.id, user.email, user.role, user.is_main)
     return user, ""
 
 

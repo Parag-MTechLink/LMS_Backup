@@ -5,7 +5,7 @@ import { estimationsService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Button from '../Button'
 import Input from '../Input'
-import { useLabManagementAuth } from '../../contexts/LabManagementAuthContext'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 
 export default function CreateProjectForm({ onSuccess, onCancel, estimationId, customerId }) {
   const { user } = useLabManagementAuth()

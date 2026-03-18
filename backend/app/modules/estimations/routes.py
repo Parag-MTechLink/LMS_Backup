@@ -19,6 +19,16 @@ def get_db():
     finally:
         db.close()
 
+
+# 🔹 GET TEST TYPES (Hardcoded for now)
+@router.get("/test-types", response_model=List[TestTypeOut])
+def get_test_types():
+    return [
+        {"id": 1, "name": "EMC Testing", "hsnCode": "9030", "defaultRate": 5000},
+        {"id": 2, "name": "RF Testing", "hsnCode": "9030", "defaultRate": 6000},
+        {"id": 3, "name": "Safety Testing", "hsnCode": "9030", "defaultRate": 4500},
+    ]
+
 # 🔹 GET ALL ESTIMATIONS
 @router.get("", response_model=List[EstimationOut])
 def get_estimations(
@@ -86,14 +96,6 @@ def get_estimation(
         "rfqProduct": rfq.product if rfq else "",
     }
 
-# 🔹 GET TEST TYPES (Hardcoded for now)
-@router.get("/test-types", response_model=List[TestTypeOut])
-def get_test_types():
-    return [
-        {"id": 1, "name": "EMC Testing", "hsnCode": "9030", "defaultRate": 5000},
-        {"id": 2, "name": "RF Testing", "hsnCode": "9030", "defaultRate": 6000},
-        {"id": 3, "name": "Safety Testing", "hsnCode": "9030", "defaultRate": 4500},
-    ]
 
 # 🔹 CREATE ESTIMATION
 @router.post("")

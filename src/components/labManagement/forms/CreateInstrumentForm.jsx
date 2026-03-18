@@ -1,4 +1,4 @@
-import { useLabManagementAuth } from '../../contexts/LabManagementAuthContext'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 
 export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }) {
   const { user } = useLabManagementAuth()

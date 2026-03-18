@@ -1,4 +1,4 @@
-import { useLabManagementAuth } from '../../contexts/LabManagementAuthContext'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 
 export default function CreateConsumableForm({ consumable, onSuccess, onCancel }) {
   const { user } = useLabManagementAuth()

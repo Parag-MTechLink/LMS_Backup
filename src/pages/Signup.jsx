@@ -7,11 +7,13 @@ import { getApiErrorMessage } from '../utils/apiError'
 import { User, Mail, Lock, Briefcase, ArrowRight, X, Eye, EyeOff } from 'lucide-react'
 
 const ROLES = [
+  { value: 'Admin', label: 'Admin' },
   { value: 'Sales Manager', label: 'Sales Manager' },
   { value: 'Project Manager', label: 'Project Manager' },
   { value: 'Finance Manager', label: 'Finance Manager' },
   { value: 'Quality Manager', label: 'Quality Manager' },
   { value: 'Team Lead', label: 'Team Lead' },
+  { value: 'Technical Manager', label: 'Technical Manager' },
 ]
 
 export default function Signup() {
@@ -22,6 +24,18 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false)
   const [role, setRole] = useState('Sales Manager')
   const [loading, setLoading] = useState(false)
+
+  // Consent checkbox state (controlled)
+  const [consents, setConsents] = useState({
+    consent_accurate: false,
+    consent_privacy: false,
+    consent_terms: false,
+  })
+  const [consentErrors, setConsentErrors] = useState({
+    consent_accurate: false,
+    consent_privacy: false,
+    consent_terms: false,
+  })
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -34,6 +48,18 @@ export default function Signup() {
       toast.error('Password must be at least 8 characters and include uppercase, lowercase, a number, and a symbol.')
       return
     }
+
+    // Validate all consent checkboxes individually
+    const newErrors = {
+      consent_accurate: !consents.consent_accurate,
+      consent_privacy: !consents.consent_privacy,
+      consent_terms: !consents.consent_terms,
+    }
+    setConsentErrors(newErrors)
+    if (Object.values(newErrors).some(Boolean)) {
+      return // Stop submission; individual errors shown inline
+    }
+
     setLoading(true)
     try {
       await authService.signup({ full_name: full_name.trim(), email: email.trim(), password, role })
@@ -95,9 +121,6 @@ export default function Signup() {
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
               Get started
             </h1>
-            <p className="mt-2 text-sm text-slate-600">
-              Enter your details to create your account.
-            </p>
 
             <form onSubmit={handleSubmit} className="mt-10 space-y-5">
               {/* Full name */}
@@ -186,16 +209,18 @@ export default function Signup() {
                   </select>
                   <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">▼</span>
                 </div>
-                <p className="mt-1.5 text-xs text-slate-500">
-                  Admin accounts can only be created by an existing administrator.
-                </p>
               </div>
 
               {/* ── Terms & Conditions + Privacy Policy Links + Modals ── */}
               <LegalSection />
 
               {/* ── Mandatory Consent Checkboxes ── */}
-              <ConsentBoxes />
+              <ConsentBoxes
+                consents={consents}
+                setConsents={setConsents}
+                errors={consentErrors}
+                setErrors={setConsentErrors}
+              />
 
               <button
                 type="submit"
@@ -438,33 +463,63 @@ function LegalSection() {
 /* ─────────────────────────────────────────────
    Mandatory Consent Checkboxes
 ───────────────────────────────────────────── */
-function ConsentBoxes() {
-  const consents = [
-    { id: 'consent_accurate', label: 'The information provided is true and accurate.' },
-    { id: 'consent_privacy', label: 'You consent to the collection and use of your information as described in the Privacy Policy.' },
-    { id: 'consent_terms', label: 'You have read and agree to the Terms & Conditions, including the Payment and Refund Policy.' },
+function ConsentBoxes({ consents, setConsents, errors, setErrors }) {
+  const consentItems = [
+    {
+      id: 'consent_accurate',
+      label: 'The information provided is true and accurate.',
+      errorMsg: 'Please confirm that the information is accurate.',
+    },
+    {
+      id: 'consent_privacy',
+      label: 'You consent to the collection and use of your information as described in the Privacy Policy.',
+      errorMsg: 'Privacy Policy consent is required to create an account.',
+    },
+    {
+      id: 'consent_terms',
+      label: 'You have read and agree to the Terms & Conditions, including the Payment and Refund Policy.',
+      errorMsg: 'You must agree to the Terms & Conditions to proceed.',
+    },
   ]
+
+  const handleChange = (id, checked) => {
+    setConsents((prev) => ({ ...prev, [id]: checked }))
+    if (checked) {
+      setErrors((prev) => ({ ...prev, [id]: false }))
+    }
+  }
 
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 space-y-3">
-      <p className="text-sm font-semibold text-slate-800">User Consent</p>
-      {consents.map(({ id, label }) => (
-        <label
-          key={id}
-          htmlFor={id}
-          className="flex items-start gap-3 cursor-pointer group"
-        >
-          <input
-            id={id}
-            name={id}
-            type="checkbox"
-            required
-            className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-slate-300 text-indigo-600 accent-indigo-600 cursor-pointer"
-          />
-          <span className="text-xs text-slate-600 leading-relaxed group-hover:text-slate-800 transition">
-            {label}
-          </span>
-        </label>
+      <p className="text-sm font-semibold text-slate-800">
+        User Consent <span className="text-red-500">*</span>
+      </p>
+      {consentItems.map(({ id, label, errorMsg }) => (
+        <div key={id}>
+          <label
+            htmlFor={id}
+            className="flex items-start gap-3 cursor-pointer group"
+          >
+            <input
+              id={id}
+              name={id}
+              type="checkbox"
+              checked={consents[id]}
+              onChange={(e) => handleChange(id, e.target.checked)}
+              className={`mt-0.5 h-4 w-4 flex-shrink-0 rounded border-slate-300 text-indigo-600 accent-indigo-600 cursor-pointer ${
+                errors[id] ? 'ring-1 ring-red-500 border-red-400' : ''
+              }`}
+            />
+            <span className={`text-xs leading-relaxed transition ${
+              errors[id] ? 'text-red-700' : 'text-slate-600 group-hover:text-slate-800'
+            }`}>
+              <span className="text-red-500 mr-0.5">*</span>{label}
+            </span>
+          </label>
+          {errors[id] && (
+            <p className="mt-1 ml-7 text-xs text-red-600 font-medium">{errorMsg}</p>
+          )}
+        </div>
       ))}
     </div>
   )

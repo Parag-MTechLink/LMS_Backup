@@ -10,9 +10,16 @@ import {
   Clock,
   BarChart3,
   Users,
-  ExternalLink
+  ExternalLink,
+  Shield,
+  CheckCircle2,
+  UserCheck,
+  ClipboardCheck,
+  CreditCard,
+  Send
 } from 'lucide-react'
-import { projectsService } from '../../../services/labManagementApi'
+import toast, { Toaster } from 'react-hot-toast'
+import { projectsService, authService, notificationsService } from '../../../services/labManagementApi'
 import { samplesService } from '../../../services/labManagementApi'
 import { trfsService } from '../../../services/labManagementApi'
 import { testPlansService } from '../../../services/labManagementApi'
@@ -30,13 +37,27 @@ function ProjectDetail() {
   const [trfs, setTrfs] = useState([])
   const [testPlans, setTestPlans] = useState([])
   const [loading, setLoading] = useState(true)
+  const [teamLeads, setTeamLeads] = useState([])
+  const [selectedTL, setSelectedTL] = useState('')
 
   useEffect(() => {
     if (id) {
       loadProject()
       loadRelatedData()
+      if (user?.role === 'Project Manager' || user?.role === 'Admin') {
+        loadTeamLeads()
+      }
     }
-  }, [id])
+  }, [id, user])
+
+  const loadTeamLeads = async () => {
+    try {
+      const allUsers = await authService.getAllUsers()
+      setTeamLeads(allUsers.filter(u => u.role === 'Team Lead'))
+    } catch (error) {
+      console.error('Failed to load team leads')
+    }
+  }
 
   const loadProject = async () => {
     try {
@@ -71,6 +92,57 @@ function ProjectDetail() {
     } catch (error) {
       // Silently fail
     }
+  }
+
+  const handleApprove = async (type) => {
+    try {
+      let updatedProject
+      if (type === 'quality') updatedProject = await projectsService.approveQuality(project.id)
+      else if (type === 'project') updatedProject = await projectsService.approveProject(project.id)
+      else if (type === 'technical') updatedProject = await projectsService.approveTechnical(project.id)
+      
+      setProject(updatedProject)
+      toast.success('Project approved successfully')
+    } catch (error) {
+      toast.error('Failed to approve project')
+    }
+  }
+
+  const handleAssignTL = async () => {
+    if (!selectedTL) return
+    try {
+      const updatedProject = await projectsService.assignTL(project.id, selectedTL)
+      setProject(updatedProject)
+      toast.success('Team Lead assigned successfully')
+    } catch (error) {
+      toast.error('Failed to assign Team Lead')
+    }
+  }
+
+  const handleWorkflowAction = async (action) => {
+    try {
+      let updatedProject
+      if (action === 'submit') {
+        updatedProject = await projectsService.submitReport(project.id)
+      } else if (action === 'review') {
+        updatedProject = await projectsService.tlReview(project.id)
+      } else if (action === 'payment') {
+        updatedProject = await projectsService.verifyPayment(project.id)
+      }
+      setProject(updatedProject)
+      toast.success(`${action.charAt(0).toUpperCase() + action.slice(1)} completed`)
+    } catch (error) {
+      toast.error(`Failed to ${action} project`)
+    }
+  }
+
+  const getStatusVariant = (status) => {
+    const s = status?.toLowerCase()
+    if (s === 'approved' || s === 'completed') return 'success'
+    if (s === 'testing_in_progress' || s === 'report_submitted' || s === 'tl_reviewed') return 'warning'
+    if (s === 'payment_pending' || s === 'pending_payment') return 'danger'
+    if (s === 'pending_team_lead') return 'default'
+    return 'default'
   }
 
   const tabs = [
@@ -119,8 +191,8 @@ function ProjectDetail() {
           <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
           <p className="text-gray-600 mt-1">Project Code: {project.code}</p>
         </div>
-        <Badge variant={project.status === 'active' ? 'success' : 'default'}>
-          {project.status}
+        <Badge variant={getStatusVariant(project.status)}>
+          {project.status.replace(/_/g, ' ')}
         </Badge>
       </div>
 
@@ -173,6 +245,157 @@ function ProjectDetail() {
                       <p className="font-medium text-gray-900">{project.oem}</p>
                     </div>
                   )}
+                  {project.teamLeadName && (
+                    <div>
+                      <p className="text-sm text-gray-600">Assigned Team Lead</p>
+                      <p className="font-medium text-blue-600 flex items-center gap-1">
+                        <UserCheck className="w-4 h-4" />
+                        {project.teamLeadName}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Workflow Approvals */}
+                <div className="mt-6 pt-6 border-t border-gray-100 space-y-4">
+                  <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-primary" />
+                    Workflow Control
+                  </h4>
+
+                  {/* ── PM: Assign Team Lead ── */}
+                  {project.status === 'pending_team_lead' && (user?.role === 'Project Manager' || user?.role === 'Admin') && (
+                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl space-y-3">
+                      <p className="text-sm text-blue-800 font-medium flex items-center gap-2">
+                        <UserCheck className="w-4 h-4" />
+                        Assign Team Lead to start testing
+                      </p>
+                      <div className="flex gap-2">
+                        <select
+                          value={selectedTL}
+                          onChange={(e) => setSelectedTL(e.target.value)}
+                          className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary transition-all"
+                        >
+                          <option value="">Select Team Lead...</option>
+                          {teamLeads.map(tl => (
+                            <option key={tl.id} value={tl.id}>{tl.full_name}</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={handleAssignTL}
+                          disabled={!selectedTL}
+                          className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark disabled:opacity-50 transition-all"
+                        >
+                          Assign
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── TL/Admin: Workflow Actions ── */}
+                  <div className="grid grid-cols-1 gap-3">
+                    {project.status === 'testing_in_progress' && (user?.role === 'Team Lead' || user?.role === 'Technical Manager' || user?.role === 'Admin') && (
+                       <button
+                         onClick={() => handleWorkflowAction('submit')}
+                         className="w-full flex items-center justify-center gap-2 p-3 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl hover:bg-indigo-100 transition-all font-semibold"
+                       >
+                         <ClipboardCheck className="w-5 h-5" />
+                         Submit Test Report
+                       </button>
+                    )}
+
+                    {project.status === 'report_submitted' && (user?.role === 'Team Lead' || user?.role === 'Admin') && (
+                      <button
+                        onClick={() => handleWorkflowAction('review')}
+                        className="w-full flex items-center justify-center gap-2 p-3 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl hover:bg-amber-100 transition-all font-semibold"
+                      >
+                        <Send className="w-5 h-5" />
+                        Complete TL Review
+                      </button>
+                    )}
+
+                    {/* Final Approvals (Only visible after TL review or if admin) */}
+                    {(project.status === 'tl_reviewed' || project.status === 'approved' || user?.role === 'Admin') && (
+                      <div className="space-y-3 pt-2">
+                        <p className="text-xs text-gray-500 font-medium">Final Approval Group</p>
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                          <div className="flex items-center gap-3">
+                            {project.qualityManagerApproved ? (
+                              <CheckCircle2 className="w-5 h-5 text-green-500" />
+                            ) : (
+                              <Clock className="w-5 h-5 text-gray-400" />
+                            )}
+                            <span className="text-sm font-medium">Quality Manager</span>
+                          </div>
+                          {user?.role === 'Quality Manager' && !project.qualityManagerApproved && (
+                            <button onClick={() => handleApprove('quality')} className="px-3 py-1 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-dark">
+                              Approve
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                          <div className="flex items-center gap-3">
+                            {project.projectManagerApproved ? (
+                              <CheckCircle2 className="w-5 h-5 text-green-500" />
+                            ) : (
+                              <Clock className="w-5 h-5 text-gray-400" />
+                            )}
+                            <span className="text-sm font-medium">Project Manager</span>
+                          </div>
+                          {user?.role === 'Project Manager' && !project.projectManagerApproved && (
+                            <button onClick={() => handleApprove('project')} className="px-3 py-1 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-dark">
+                              Approve
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                          <div className="flex items-center gap-3">
+                            {project.technicalManagerApproved ? (
+                              <CheckCircle2 className="w-5 h-5 text-green-500" />
+                            ) : (
+                              <Clock className="w-5 h-5 text-gray-400" />
+                            )}
+                            <span className="text-sm font-medium">Technical Manager</span>
+                          </div>
+                          {user?.role === 'Technical Manager' && !project.technicalManagerApproved && (
+                            <button onClick={() => handleApprove('technical')} className="px-3 py-1 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-dark">
+                              Approve
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Payment Verification */}
+                    {!project.paymentCompleted && (user?.role === 'Finance Manager' || user?.role === 'Admin') && (
+                      <div className="mt-4 p-4 bg-emerald-50 border border-emerald-100 rounded-xl space-y-3">
+                        <p className="text-sm text-emerald-800 font-medium flex items-center gap-2">
+                          <CreditCard className="w-4 h-4" />
+                          Verify payment to release final report
+                        </p>
+                        <button
+                          onClick={() => handleWorkflowAction('payment')}
+                          className="w-full py-2 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-md"
+                        >
+                          Confirm Payment Received
+                        </button>
+                      </div>
+                    )}
+
+                    {project.paymentCompleted && (
+                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                          <CreditCard className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-green-800">Payment Verified</p>
+                          <p className="text-xs text-green-600">The final report can now be released.</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </Card>
 
@@ -359,6 +582,18 @@ function ProjectDetail() {
           </div>
         )}
       </div>
+      <Toaster position="top-right" />
+    </div>
+  )
+}
+
+function Card({ children, className = '', hover = false, onClick }) {
+  return (
+    <div 
+      onClick={onClick}
+      className={`bg-white rounded-xl p-6 shadow-sm border border-gray-200 transition-all ${hover ? 'hover:shadow-md hover:border-primary/30' : ''} ${className}`}
+    >
+      {children}
     </div>
   )
 }

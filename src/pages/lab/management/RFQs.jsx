@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { rfqsService, customersService } from '../../../services/labManagementApi'
+import { rfqsService, customersService, notificationsService } from '../../../services/labManagementApi'
 import { getApiErrorMessage } from '../../../utils/apiError'
 import toast, { Toaster } from 'react-hot-toast'
-import { Plus, X, FileSpreadsheet, Trash2, Download, User, Mail, Phone, Package, Calendar, AlertCircle, CheckCircle, Clock, Eye, ChevronDown } from 'lucide-react'
+import { Plus, X, FileSpreadsheet, Trash2, Download, User, Mail, Phone, Package, Calendar, AlertCircle, CheckCircle, Clock, Eye, ChevronDown, Shield } from 'lucide-react'
 import RouteSkeleton from '../../../components/RouteSkeleton'
 import ConfirmDeleteModal from '../../../components/labManagement/ConfirmDeleteModal'
 import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
@@ -143,13 +143,60 @@ function RFQs() {
     }
   }
 
+  const handleFeasibility = async () => {
+    if (!viewRfq) return
+    setSavingRfqStatus(true)
+    try {
+      await rfqsService.feasibilityCheck(viewRfq.id, rfqComment)
+      toast.success('Feasibility check completed')
+      loadData()
+      setViewRfq(null)
+    } catch (err) {
+      toast.error('Failed to update feasibility')
+    } finally {
+      setSavingRfqStatus(false)
+    }
+  }
+
+  const handleQuotation = async () => {
+    if (!viewRfq) return
+    setSavingRfqStatus(true)
+    try {
+      await rfqsService.prepareQuotation(viewRfq.id, rfqComment)
+      toast.success('Quotation prepared')
+      loadData()
+      setViewRfq(null)
+    } catch (err) {
+      toast.error('Failed to update quotation')
+    } finally {
+      setSavingRfqStatus(false)
+    }
+  }
+
+  const handleApprove = async () => {
+    if (!viewRfq) return
+    setSavingRfqStatus(true)
+    try {
+      await rfqsService.approve(viewRfq.id)
+      toast.success('RFQ Approved')
+      loadData()
+      setViewRfq(null)
+    } catch (err) {
+      toast.error('Failed to approve RFQ')
+    } finally {
+      setSavingRfqStatus(false)
+    }
+  }
+
   const getStatusColor = (status) => {
     const statusLower = status?.toLowerCase() ?? ''
     if (statusLower === 'pending') return 'from-yellow-400 to-orange-500'
     if (statusLower === 'approved') return 'from-green-400 to-emerald-500'
     if (statusLower === 'rejected') return 'from-red-400 to-pink-500'
-    if (statusLower === 'pending review') return 'from-blue-400 to-cyan-500'
-    return 'from-blue-400 to-cyan-500'
+    if (statusLower === 'feasibility_done') return 'from-blue-400 to-cyan-500'
+    if (statusLower === 'quotation_review') return 'from-purple-400 to-fuchsia-500'
+    if (statusLower === 'completed') return 'from-teal-400 to-emerald-500'
+    return 'from-gray-400 to-slate-500'
   }
 
   const getStatusIcon = (status) => {
@@ -359,12 +406,17 @@ function RFQs() {
             ) : (
               <div className="p-6 space-y-6">
                 {/* Status badge */}
-                <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full bg-gradient-to-r ${getStatusColor(displayRfq?.status ?? viewRfq.status)} text-white shadow-sm`}>
-                    {getStatusIcon(displayRfq?.status ?? viewRfq.status)}
-                    {displayRfq?.status ?? viewRfq.status}
-                  </span>
-                </div>
+                {(() => {
+                  const statusLower = (displayRfq?.status ?? viewRfq.status)?.toLowerCase() ?? ''
+                  return (
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full bg-gradient-to-r ${getStatusColor(statusLower)} text-white shadow-sm`}>
+                        {getStatusIcon(statusLower)}
+                        {displayRfq?.status ?? viewRfq.status}
+                      </span>
+                    </div>
+                  )
+                })()}
 
                 {/* Info grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -454,6 +506,32 @@ function RFQs() {
                       </div>
                     </div>
                   )}
+
+                  {/* Feasibility Notes */}
+                  {displayRfq?.feasibility_notes && (
+                    <div className="col-span-1 sm:col-span-2 bg-blue-50 rounded-xl p-4 flex gap-3 border border-blue-100">
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <Shield className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-blue-600 font-medium uppercase tracking-wide">Feasibility Notes (TM)</p>
+                        <p className="text-sm text-gray-800 mt-1 whitespace-pre-wrap">{displayRfq.feasibility_notes}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Quotation Notes */}
+                  {displayRfq?.quotation_notes && (
+                    <div className="col-span-1 sm:col-span-2 bg-purple-50 rounded-xl p-4 flex gap-3 border border-purple-100">
+                      <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                        <Package className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-purple-600 font-medium uppercase tracking-wide">Quotation Remarks (FM)</p>
+                        <p className="text-sm text-gray-800 mt-1 whitespace-pre-wrap">{displayRfq.quotation_notes}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Sample / Test Details */}
@@ -503,49 +581,106 @@ function RFQs() {
                   </div>
                 )}
 
-                {/* ── Status Change ── */}
-                {canCreate && (
-                  <div className="border border-gray-200 rounded-xl p-4 space-y-3">
-                    <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      <ChevronDown className="w-4 h-4 text-gray-400" />
-                      Change Status
-                    </h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      {[
-                        { value: 'pending', label: 'Pending', border: 'border-yellow-200 bg-yellow-50 text-yellow-800' },
-                        { value: 'pending review', label: 'Pending Review', border: 'border-blue-200 bg-blue-50 text-blue-800' },
-                        { value: 'approved', label: 'Approved', border: 'border-green-200 bg-green-50 text-green-800' },
-                        { value: 'rejected', label: 'Rejected', border: 'border-red-200 bg-red-50 text-red-800' },
-                      ].map(opt => (
-                        <button
-                          key={opt.value}
-                          onClick={() => setRfqStatus(opt.value)}
-                          className={`px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all duration-150
-                            ${rfqStatus === opt.value
-                              ? 'ring-2 ring-offset-1 ring-primary border-primary bg-primary/10 text-primary'
-                              : `${opt.border} hover:opacity-80`
-                            }`}
+                {/* ── Role-specific Actions ── */}
+                <div className="border border-gray-200 rounded-xl p-4 space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-primary" />
+                    Workflow Actions
+                  </h3>
+                  
+                  {(() => {
+                    const statusLower = (displayRfq?.status ?? viewRfq.status)?.toLowerCase() ?? ''
+                    return (
+                      <>
+                        {user?.role === 'Technical Manager' && statusLower === 'pending' && (
+                          <div className="space-y-3">
+                            <p className="text-xs text-blue-600 font-medium bg-blue-50 p-2 rounded-lg border border-blue-100">
+                              As a Technical Manager, perform the feasibility check and provide your notes.
+                            </p>
+                            <textarea
+                              rows={3}
+                              value={rfqComment}
+                              onChange={e => setRfqComment(e.target.value)}
+                              placeholder="Feasibility notes..."
+                              className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all"
+                            />
+                            <button
+                              onClick={handleFeasibility}
+                              disabled={savingRfqStatus || !rfqComment.trim()}
+                              className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 disabled:opacity-50 transition-all duration-200"
+                            >
+                              {savingRfqStatus ? 'Submitting...' : 'Mark Feasibility Done'}
+                            </button>
+                          </div>
+                        )}
+
+                        {user?.role === 'Finance Manager' && statusLower === 'feasibility_done' && (
+                          <div className="space-y-3">
+                            <p className="text-xs text-indigo-600 font-medium bg-indigo-50 p-2 rounded-lg border border-indigo-100">
+                              As a Finance Manager, prepare the quotation and add any financial remarks.
+                            </p>
+                            <textarea
+                              rows={3}
+                              value={rfqComment}
+                              onChange={e => setRfqComment(e.target.value)}
+                              placeholder="Quotation remarks..."
+                              className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all"
+                            />
+                            <button
+                              onClick={handleQuotation}
+                              disabled={savingRfqStatus || !rfqComment.trim()}
+                              className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 disabled:opacity-50 transition-all duration-200"
+                            >
+                              {savingRfqStatus ? 'Preparing...' : 'Set Quotation for Review'}
+                            </button>
+                          </div>
+                        )}
+
+                        {(user?.role === 'Project Manager' || user?.role === 'Sales Manager' || isAdmin) && statusLower === 'quotation_review' && (
+                          <div className="space-y-3">
+                            <p className="text-xs text-emerald-600 font-medium bg-emerald-50 p-2 rounded-lg border border-emerald-100">
+                              Review the feasibility and quotation notes. Approve to send to customer.
+                            </p>
+                            <button
+                              onClick={handleApprove}
+                              disabled={savingRfqStatus}
+                              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all duration-200"
+                            >
+                              {savingRfqStatus ? 'Approving...' : 'Approve & Send to Customer'}
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    )
+                  })()}
+
+                  {isAdmin && (
+                    <div className="space-y-3 pt-4 border-t border-gray-100">
+                      <p className="text-xs text-gray-500 font-medium">Admin Overrides</p>
+                      <div className="flex gap-2">
+                        <select
+                          value={rfqStatus}
+                          onChange={e => setRfqStatus(e.target.value)}
+                          className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary transition-all"
                         >
-                          {opt.label}
+                          <option value="pending">Pending</option>
+                          <option value="feasibility_done">Feasibility Done</option>
+                          <option value="quotation_pending">Quotation Pending</option>
+                          <option value="quotation_review">Quotation Review</option>
+                          <option value="sent_to_customer">Sent to Customer</option>
+                          <option value="negotiation">Negotiation</option>
+                          <option value="approved">Approved</option>
+                        </select>
+                        <button
+                          onClick={handleSaveRfqStatus}
+                          className="p-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all"
+                        >
+                          Save
                         </button>
-                      ))}
+                      </div>
                     </div>
-                    <textarea
-                      rows={2}
-                      value={rfqComment}
-                      onChange={e => setRfqComment(e.target.value)}
-                      placeholder="Optional comment"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all"
-                    />
-                    <button
-                      onClick={handleSaveRfqStatus}
-                      disabled={savingRfqStatus || rfqStatus === (displayRfq?.status ?? viewRfq?.status ?? '')}
-                      className="w-full py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold rounded-xl shadow hover:shadow-md hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-150"
-                    >
-                      {savingRfqStatus ? 'Saving…' : 'Save Status'}
-                    </button>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 {/* Footer actions */}
                 <div className="flex gap-3 pt-2 border-t border-gray-100">

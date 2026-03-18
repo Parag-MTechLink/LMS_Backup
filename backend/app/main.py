@@ -22,6 +22,7 @@ from app.core.config import settings
 from app.core.database import Base, engine
 from app.core.logging_config import configure_logging
 from app.models import FAQKnowledgeBase, RFQRequest, User, AuditLog  # noqa: F401 - register models for create_all
+from app.models.notification_model import Notification  # noqa: F401 - register for create_all
 
 # Import Routers
 from app.modules.organization import routes as organization_routes
@@ -42,6 +43,7 @@ from app.modules.samples.routes import router as samples_router
 from app.modules.trf.routes import router as trfs_router
 from app.modules.reports.routes import router as reports_router
 from app.modules.document.routes import router as documents_router
+from app.routes.notifications import router as notifications_router
 
 
 @asynccontextmanager
@@ -175,6 +177,9 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
     Catch unhandled exceptions; return standard error format.
     HTTPException is handled by FastAPI and returns detail as-is (contract preserved).
     """
+    import traceback
+    print("GLOBAL EXCEPTION CAUGHT:")
+    traceback.print_exc()
     logging.getLogger("app").exception(
         "Unhandled exception | path=%s | method=%s",
         request.url.path,
@@ -276,6 +281,7 @@ app.include_router(samples_router, prefix="/api/v1", tags=["Samples"])
 app.include_router(trfs_router, prefix="/api/v1", tags=["TRFs"])
 app.include_router(reports_router, prefix="/api/v1", tags=["Reports"])
 app.include_router(documents_router, prefix="/api/v1", tags=["Documents (Extended)"])
+app.include_router(notifications_router, prefix="/api/v1", tags=["Notifications"])
 
 from app.modules.labs.routes import router as labs_router
 app.include_router(labs_router, prefix="/api/v1", tags=["Labs / Recommendations"])

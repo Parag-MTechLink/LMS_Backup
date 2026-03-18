@@ -3,7 +3,7 @@ import { testExecutionsService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Button from '../Button'
 import Input from '../Input'
-import { useLabManagementAuth } from '../../contexts/LabManagementAuthContext'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 
 export default function EditTestExecutionForm({ execution, onSuccess, onCancel }) {
     const { user } = useLabManagementAuth()
