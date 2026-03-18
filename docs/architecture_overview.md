@@ -11,8 +11,8 @@ The backend is organized into functional modules under `backend/app/modules`.
 - **ORM**: SQLAlchemy (configured for Neon/serverless compatibility)
 - **Migrations**: Alembic
 - **Validation**: Pydantic
-- **Authentication**: JWT-based for sessions; Stateful tokens for Password Reset.
-- **Security Standards**: Enforced complexity (Uppercase, Lowercase, Number, Symbol).
+- **Authentication**: JWT-based for sessions; MFA via email; Stateful tokens for Password Reset.
+- **Security Standards**: Enforced complexity (Uppercase, Lowercase, Number, Symbol), Rate limiting, and MFA.
 - **Database**: PostgreSQL (pgvector enabled for AI features).
 
 ### Module Structure
@@ -23,7 +23,7 @@ Each module (e.g., `test_management`, `inventory`) follows a consistent pattern:
 - `routes.py`: API endpoints.
 
 ### Key Backend Services
-- **Auth**: Custom JWT implementation and stateful reset token handling.
+- **Auth**: Custom JWT implementation, Multi-Factor Authentication (MFA), and stateful reset token handling.
 - **Email**: SMTP-based utility with console-logging fallback for development.
 - **FAQ/Chatbot**: RAG-based system using pgvector and LangChain patterns.
 - **Lab Recommendation Engine**: Native service for matching labs to requirements.

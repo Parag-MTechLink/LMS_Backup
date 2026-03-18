@@ -10,6 +10,7 @@ from app.core.security import (
     hash_password,
     validate_password_strength,
     verify_password,
+    generate_mfa_code,
 )
 from app.models.user_model import User, ROLES
 
@@ -174,10 +175,14 @@ def reset_password(db: Session, token: str, new_password: str) -> tuple[bool, st
         db.commit()
         return False, "Reset token has expired."
     
-    # Validate new password
+    # Validate new password strength
     valid, msg = validate_password_strength(new_password)
     if not valid:
         return False, msg
+    
+    # NEW: Prevent resetting to the current password
+    if verify_password(new_password, user.password_hash):
+        return False, "New password cannot be the same as your current password."
     
     # Update password and clear token
     user.password_hash = hash_password(new_password)
@@ -186,3 +191,91 @@ def reset_password(db: Session, token: str, new_password: str) -> tuple[bool, st
     
     db.commit()
     return True, "Password has been reset successfully."
+
+def create_mfa_code(db: Session, email: str) -> str | None:
+    """
+    Generate a 6-digit MFA code for the user and save it to the DB with expiry.
+    Returns the code if successful, else None.
+    """
+    user = get_user_by_email(db, email)
+    if not user:
+        return None
+    
+    code = generate_mfa_code()
+    user.mfa_code = code
+    # MFA code expires in 5 minutes
+    user.mfa_code_expires = datetime.utcnow() + timedelta(minutes=5)
+    
+    db.commit()
+    return code
+
+def verify_mfa_code(db: Session, email: str, code: str) -> User | None:
+    """
+    Validate the MFA code and return the user if successful.
+    Clears the code upon success.
+    """
+    user = get_user_by_email(db, email)
+    if not user:
+        return None
+    
+    if not user.mfa_code or user.mfa_code != code:
+        return None
+    
+    if user.mfa_code_expires < datetime.utcnow():
+        # Clear expired code
+        user.mfa_code = None
+        user.mfa_code_expires = None
+        db.commit()
+        return None
+    
+    # Success: clear code and return user
+    user.mfa_code = None
+    user.mfa_code_expires = None
+    db.commit()
+    return user
+
+def update_user_profile(db: Session, user_id: str, profile_data: dict) -> tuple[User | None, str]:
+    """
+    Update user profile fields.
+    """
+    user = get_user_by_id(db, UUID(user_id))
+    if not user:
+        return None, "User not found."
+
+    # Update fields if present in profile_data
+    allowed_fields = [
+        "full_name", "gender", "country", "language", "address", 
+        "company_name", "phone_no", "designation", "industry", "account_type"
+    ]
+    
+    for field in allowed_fields:
+        if field in profile_data:
+            setattr(user, field, profile_data[field])
+    
+    user.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(user)
+    return user, ""
+
+def change_user_password(db: Session, user_id: str, current_password: str, new_password: str) -> tuple[bool, str]:
+    """
+    Change user password after verifying current password.
+    """
+    user = get_user_by_id(db, UUID(user_id))
+    if not user:
+        return False, "User not found."
+
+    if not verify_password(current_password, user.password_hash):
+        return False, "Incorrect current password."
+
+    valid, msg = validate_password_strength(new_password)
+    if not valid:
+        return False, msg
+
+    if verify_password(new_password, user.password_hash):
+        return False, "New password cannot be same as current password."
+
+    user.password_hash = hash_password(new_password)
+    user.updated_at = datetime.utcnow()
+    db.commit()
+    return True, "Password changed successfully."

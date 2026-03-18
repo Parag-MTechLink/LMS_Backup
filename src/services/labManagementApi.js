@@ -168,6 +168,14 @@ export const authService = {
   },
   getAllUsers: () => apiService.get('/api/v1/auth/users'),
   deleteUser: (userId) => apiService.delete(`/api/v1/auth/users/${userId}`),
+  verifyMfa: (email, code) =>
+    apiService.post('/api/v1/auth/verify-mfa', { email, code }),
+  updateProfile: (data) => {
+    clearCache('auth:me')
+    return apiService.put('/api/v1/auth/profile', data)
+  },
+  changePassword: (currentPassword, newPassword) =>
+    apiService.post('/api/v1/auth/change-password', { current_password: currentPassword, new_password: newPassword }),
 }
 
 // Notifications Service — workflow-driven in-app notifications

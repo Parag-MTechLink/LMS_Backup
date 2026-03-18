@@ -6,16 +6,22 @@ import toast from 'react-hot-toast'
 import Button from '../Button'
 import Input from '../Input'
 
-export default function CreateCustomerForm({ onSuccess, onCancel }) {
+export default function CreateCustomerForm({ onSuccess, onCancel, initialData = null, isEdit = false }) {
   const [formData, setFormData] = useState({
-    companyName: '',
-    email: '',
-    phone: '',
-    address: '',
-    contactPerson: ''
+    companyName: initialData?.companyName || '',
+    email: initialData?.email || '',
+    phone: initialData?.phone ? initialData.phone.replace(/^\+\d+-/, '') : '',
+    address: initialData?.address || '',
+    contactPerson: initialData?.contactPerson || '',
+    region: initialData?.region || ''
   })
   const [errors, setErrors] = useState({})
-  const [countryCode, setCountryCode] = useState('+91')
+  const [countryCode, setCountryCode] = useState(() => {
+    if (initialData?.phone && initialData.phone.includes('-')) {
+      return initialData.phone.split('-')[0]
+    }
+    return '+91'
+  })
   const [loading, setLoading] = useState(false)
 
   // Top 20 country codes for the dropdown
@@ -69,6 +75,10 @@ export default function CreateCustomerForm({ onSuccess, onCancel }) {
       newErrors.contactPerson = 'Please enter at least first and last name'
     }
 
+    if (!formData.region) {
+      newErrors.region = 'Region is required'
+    }
+
     setErrors(newErrors)
 
     if (Object.keys(newErrors).length > 0) {
@@ -82,19 +92,35 @@ export default function CreateCustomerForm({ onSuccess, onCancel }) {
         ...formData,
         phone: `${countryCode}-${formData.phone}`
       }
-      await customersService.create(submitData)
-      toast.success('Customer created successfully!')
+      if (isEdit && initialData?.id) {
+        await customersService.update(initialData.id, submitData)
+        toast.success('Customer updated successfully!')
+      } else {
+        await customersService.create(submitData)
+        toast.success('Customer created successfully!')
+      }
       onSuccess()
     } catch (error) {
-      const errorMsg = error.response?.data?.message || 'Failed to create customer'
+      // The backend returns { success: false, error: "...", details: [...] }
+      const responseData = error.response?.data
+      const errorMsg = responseData?.error || responseData?.details?.[0] || responseData?.detail || responseData?.message || 'Failed to create customer'
       
-      // Handle known duplicate scenarios inline based on generic backend messages
-      if (errorMsg.toLowerCase().includes('email')) {
-        setErrors(prev => ({ ...prev, email: 'Email already registered' }))
-      } else if (errorMsg.toLowerCase().includes('mobile') || errorMsg.toLowerCase().includes('phone')) {
-        setErrors(prev => ({ ...prev, phone: 'Mobile number already registered' }))
+      const errorLower = typeof errorMsg === 'string' ? errorMsg.toLowerCase() : JSON.stringify(errorMsg).toLowerCase()
+      
+      if (errorLower.includes('email') && (errorLower.includes('already') || errorLower.includes('exist') || errorLower.includes('registered'))) {
+        setErrors(prev => ({ ...prev, email: 'This email is already registered to another customer' }))
+        toast.error('Duplicate error: This email is already registered.')
+      } else if (errorLower.includes('mobile') || errorLower.includes('phone') || errorLower.includes('data')) { // The backend throws generic 'data already exists' if it hits a unique constraint other than email
+        setErrors(prev => ({ ...prev, phone: 'This record might already be registered.' }))
+        toast.error('Duplicate error: This mobile number/record is already registered.')
+      } else if (errorLower.includes('contact person')) {
+        setErrors(prev => ({ ...prev, contactPerson: 'This contact person already exists' }))
+        toast.error('Duplicate error: This contact person already exists in another record.')
+      } else if (errorLower.includes('company') || errorLower.includes('name')) {
+        setErrors(prev => ({ ...prev, companyName: 'This company name already exists' }))
+        toast.error('Duplicate error: This company name already exists.')
       } else {
-        toast.error(errorMsg)
+        toast.error(typeof errorMsg === 'string' ? errorMsg : `Failed to ${isEdit ? 'update' : 'create'} customer. Please try again.`)
       }
     } finally {
       setLoading(false)
@@ -102,32 +128,49 @@ export default function CreateCustomerForm({ onSuccess, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <p className="text-sm text-red-500 mb-4">Please fill all the mandatory details in the form (*)</p>
-      <Input
-        label={<>Company Name <span className="text-red-500">*</span></>}
-        value={formData.companyName}
-        onChange={(e) => {
-          setFormData({ ...formData, companyName: e.target.value })
-          if (errors.companyName) setErrors(prev => ({ ...prev, companyName: null }))
-        }}
-        error={errors.companyName}
-        placeholder="Enter company name"
-      />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="bg-blue-50/50 px-4 py-3 rounded-xl border border-blue-100/50 text-sm text-blue-800">
+        Please fill all the mandatory details in the form (<span className="text-red-500 font-bold">*</span>)
+      </div>
 
-      <Input
-        label={<>Email <span className="text-red-500">*</span></>}
-        type="email"
-        value={formData.email}
-        onChange={(e) => {
-          setFormData({ ...formData, email: e.target.value })
-          if (errors.email) setErrors(prev => ({ ...prev, email: null }))
-        }}
-        error={errors.email}
-        placeholder="Enter email address"
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Input
+          label={<>Company Name <span className="text-red-500">*</span></>}
+          value={formData.companyName}
+          onChange={(e) => {
+            setFormData({ ...formData, companyName: e.target.value })
+            if (errors.companyName) setErrors(prev => ({ ...prev, companyName: null }))
+          }}
+          error={errors.companyName}
+          placeholder="Enter company name"
+        />
 
-      <div>
+        <Input
+          label={<>Contact Person <span className="text-red-500">*</span></>}
+          value={formData.contactPerson}
+          onChange={(e) => {
+            setFormData({ ...formData, contactPerson: e.target.value })
+            if (errors.contactPerson) setErrors(prev => ({ ...prev, contactPerson: null }))
+          }}
+          error={errors.contactPerson}
+          placeholder="Enter contact person name"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        <Input
+          label={<>Email <span className="text-red-500">*</span></>}
+          type="email"
+          value={formData.email}
+          onChange={(e) => {
+            setFormData({ ...formData, email: e.target.value })
+            if (errors.email) setErrors(prev => ({ ...prev, email: null }))
+          }}
+          error={errors.email}
+          placeholder="Enter email address"
+        />
+
+        <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Phone <span className="text-red-500">*</span>
         </label>
@@ -191,29 +234,47 @@ export default function CreateCustomerForm({ onSuccess, onCancel }) {
         </div>
         {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
       </div>
+      </div>
 
-      <Input
-        label={<>Contact Person <span className="text-red-500">*</span></>}
-        value={formData.contactPerson}
-        onChange={(e) => {
-          setFormData({ ...formData, contactPerson: e.target.value })
-          if (errors.contactPerson) setErrors(prev => ({ ...prev, contactPerson: null }))
-        }}
-        error={errors.contactPerson}
-        placeholder="Enter contact person name"
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Region <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <select
+              value={formData.region}
+              onChange={(e) => {
+                setFormData({ ...formData, region: e.target.value })
+                if (errors.region) setErrors(prev => ({ ...prev, region: null }))
+              }}
+              className={`w-full px-4 py-2.5 rounded-xl border ${errors.region ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary focus:ring-primary'} focus:outline-none focus:ring-2 bg-white transition-colors appearance-none`}
+            >
+              <option value="" disabled>Select region</option>
+              <option value="North">North</option>
+              <option value="South">South</option>
+              <option value="East">East</option>
+              <option value="West">West</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+              <ChevronDown className="h-4 w-4" />
+            </div>
+          </div>
+          {errors.region && <p className="mt-1 text-sm text-red-600">{errors.region}</p>}
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Address
-        </label>
-        <textarea
-          value={formData.address}
-          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-          placeholder="Enter address"
-          rows={3}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Address
+          </label>
+          <textarea
+            value={formData.address}
+            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            placeholder="Enter address"
+            rows={3}
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+          />
+        </div>
       </div>
 
       <div className="flex gap-3 pt-4">
@@ -230,7 +291,7 @@ export default function CreateCustomerForm({ onSuccess, onCancel }) {
           isLoading={loading}
           className="flex-1"
         >
-          Create Customer
+          {isEdit ? 'Save Changes' : 'Create Customer'}
         </Button>
       </div>
     </form>

@@ -37,13 +37,8 @@ export function LabManagementAuthProvider({ children }) {
       .me()
       .then((data) => {
         const u = {
-          id: data.id,
-          email: data.email,
-          full_name: data.full_name,
-          name: data.full_name,
-          role: data.role,
-          is_active: data.is_active,
-          is_main: data.is_main,
+          ...data,
+          name: data.full_name, // fallback for components using .name
         }
         setUser(u)
         localStorage.setItem(STORAGE_USER, JSON.stringify(u))
@@ -64,17 +59,31 @@ export function LabManagementAuthProvider({ children }) {
 
   const login = async (email, password) => {
     const res = await authService.login(email, password)
+    
+    if (res.mfa_required) {
+      return res
+    }
+
     localStorage.setItem(STORAGE_TOKEN, res.access_token)
     const u = {
-      id: res.user.id,
-      email: res.user.email,
-      full_name: res.user.full_name,
+      ...res.user,
       name: res.user.full_name,
-      role: res.user.role,
-      is_main: res.user.is_main,
     }
     localStorage.setItem(STORAGE_USER, JSON.stringify(u))
     setUser(u)
+    return res
+  }
+
+  const verifyMfa = async (email, code) => {
+    const res = await authService.verifyMfa(email, code)
+    localStorage.setItem(STORAGE_TOKEN, res.access_token)
+    const u = {
+      ...res.user,
+      name: res.user.full_name,
+    }
+    localStorage.setItem(STORAGE_USER, JSON.stringify(u))
+    setUser(u)
+    return res
   }
 
   const logout = () => {
@@ -89,6 +98,7 @@ export function LabManagementAuthProvider({ children }) {
     isAuthenticated: !!user,
     loading,
     login,
+    verifyMfa,
     logout,
     refreshUser: loadUser,
   }

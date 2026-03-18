@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { 
@@ -24,7 +24,9 @@ import {
   PieChart as PieChartIcon,
   RefreshCw,
   TrendingDown,
-  Settings
+  Settings,
+  Info,
+  X
 } from 'lucide-react'
 import { 
   projectsService, 
@@ -37,7 +39,8 @@ import {
   testExecutionsService,
   testResultsService,
   inventoryReportsService,
-  instrumentsService
+  instrumentsService,
+  calibrationsService
 } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
@@ -65,6 +68,11 @@ function LabManagementDashboard() {
   const [recentActivities, setRecentActivities] = useState([])
   const [chartData, setChartData] = useState([])
   const [statusDistribution, setStatusDistribution] = useState([])
+  // Store full lists for real-time selector filtering
+  const [allProjects, setAllProjects] = useState([])
+  const [allTestExecutions, setAllTestExecutions] = useState([])
+  const [allInstruments, setAllInstruments] = useState([])
+  const [allCalibrations, setAllCalibrations] = useState([])
   const [performanceMetrics, setPerformanceMetrics] = useState({
     completionRate: 0,
     averageCycleTime: 0,
@@ -75,6 +83,9 @@ function LabManagementDashboard() {
   const [revenueData, setRevenueData] = useState([])
   const [refreshing, setRefreshing] = useState(false)
   const [timeRange, setTimeRange] = useState('6M')
+  const [chartsTimeRange, setChartsTimeRange] = useState('6M')
+  const [chartsCustomRange, setChartsCustomRange] = useState({ start: '', end: '' })
+  // Alerts state removed — alerts are now shown in the header bell icon
   const [operationalStats, setOperationalStats] = useState({
     equipmentUtilization: 0,
     activeEquipmentCount: 0,
@@ -82,8 +93,8 @@ function LabManagementDashboard() {
     personnelWorkload: 0,
     spaceUtilization: 0,
     storageCapacity: 0,
-    avgTAT: 0,
-    tatImprovement: 0
+    avgTAT: null,
+    tatImprovement: null
   })
   const [isTargetModalOpen, setIsTargetModalOpen] = useState(false)
   const [targets, setTargets] = useState({
@@ -93,6 +104,67 @@ function LabManagementDashboard() {
     spaceTarget: 70,
     storageTarget: 50
   })
+  const [activeInfoPopup, setActiveInfoPopup] = useState(null)
+  
+  // Calculate deadlines for various systems
+  const deadlines = useMemo(() => {
+    const list = []
+    const now = new Date()
+
+    // Test Plan Deadlines
+    allTestExecutions.filter(t => {
+      const end = new Date(t.end_date || t.endDate || t.due_date)
+      return (t.status !== 'completed' && t.status !== 'Completed') && !isNaN(end)
+    }).forEach(t => {
+      const due = new Date(t.end_date || t.endDate || t.due_date)
+      const daysUntil = Math.round((due - now) / (1000 * 60 * 60 * 24))
+      list.push({
+        id: `tp-${t.id}`,
+        title: `Test Plan: ${t.name}`,
+        subtitle: `Project: ${t.projectName || 'N/A'}`,
+        days: daysUntil,
+        type: 'test'
+      })
+    })
+
+    // Instrument Calibration Deadlines
+    allCalibrations.forEach(cal => {
+      const calDate = cal.nextDueDate || cal.dueDate || cal.due_date || cal.nextCalibrationDate
+      if (calDate) {
+        const due = new Date(calDate)
+        const daysUntil = Math.round((due - now) / (1000 * 60 * 60 * 24))
+        if (daysUntil <= 30 && (cal.status === 'Due Soon' || cal.status === 'Overdue' || cal.status === 'Pending')) {
+          list.push({
+            id: `cal-${cal.id}`,
+            title: `Calibration: ${cal.instrumentName || 'Instrument'}`,
+            subtitle: `ID: ${cal.instrumentId || 'N/A'}`,
+            days: daysUntil,
+            type: 'calibration'
+          })
+        }
+      }
+    })
+
+    return list.sort((a, b) => a.days - b.days)
+  }, [allTestExecutions, allInstruments])
+
+  const urgentCount = useMemo(() => deadlines.filter(d => d.days <= 0).length, [deadlines])
+
+  const [rawLists, setRawLists] = useState({
+    projects: [],
+    customers: [],
+    testPlans: [],
+    rfqs: []
+  })
+
+  // Close info popup when clicking outside
+  useEffect(() => {
+    const handleGlobalClick = () => setActiveInfoPopup(null)
+    if (activeInfoPopup) {
+      document.addEventListener('click', handleGlobalClick)
+    }
+    return () => document.removeEventListener('click', handleGlobalClick)
+  }, [activeInfoPopup])
 
   useEffect(() => {
     const savedTargets = localStorage.getItem('dashboardTargets')
@@ -122,7 +194,8 @@ function LabManagementDashboard() {
         testExecutions,
         testResults,
         inventorySummary,
-        allInstruments
+        allInstruments,
+        allCalibrations
       ] = await Promise.all([
         projectsService.getAll().catch(() => []),
         customersService.getAll().catch(() => []),
@@ -134,8 +207,19 @@ function LabManagementDashboard() {
         testExecutionsService.getAll().catch(() => []),
         testResultsService.getAll().catch(() => []),
         inventoryReportsService.getSummary().catch(() => ({})),
-        instrumentsService.getAll().catch(() => [])
+        instrumentsService.getAll().catch(() => []),
+        calibrationsService.getAll().catch(() => [])
       ])
+
+      setAllTestExecutions(testExecutions)
+      setAllInstruments(allInstruments)
+      setAllCalibrations(allCalibrations)
+      setRawLists({
+        projects: projects.slice(0, 5),
+        customers: customers.slice(0, 5),
+        testPlans: testPlans.slice(0, 5),
+        rfqs: rfqs.slice(0, 5)
+      })
 
       setStats({
         projects: projects.length,
@@ -258,7 +342,11 @@ function LabManagementDashboard() {
         customerSatisfaction: Math.round(passRate)
       })
 
+      setAllProjects(projects)
+      setAllTestExecutions(testExecutions)
+
       // Prepare monthly data based on actual data
+      const currentYear = new Date().getFullYear()
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
       const monthlyData = months.slice(0, 6).map((month, index) => {
         // Distribute projects and tests across months
@@ -266,6 +354,7 @@ function LabManagementDashboard() {
         const monthTests = Math.floor(testPlans.length / 6) + (index < testPlans.length % 6 ? 1 : 0)
         return {
           month,
+          fullDate: new Date(currentYear, index, 1).toISOString(),
           projects: monthProjects,
           tests: monthTests,
           completed: Math.floor(monthProjects * 0.7)
@@ -273,22 +362,13 @@ function LabManagementDashboard() {
       })
       setChartData(monthlyData)
 
-      // Test execution data for bar chart
-      const executionData = [
-        { name: 'EMC', completed: testExecutions.filter(e => e.status === 'Completed' && e.testType === 'EMC').length, pending: testExecutions.filter(e => e.status === 'Pending' && e.testType === 'EMC').length },
-        { name: 'RF', completed: testExecutions.filter(e => e.status === 'Completed' && e.testType === 'RF').length, pending: testExecutions.filter(e => e.status === 'Pending' && e.testType === 'RF').length },
-        { name: 'Safety', completed: testExecutions.filter(e => e.status === 'Completed' && e.testType === 'Safety').length, pending: testExecutions.filter(e => e.status === 'Pending' && e.testType === 'Safety').length },
-        { name: 'Env', completed: testExecutions.filter(e => e.status === 'Completed' && e.testType === 'Environmental').length, pending: testExecutions.filter(e => e.status === 'Pending' && e.testType === 'Environmental').length },
-      ]
-      setTestExecutionData(executionData)
-
-      // Revenue/Estimation data
-      const revenueData = estimations.map((est, index) => ({
+      // Test execution data for bar chart — logic moved to render for timeline support
+      const revenueDataItems = estimations.map((est, index) => ({
         month: months[index % 12],
         revenue: est.totalCost || 0,
         estimations: 1
       })).slice(0, 6)
-      setRevenueData(revenueData)
+      setRevenueData(revenueDataItems)
 
       // Calculate Operational Stats
       const activeInstruments = inventorySummary.activeInstruments || allInstruments.filter(i => i.status === 'active').length || 0
@@ -296,43 +376,58 @@ function LabManagementDashboard() {
       const utilization = Math.round((activeInstruments / totalInstruments) * 100)
 
       // Calculate TAT: average days between project creation and completion for completed projects
-      const completedProjects = projects.filter(p => p.status === 'completed')
-      let avgTAT = 8.4 // fallback
-      if (completedProjects.length > 0) {
-        const totalDays = completedProjects.reduce((acc, p) => {
-          const start = new Date(p.createdAt || p.start_date)
-          const end = new Date(p.updatedAt || p.end_date)
-          return acc + (end - start) / (1000 * 60 * 60 * 24)
-        }, 0)
-        avgTAT = Math.round((totalDays / completedProjects.length) * 10) / 10
+      const completedProjectsList = projects.filter(p => p.status === 'completed' || p.status === 'Completed')
+      let avgTAT = null // null means no data — no fallback
+      if (completedProjectsList.length > 0) {
+        const validDurations = completedProjectsList
+          .map(p => {
+            const start = new Date(p.createdAt || p.start_date || p.created_at)
+            const end = new Date(p.updatedAt || p.end_date || p.updated_at)
+            const diff = (end - start) / (1000 * 60 * 60 * 24)
+            return isNaN(diff) || diff < 0 ? null : diff
+          })
+          .filter(d => d !== null)
+        if (validDurations.length > 0) {
+          avgTAT = Math.round((validDurations.reduce((a, b) => a + b, 0) / validDurations.length) * 10) / 10
+        }
       }
 
       // Read current targets from localStorage for use in derived comparisons
       const savedTargets = JSON.parse(localStorage.getItem('dashboardTargets') || '{}')
       const currentTatTarget = savedTargets.tatTarget || 10
 
-      // TAT improvement: % difference between actual and target (positive = better than target)
-      const resolvedTAT = avgTAT || 8.4
-      const tatVsTarget = currentTatTarget > 0
-        ? Math.round(((currentTatTarget - resolvedTAT) / currentTatTarget) * 100)
-        : 0
+      // TAT improvement: only meaningful when we have real TAT data
+      const tatVsTarget = (avgTAT !== null && currentTatTarget > 0)
+        ? Math.round(((currentTatTarget - avgTAT) / currentTatTarget) * 100)
+        : null
+
+      // Personnel workload: based purely on real active projects + in-progress test plans
+      const activeProjectsCount = projects.filter(p => p.status === 'active' || p.status === 'Active').length
+      const inProgressTestsCount = testPlans.filter(t => t.status === 'In Progress').length
+      const personnelWorkload = Math.min(100, Math.round(activeProjectsCount * 15 + inProgressTestsCount * 8))
+
+      // Space/Storage: based on actual sample count vs a reasonable lab capacity
+      const labCapacity = 50 // reasonable assumption for max concurrent samples
+      const spaceUtilization = Math.min(100, Math.round((samples.length / labCapacity) * 100))
+      const storageCapacity = Math.min(100, Math.round((samples.length / labCapacity) * 80))
 
       setOperationalStats({
         equipmentUtilization: utilization,
         activeEquipmentCount: activeInstruments,
         totalEquipmentCount: totalInstruments,
-        personnelWorkload: Math.min(95, Math.round((projects.filter(p => p.status === 'active').length * 20) + (testPlans.filter(t => t.status === 'In Progress').length * 10))) || 85,
-        spaceUtilization: Math.min(80, 50 + (samples.length * 2)) || 62,
-        storageCapacity: Math.min(90, 30 + (samples.length * 5)) || 45,
-        avgTAT: resolvedTAT,
+        personnelWorkload,
+        spaceUtilization,
+        storageCapacity,
+        avgTAT,
         tatImprovement: tatVsTarget,
-        // Added for role-based counts
+        completedCount: completedProjectsList.length,
         feasibilityPending: rfqs.filter(r => r.status === 'pending').length,
         quotationReview: rfqs.filter(r => r.status === 'quotation_review').length,
         paymentPending: projects.filter(p => p.status === 'approved' && !p.paymentCompleted).length,
         pendingApprovals: projects.filter(p => p.status === 'tl_reviewed' || p.status === 'report_submitted').length,
         myAssignedProjects: projects.filter(p => p.teamLeadId === user?.id).length
       })
+
     } catch (error) {
       if (!silent) toast.error('Failed to load dashboard data')
     } finally {
@@ -464,6 +559,8 @@ function LabManagementDashboard() {
 
   const statsData = getFilteredStats()
 
+
+
   if (loading) {
     return <RouteSkeleton />
   }
@@ -490,7 +587,7 @@ function LabManagementDashboard() {
             name="dashboard-time-range"
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-sm font-medium"
           >
             <option value="1M">Last Month</option>
             <option value="3M">Last 3 Months</option>
@@ -500,7 +597,7 @@ function LabManagementDashboard() {
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 bg-white"
             title="Refresh data"
           >
             <RefreshCw className={`w-5 h-5 text-gray-600 ${refreshing ? 'animate-spin' : ''}`} />
@@ -518,11 +615,28 @@ function LabManagementDashboard() {
             transition={{ delay: index * 0.1 }}
             whileHover={{ y: -4, scale: 1.02 }}
             onClick={() => navigate(stat.link)}
-            className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-lg hover:border-primary transition-all cursor-pointer group relative overflow-hidden"
+            className={`bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-primary transition-all cursor-pointer group relative ${activeInfoPopup === stat.id ? 'z-[60]' : 'z-10'}`}
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors"></div>
-            <div className="relative z-10 flex items-center justify-between">
-              <div className="flex-1">
+            <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary-dark opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </div>
+            
+            <div className="absolute top-4 right-4 z-40">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setActiveInfoPopup(activeInfoPopup === stat.id ? null : stat.id)
+                }}
+                className={`p-1.5 rounded-full transition-all border ${activeInfoPopup === stat.id ? 'bg-primary text-white border-primary shadow-lg scale-110' : 'bg-white/80 text-gray-400 border-gray-100 hover:border-primary hover:text-primary shadow-sm'}`}
+                title="View details"
+              >
+                <Info className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="relative z-10 p-6 flex items-center justify-between pointer-events-none">
+              <div className="flex-1 pointer-events-auto pr-8">
                 <p className="text-sm font-medium text-gray-600">{stat.name}</p>
                 <motion.p 
                   key={stat.value}
@@ -537,11 +651,36 @@ function LabManagementDashboard() {
                   {stat.change}
                 </p>
               </div>
-              <div className={`${stat.bgColor} rounded-xl p-4 group-hover:scale-110 transition-transform`}>
+              <div className={`${stat.bgColor} rounded-xl p-4 group-hover:scale-110 transition-transform pointer-events-auto`}>
                 <stat.icon className={`w-6 h-6 ${stat.color}`} />
               </div>
             </div>
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary-dark opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+            <AnimatePresence>
+              {activeInfoPopup === stat.id && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-12 right-0 w-64 md:w-72 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+                >
+                   <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
+                     <h4 className="font-semibold text-gray-900 text-sm">Recent {stat.name}</h4>
+                     <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600">
+                       <X className="w-4 h-4" />
+                     </button>
+                   </div>
+                   <div className="max-h-60 overflow-y-auto pr-1">
+                      {rawLists[stat.id] && rawLists[stat.id].length > 0 ? (
+                        stat.renderDetails(rawLists[stat.id])
+                      ) : (
+                        <p className="text-xs text-gray-500 py-2 text-center">No recent data found.</p>
+                      )}
+                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         ))}
       </div>
@@ -553,13 +692,41 @@ function LabManagementDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200"
+            className={`bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200 relative ${activeInfoPopup === 'perf_completion' ? 'z-[60]' : 'z-10'}`}
           >
+            <div className="absolute top-2 right-2 z-30">
+              <button
+                 onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_completion' ? null : 'perf_completion') }}
+                 className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_completion' ? 'text-blue-700 bg-blue-200' : 'text-blue-400'}`}
+                 title="View logic"
+              >
+                 <Info className="w-4 h-4" />
+              </button>
+            </div>
+            <AnimatePresence>
+              {activeInfoPopup === 'perf_completion' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+                >
+                   <div className="flex justify-between items-center mb-2">
+                     <h4 className="font-semibold text-gray-900 text-sm">Completion Rate</h4>
+                     <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                   </div>
+                   <p className="text-xs text-gray-600 mb-2">Percentage of all projects marked as completed.</p>
+                   <div className="bg-blue-50 p-2 rounded text-xs font-mono text-blue-800 break-all">
+                      (Completed Projects / Total) × 100
+                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-blue-500 rounded-lg">
                 <Target className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xs font-medium text-blue-700 bg-blue-200 px-2 py-1 rounded-full">KPI</span>
             </div>
             <h3 className="text-sm font-medium text-gray-700 mb-2">Completion Rate</h3>
             <div className="flex items-baseline gap-2">
@@ -580,13 +747,41 @@ function LabManagementDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200"
+            className={`bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200 relative ${activeInfoPopup === 'perf_ontime' ? 'z-[60]' : 'z-10'}`}
           >
+            <div className="absolute top-2 right-2 z-30">
+              <button
+                 onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_ontime' ? null : 'perf_ontime') }}
+                 className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_ontime' ? 'text-green-700 bg-green-200' : 'text-green-400'}`}
+                 title="View logic"
+              >
+                 <Info className="w-4 h-4" />
+              </button>
+            </div>
+            <AnimatePresence>
+              {activeInfoPopup === 'perf_ontime' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+                >
+                   <div className="flex justify-between items-center mb-2">
+                     <h4 className="font-semibold text-gray-900 text-sm">On-Time Delivery</h4>
+                     <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                   </div>
+                   <p className="text-xs text-gray-600 mb-2">Percentage of test plans completed on or before schedule.</p>
+                   <div className="bg-green-50 p-2 rounded text-xs font-mono text-green-800 break-all">
+                      (Completed Tests / Total Tests) × 100
+                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-green-500 rounded-lg">
                 <Zap className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xs font-medium text-green-700 bg-green-200 px-2 py-1 rounded-full">EFFICIENCY</span>
             </div>
             <h3 className="text-sm font-medium text-gray-700 mb-2">On-Time Delivery</h3>
             <div className="flex items-baseline gap-2">
@@ -607,13 +802,41 @@ function LabManagementDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200"
+            className={`bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200 relative ${activeInfoPopup === 'perf_cycletime' ? 'z-[60]' : 'z-10'}`}
           >
+            <div className="absolute top-2 right-2 z-30">
+              <button
+                 onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_cycletime' ? null : 'perf_cycletime') }}
+                 className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_cycletime' ? 'text-purple-700 bg-purple-200' : 'text-purple-400'}`}
+                 title="View logic"
+              >
+                 <Info className="w-4 h-4" />
+              </button>
+            </div>
+            <AnimatePresence>
+              {activeInfoPopup === 'perf_cycletime' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+                >
+                   <div className="flex justify-between items-center mb-2">
+                     <h4 className="font-semibold text-gray-900 text-sm">Avg Cycle Time</h4>
+                     <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                   </div>
+                   <p className="text-xs text-gray-600 mb-2">Average duration from test initialization to completion.</p>
+                   <div className="bg-purple-50 p-2 rounded text-xs font-mono text-purple-800 break-all">
+                      Σ(Completion Date - Start Date) / Completed Tests
+                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-purple-500 rounded-lg">
                 <Clock className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xs font-medium text-purple-700 bg-purple-200 px-2 py-1 rounded-full">AVG</span>
             </div>
             <h3 className="text-sm font-medium text-gray-700 mb-2">Avg Cycle Time</h3>
             <div className="flex items-baseline gap-2">
@@ -627,13 +850,41 @@ function LabManagementDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200"
+            className={`bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200 relative ${activeInfoPopup === 'perf_passrate' ? 'z-[60]' : 'z-10'}`}
           >
+            <div className="absolute top-2 right-2 z-30">
+              <button
+                 onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_passrate' ? null : 'perf_passrate') }}
+                 className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_passrate' ? 'text-orange-700 bg-orange-200' : 'text-orange-400'}`}
+                 title="View logic"
+              >
+                 <Info className="w-4 h-4" />
+              </button>
+            </div>
+            <AnimatePresence>
+              {activeInfoPopup === 'perf_passrate' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+                >
+                   <div className="flex justify-between items-center mb-2">
+                     <h4 className="font-semibold text-gray-900 text-sm">Pass Rate</h4>
+                     <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                   </div>
+                   <p className="text-xs text-gray-600 mb-2">Percentage of all processed test results marked as Passed.</p>
+                   <div className="bg-orange-50 p-2 rounded text-xs font-mono text-orange-800 break-all">
+                      (Passed Results / Total Results) × 100
+                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-orange-500 rounded-lg">
                 <Award className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xs font-medium text-orange-700 bg-orange-200 px-2 py-1 rounded-full">QUALITY</span>
             </div>
             <h3 className="text-sm font-medium text-gray-700 mb-2">Pass Rate</h3>
             <div className="flex items-baseline gap-2">
@@ -807,56 +1058,73 @@ function LabManagementDashboard() {
             <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 flex flex-col justify-between">
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-4">Turnaround Time (TAT)</h3>
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-white rounded-lg shadow-sm">
-                    <Clock className={`w-6 h-6 ${operationalStats.avgTAT <= targets.tatTarget ? 'text-green-500' : 'text-red-500'}`} />
+                {operationalStats.avgTAT === null ? (
+                  <div className="flex flex-col items-center justify-center py-4 text-center">
+                    <Clock className="w-8 h-8 text-gray-300 mb-2" />
+                    <p className="text-sm font-medium text-gray-500">No Data Yet</p>
+                    <p className="text-xs text-gray-400 mt-1">TAT is calculated once projects are completed</p>
+                    <p className="text-xs text-gray-400">Target: {targets.tatTarget} Days</p>
                   </div>
-                  <div>
-                    <p className={`text-2xl font-bold ${operationalStats.avgTAT <= targets.tatTarget ? 'text-gray-900' : 'text-red-600'}`}>
-                      {operationalStats.avgTAT} Days
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Target: {targets.tatTarget} Days
-                    </p>
-                    {operationalStats.avgTAT <= targets.tatTarget ? (
-                      <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
-                        <TrendingUp className="w-3 h-3" />
-                        {operationalStats.tatImprovement}% improvement
-                      </p>
-                    ) : (
-                      <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
-                        <TrendingDown className="w-3 h-3" />
-                        {Math.round(((operationalStats.avgTAT - targets.tatTarget) / targets.tatTarget) * 100)}% above target
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>Target</span>
-                  <span>Actual</span>
-                </div>
-                <div className="flex justify-between mt-1 font-medium text-gray-900">
-                  <span>{targets.tatTarget} Days</span>
-                  <span className={operationalStats.avgTAT <= targets.tatTarget ? 'text-green-600' : 'text-red-600'}>
-                    {operationalStats.avgTAT <= targets.tatTarget ? 'Under Target ✓' : 'Over Target ✗'}
-                  </span>
-                </div>
-                {/* Visual TAT progress bar */}
-                <div className="mt-3">
-                  <div className="w-full bg-gray-200 rounded-full h-1.5">
-                    <div
-                      className={`h-1.5 rounded-full transition-all duration-700 ${operationalStats.avgTAT <= targets.tatTarget ? 'bg-green-500' : 'bg-red-500'}`}
-                      style={{ width: `${Math.min(100, (operationalStats.avgTAT / (targets.tatTarget * 1.5)) * 100)}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {operationalStats.avgTAT <= targets.tatTarget
-                      ? `${(targets.tatTarget - operationalStats.avgTAT).toFixed(1)} days under target`
-                      : `${(operationalStats.avgTAT - targets.tatTarget).toFixed(1)} days over target`}
-                  </p>
-                </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-white rounded-lg shadow-sm">
+                        <Clock className={`w-6 h-6 ${operationalStats.avgTAT <= targets.tatTarget ? 'text-green-500' : 'text-red-500'}`} />
+                      </div>
+                      <div>
+                        <p className={`text-2xl font-bold ${operationalStats.avgTAT <= targets.tatTarget ? 'text-gray-900' : 'text-red-600'}`}>
+                          {operationalStats.avgTAT} Days
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Based on {operationalStats.completedCount || 0} completions
+                        </p>
+                        <p className="text-[10px] text-gray-400">
+                          Target: {targets.tatTarget} Days
+                        </p>
+                        {operationalStats.tatImprovement !== null && (
+                          operationalStats.avgTAT <= targets.tatTarget ? (
+                            <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                              <TrendingUp className="w-3 h-3" />
+                              {operationalStats.tatImprovement}% improvement
+                            </p>
+                          ) : (
+                            <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
+                              <TrendingDown className="w-3 h-3" />
+                              {Math.round(((operationalStats.avgTAT - targets.tatTarget) / targets.tatTarget) * 100)}% above target
+                            </p>
+                          )
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Target</span>
+                        <span>Actual</span>
+                      </div>
+                      <div className="flex justify-between mt-1 font-medium text-gray-900">
+                        <span>{targets.tatTarget} Days</span>
+                        <span className={operationalStats.avgTAT <= targets.tatTarget ? 'text-green-600' : 'text-red-600'}>
+                          {operationalStats.avgTAT <= targets.tatTarget ? 'Under Target ✓' : 'Over Target ✗'}
+                        </span>
+                      </div>
+                      {/* Visual TAT progress bar */}
+                      <div className="mt-3">
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div
+                            className={`h-1.5 rounded-full transition-all duration-700 ${operationalStats.avgTAT <= targets.tatTarget ? 'bg-green-500' : 'bg-red-500'}`}
+                            style={{ width: `${Math.min(100, (operationalStats.avgTAT / (targets.tatTarget * 1.5)) * 100)}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {operationalStats.avgTAT <= targets.tatTarget
+                            ? `${(targets.tatTarget - operationalStats.avgTAT).toFixed(1)} days under target`
+                            : `${(operationalStats.avgTAT - targets.tatTarget).toFixed(1)} days over target`}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
+
               </div>
             </div>
           </div>
@@ -983,39 +1251,100 @@ function LabManagementDashboard() {
               <Calendar className="w-5 h-5 text-primary" />
               Upcoming Deadlines
             </h3>
-            <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">2 Urgent</span>
+            {urgentCount > 0 && (
+              <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">{urgentCount} Urgent</span>
+            )}
           </div>
           <div className="space-y-4">
-            <motion.div
-              whileHover={{ x: 4 }}
-              className="flex items-center gap-4 p-3 rounded-lg hover:bg-red-50 transition-colors cursor-pointer border-l-4 border-red-500"
-            >
-              <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-red-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">Test Report Due</p>
-                <p className="text-sm text-gray-500">Project: EMC-2024-001</p>
-                <p className="text-xs text-red-600 mt-1 font-medium">Due in 2 days</p>
-              </div>
-              <AlertCircle className="w-5 h-5 text-red-600" />
-            </motion.div>
-            <motion.div
-              whileHover={{ x: 4 }}
-              className="flex items-center gap-4 p-3 rounded-lg hover:bg-yellow-50 transition-colors cursor-pointer border-l-4 border-yellow-500"
-            >
-              <div className="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center">
-                <AlertCircle className="w-6 h-6 text-yellow-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">Sample Review</p>
-                <p className="text-sm text-gray-500">Sample: SAMPLE-2024-045</p>
-                <p className="text-xs text-yellow-600 mt-1 font-medium">Due in 5 days</p>
-              </div>
-            </motion.div>
+            {(() => {
+              const relevantDeadlines = deadlines.slice(0, 3)
+
+              if (relevantDeadlines.length === 0) {
+                return (
+                  <div className="text-center py-6">
+                    <CheckCircle2 className="w-10 h-10 text-green-200 mx-auto mb-2" />
+                    <p className="text-sm text-gray-500">All caught up!</p>
+                    <p className="text-xs text-gray-400">No urgent deadlines found</p>
+                  </div>
+                )
+              }
+
+              return relevantDeadlines.map((d, idx) => (
+                <motion.div
+                  key={d.id}
+                  whileHover={{ x: 4 }}
+                  className={`flex items-center gap-4 p-3 rounded-lg transition-colors cursor-pointer border-l-4 ${
+                    d.days < 0 ? 'bg-red-50 border-red-500 hover:bg-red-100' : 
+                    d.days <= 3 ? 'bg-yellow-50 border-yellow-500 hover:bg-yellow-100' : 
+                    'bg-blue-50 border-blue-500 hover:bg-blue-100'
+                  }`}
+                >
+                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                    d.days < 0 ? 'bg-red-100' : d.days <= 3 ? 'bg-yellow-100' : 'bg-blue-100'
+                  }`}>
+                    {d.days < 0 ? <AlertCircle className={`w-6 h-6 ${d.days < 0 ? 'text-red-600' : 'text-blue-600'}`} /> : <Clock className="w-6 h-6 text-gray-600" />}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{d.title}</p>
+                    <p className="text-sm text-gray-500">{d.subtitle}</p>
+                    <p className={`text-xs mt-1 font-medium ${d.days < 0 ? 'text-red-600' : 'text-gray-600'}`}>
+                      {d.days < 0 ? `${Math.abs(d.days)} days overdue` : d.days === 0 ? 'Due today' : `Due in ${d.days} days`}
+                    </p>
+                  </div>
+                  {d.days < 0 && <AlertCircle className="w-5 h-5 text-red-600" />}
+                </motion.div>
+              ))
+            })()}
           </div>
         </motion.div>
       </div>
+
+      {/* Unified Chart Filter Bar */}
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-wrap items-center justify-between gap-4"
+      >
+        <div className="flex items-center gap-2 text-gray-700">
+          <Activity className="w-5 h-5 text-primary" />
+          <span className="font-semibold">Diagram Filter</span>
+          <span className="text-xs text-gray-400 ml-2 hidden sm:inline">Unified control for charts below</span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {['Custom','1M','3M','6M','1Y'].map(tl => (
+            <button
+              key={tl}
+              onClick={() => setChartsTimeRange(tl)}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                chartsTimeRange === tl
+                  ? 'bg-primary text-white shadow-md scale-105'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >{tl}</button>
+          ))}
+          {chartsTimeRange === 'Custom' && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-2 ml-2 bg-gray-50 p-1 rounded-lg border border-gray-200"
+            >
+              <input 
+                type="date" 
+                className="text-xs border-none bg-transparent focus:ring-0 p-1" 
+                value={chartsCustomRange.start} 
+                onChange={e => setChartsCustomRange(r => ({...r, start: e.target.value}))} 
+              />
+              <span className="text-gray-400">–</span>
+              <input 
+                type="date" 
+                className="text-xs border-none bg-transparent focus:ring-0 p-1" 
+                value={chartsCustomRange.end} 
+                onChange={e => setChartsCustomRange(r => ({...r, end: e.target.value}))} 
+              />
+            </motion.div>
+          )}
+        </div>
+      </motion.div>
 
       {/* Enhanced Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1026,41 +1355,69 @@ function LabManagementDashboard() {
           transition={{ delay: 0.8 }}
           className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
         >
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-primary" />
               <h3 className="text-lg font-semibold text-gray-900">Monthly Trends</h3>
             </div>
             <button className="text-sm text-primary hover:text-primary-dark">View Details →</button>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="colorProjects" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="colorTests" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e5e7eb', 
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                }}
-              />
-              <Legend />
-              <Area type="monotone" dataKey="projects" stroke="#3b82f6" fillOpacity={1} fill="url(#colorProjects)" name="Projects" />
-              <Area type="monotone" dataKey="tests" stroke="#10b981" fillOpacity={1} fill="url(#colorTests)" name="Tests" />
-              <Area type="monotone" dataKey="completed" stroke="#8b5cf6" fillOpacity={0.6} fill="#8b5cf6" name="Completed" />
-            </AreaChart>
+          <ResponsiveContainer width="100%" height={280}>
+            {(() => {
+              const data = (() => {
+                if (chartsTimeRange === 'Custom') {
+                  if (!chartsCustomRange.start || !chartsCustomRange.end) return chartData
+                  const start = new Date(chartsCustomRange.start)
+                  const end = new Date(chartsCustomRange.end)
+                  return chartData.filter(d => {
+                    const dDate = new Date(d.fullDate)
+                    return dDate >= start && dDate <= end
+                  })
+                }
+                const monthsLimit = {'1M': 1, '3M': 3, '6M': 6, '1Y': 12}
+                const count = monthsLimit[chartsTimeRange] || chartData.length
+                return chartData.slice(0, count)
+              })()
+
+              const hasData = data.some(d => d.projects > 0 || d.tests > 0 || d.completed > 0)
+              const displayData = hasData ? data : data.length > 0 ? data.map(d => ({ ...d, projects: 0, tests: 0, completed: 0 })) : [
+                { month: 'N/A', projects: 0, tests: 0, completed: 0 }
+              ]
+
+              return (
+                <AreaChart data={displayData}>
+                  <defs>
+                    <linearGradient id="colorProjects" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={hasData ? "#3b82f6" : "#e5e7eb"} stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor={hasData ? "#3b82f6" : "#e5e7eb"} stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorTests" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={hasData ? "#10b981" : "#e5e7eb"} stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor={hasData ? "#10b981" : "#e5e7eb"} stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={hasData ? "#8b5cf6" : "#e5e7eb"} stopOpacity={0.7}/>
+                      <stop offset="95%" stopColor={hasData ? "#8b5cf6" : "#e5e7eb"} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="month" stroke="#6b7280" tick={{ fontSize: 12 }} />
+                  <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} allowDecimals={false} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #e5e7eb', 
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Area type="monotone" dataKey="projects" stroke={hasData ? "#3b82f6" : "#d1d5db"} strokeWidth={2} fillOpacity={1} fill="url(#colorProjects)" name="Projects" />
+                  <Area type="monotone" dataKey="tests" stroke={hasData ? "#10b981" : "#d1d5db"} strokeWidth={2} fillOpacity={1} fill="url(#colorTests)" name="Tests" />
+                  <Area type="monotone" dataKey="completed" stroke={hasData ? "#8b5cf6" : "#d1d5db"} strokeWidth={2} fillOpacity={1} fill="url(#colorCompleted)" name="Completed" />
+                </AreaChart>
+              )
+            })()}
           </ResponsiveContainer>
         </motion.div>
 
@@ -1071,40 +1428,77 @@ function LabManagementDashboard() {
           transition={{ delay: 0.9 }}
           className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
         >
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <PieChartIcon className="w-5 h-5 text-primary" />
               <h3 className="text-lg font-semibold text-gray-900">Project Status</h3>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={statusDistribution}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={90}
-                fill="#8884d8"
-                dataKey="value"
-                animationBegin={0}
-                animationDuration={1000}
-              >
-                {statusDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e5e7eb', 
-                  borderRadius: '8px'
-                }}
-              />
-            </PieChart>
+          <ResponsiveContainer width="100%" height={260}>
+            {(() => {
+              const data = (() => {
+                let filtered = allProjects;
+                if (chartsTimeRange === 'Custom' && chartsCustomRange.start && chartsCustomRange.end) {
+                  const start = new Date(chartsCustomRange.start)
+                  const end = new Date(chartsCustomRange.end)
+                  filtered = allProjects.filter(p => {
+                    const d = new Date(p.createdAt || p.start_date || p.created_at)
+                    return d >= start && d <= end
+                  })
+                } else if (chartsTimeRange !== 'Custom') {
+                  const monthsCount = {'1M': 1, '3M': 3, '6M': 6, '1Y': 12}[chartsTimeRange] || 6
+                  const cutoff = new Date()
+                  cutoff.setMonth(cutoff.getMonth() - monthsCount)
+                  filtered = allProjects.filter(p => new Date(p.createdAt || p.start_date || p.created_at) >= cutoff)
+                }
+                
+                const counts = {
+                  active: filtered.filter(p => (p.status || '').toLowerCase() === 'active').length,
+                  completed: filtered.filter(p => (p.status || '').toLowerCase() === 'completed').length,
+                  pending: filtered.filter(p => (p.status || '').toLowerCase() === 'pending').length,
+                }
+                const result = [
+                  { name: 'Active', value: counts.active, color: '#3b82f6' },
+                  { name: 'Completed', value: counts.completed, color: '#10b981' },
+                  { name: 'Pending', value: counts.pending, color: '#f59e0b' },
+                ].filter(d => d.value > 0)
+
+                return result.length > 0 ? result : [{ name: 'No Data', value: 1, color: '#e5e7eb' }]
+              })()
+
+              const isPlaceholder = data.length === 1 && data[0].name === 'No Data'
+
+              return (
+                <PieChart>
+                  <Pie
+                    data={data}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={!isPlaceholder}
+                    label={({ name, percent, value }) => isPlaceholder ? '' : value > 0 ? `${name}: ${(percent * 100).toFixed(0)}%` : ''}
+                    outerRadius={95}
+                    fill="#8884d8"
+                    dataKey="value"
+                    animationBegin={0}
+                    animationDuration={1000}
+                  >
+                    {data.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #e5e7eb', 
+                      borderRadius: '8px'
+                    }}
+                    formatter={(value, name) => isPlaceholder ? ['0 projects', 'No data found'] : [value + ' projects', name]}
+                  />
+                </PieChart>
+              )
+            })()}
           </ResponsiveContainer>
-          <div className="mt-4 flex justify-center gap-4">
+          <div className="mt-2 flex justify-center gap-4 flex-wrap">
             {statusDistribution.map((item, index) => (
               <div key={index} className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
@@ -1122,30 +1516,66 @@ function LabManagementDashboard() {
         transition={{ delay: 1.0 }}
         className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Activity className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold text-gray-900">Test Executions by Type</h3>
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={testExecutionData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="name" stroke="#6b7280" />
-            <YAxis stroke="#6b7280" />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'white', 
-                border: '1px solid #e5e7eb', 
-                borderRadius: '8px'
-              }}
-            />
-            <Legend />
-            <Bar dataKey="completed" fill="#10b981" name="Completed" radius={[8, 8, 0, 0]} />
-            <Bar dataKey="pending" fill="#f59e0b" name="Pending" radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        {(() => {
+          let filtered = allTestExecutions;
+          if (chartsTimeRange === 'Custom' && chartsCustomRange.start && chartsCustomRange.end) {
+            const start = new Date(chartsCustomRange.start)
+            const end = new Date(chartsCustomRange.end)
+            filtered = allTestExecutions.filter(e => {
+              const d = new Date(e.createdAt || e.created_at)
+              return d >= start && d <= end
+            })
+          } else if (chartsTimeRange !== 'Custom') {
+            const monthsCount = {'1M': 1, '3M': 3, '6M': 6, '1Y': 12}[chartsTimeRange] || 6
+            const cutoff = new Date()
+            cutoff.setMonth(cutoff.getMonth() - monthsCount)
+            filtered = allTestExecutions.filter(e => new Date(e.createdAt || e.created_at) >= cutoff)
+          }
+
+          const hasRealData = filtered.length > 0;
+          const execLabels = ['EMC', 'RF', 'Safety', 'Env']
+          const displayData = execLabels.map((label, i) => {
+            const apiType = label === 'Env' ? 'Environmental' : label
+            const completed = filtered.filter(e => (e.status || '').toLowerCase() === 'completed' && (e.testType === apiType || e.test_type === apiType)).length
+            const pending = filtered.filter(e => (e.status || '').toLowerCase() === 'pending' && (e.testType === apiType || e.test_type === apiType)).length
+            
+            // Placeholder logic if no data for selection
+            if (!hasRealData) {
+               return { name: label, completed: 0, pending: 0, placeholder: true }
+            }
+            
+            return { name: label, completed, pending }
+          })
+
+          return (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={displayData} barCategoryGap="30%">
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="name" stroke="#6b7280" tick={{ fontSize: 12 }} />
+                <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} allowDecimals={false} domain={[0, hasRealData ? 'auto' : 5]} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'white', 
+                    border: '1px solid #e5e7eb', 
+                    borderRadius: '8px'
+                  }}
+                  formatter={(value, name, props) => props.payload.placeholder ? ['0 tests', 'No data'] : [value + ' tests', name]}
+                />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Bar dataKey="completed" fill={hasRealData ? "#10b981" : "#e5e7eb"} name="Completed" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="pending" fill={hasRealData ? "#f59e0b" : "#f3f4f6"} name="Pending" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )
+        })()}
       </motion.div>
+
 
       {/* Target Configuration Modal */}
       <Modal

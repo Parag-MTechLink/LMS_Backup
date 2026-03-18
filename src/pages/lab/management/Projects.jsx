@@ -20,7 +20,7 @@ function Projects() {
   const [projects, setProjects] = useState([])
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [selectedCustomer, setSelectedCustomer] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -52,6 +52,12 @@ function Projects() {
     loadProjects()
     loadCustomers()
   }, [loadProjects, loadCustomers])
+
+  // Support deep-linking from notifications
+  useEffect(() => {
+    const s = searchParams.get('search')
+    if (s) setSearchTerm(s)
+  }, [searchParams])
 
   const customerId = searchParams.get('customerId')
 

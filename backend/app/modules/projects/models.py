@@ -20,6 +20,7 @@ class Customer(Base):
     phone = Column(String(50), nullable=True)
     contact_person = Column(String(255), nullable=True)
     address = Column(Text, nullable=True)
+    region = Column(String(50), nullable=True)
     status = Column(String(50), nullable=False, default="active")
     
     # Metadata

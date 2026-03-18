@@ -14,8 +14,10 @@ const ChatbotWidget = lazy(() => import('./components/chatbot').then(m => ({ def
 const Landing = lazy(() => import('./pages/Landing'))
 const Login = lazy(() => import('./pages/Login'))
 const Signup = lazy(() => import('./pages/Signup'))
+const GetStarted = lazy(() => import('./pages/GetStarted'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+const VerifyMFA = lazy(() => import('./pages/VerifyMFA'))
 
 // Lazy load lab management pages for better performance
 const LabManagementDashboard = lazy(() => import('./pages/lab/management/Dashboard'))
@@ -56,6 +58,7 @@ const QADocumentControl = lazy(() => import('./pages/lab/management/QADocumentCo
 const QAAReports = lazy(() => import('./pages/lab/management/QAAReports'))
 const Payment = lazy(() => import('./pages/lab/management/Payment'))
 const UserManagement = lazy(() => import('./pages/lab/management/UserManagement'))
+const LabManagementProfile = lazy(() => import('./pages/lab/management/Profile'))
 
 // Non-blocking skeleton for lazy routes (faster perceived load)
 const RouteFallback = () => <RouteSkeleton />
@@ -96,7 +99,7 @@ function AnimatedRoutes() {
 
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+      <Routes location={location}>
         {/* Public: landing — redirect to dashboard if authenticated */}
         <Route
           path="/"
@@ -110,8 +113,10 @@ function AnimatedRoutes() {
         />
         <Route path="/login" element={isAuthenticated ? <Navigate to="/lab/management/dashboard" replace /> : <Suspense fallback={<RouteFallback />}><Login /></Suspense>} />
         <Route path="/signup" element={isAuthenticated ? <Navigate to="/lab/management/dashboard" replace /> : <Suspense fallback={<RouteFallback />}><Signup /></Suspense>} />
+        <Route path="/get-started" element={isAuthenticated ? <Navigate to="/lab/management/dashboard" replace /> : <Suspense fallback={<RouteFallback />}><GetStarted /></Suspense>} />
         <Route path="/forgot-password" element={<Suspense fallback={<RouteFallback />}><ForgotPassword /></Suspense>} />
         <Route path="/reset-password" element={<Suspense fallback={<RouteFallback />}><ResetPassword /></Suspense>} />
+        <Route path="/verify-mfa" element={<Suspense fallback={<RouteFallback />}><VerifyMFA /></Suspense>} />
 
         {/* Protected: Lab Management — redirect to login if not authenticated */}
         <Route
@@ -151,6 +156,7 @@ function AnimatedRoutes() {
           <Route path="certifications" element={<Suspense fallback={<RouteFallback />}><LabManagementCertifications /></Suspense>} />
           <Route path="calendar" element={<Suspense fallback={<RouteFallback />}><LabManagementCalendar /></Suspense>} />
           <Route path="lab-recommendations" element={<Suspense fallback={<RouteFallback />}><LabManagementRecommendations /></Suspense>} />
+          <Route path="profile" element={<Suspense fallback={<RouteFallback />}><LabManagementProfile /></Suspense>} />
           <Route path="users" element={<Suspense fallback={<RouteFallback />}><UserManagement /></Suspense>} />
 
           {/* Inventory Management */}

@@ -20,6 +20,7 @@ from sqlalchemy.exc import OperationalError as SQLAlchemyOperationalError
 
 from app.core.config import settings
 from app.core.database import Base, engine
+from app.core.migrations import run_all_migrations
 from app.core.logging_config import configure_logging
 from app.models import FAQKnowledgeBase, RFQRequest, User, AuditLog  # noqa: F401 - register models for create_all
 from app.models.notification_model import Notification  # noqa: F401 - register for create_all
@@ -70,6 +71,12 @@ async def lifespan(app: FastAPI):
     ensure_pgvector_extension()
     # Create database tables (in production, use Alembic migrations)
     Base.metadata.create_all(bind=engine)
+
+    # Run custom standard migrations (our .py scripts)
+    try:
+        run_all_migrations()
+    except Exception as e:
+        logging.getLogger("app").error(f"Startup migrations failed: {e}")
 
     # Verify database connectivity (fail fast if DB unreachable, e.g. Neon)
     try:
@@ -340,6 +347,12 @@ from app.routes.auth import (
     perform_password_reset as _auth_reset_password,
     ResetRequest,
     PasswordReset,
+    verify_mfa as _auth_verify_mfa,
+    VerifyMFARequest,
+    update_profile as _auth_update_profile,
+    change_password as _auth_change_password,
+    UpdateProfileRequest,
+    ChangePasswordRequest,
 )
 from app.models.user_model import User
 from fastapi import Depends
@@ -360,6 +373,16 @@ def auth_signup_route(body: SignupRequest, request: Request, db: Session = Depen
 @app.get("/api/v1/auth/me", response_model=MeResponse)
 def auth_me_route(current_user: User = Depends(get_current_user)):
     return _auth_me(current_user)
+
+
+@app.put("/api/v1/auth/profile", response_model=MeResponse)
+def auth_update_profile_route(body: UpdateProfileRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return _auth_update_profile(body, db, current_user)
+
+
+@app.post("/api/v1/auth/change-password")
+def auth_change_password_route(body: ChangePasswordRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return _auth_change_password(body, db, current_user)
 
 
 @app.get("/api/v1/auth/users", response_model=List[MeResponse])
@@ -384,6 +407,12 @@ def auth_request_reset_route(body: ResetRequest, db: Session = Depends(get_db)):
 def auth_reset_password_route(body: PasswordReset, db: Session = Depends(get_db)):
     """Verify token and set new password."""
     return _auth_reset_password(body, db)
+
+
+@app.post("/api/v1/auth/verify-mfa", response_model=LoginResponse)
+def auth_verify_mfa_route(body: VerifyMFARequest, db: Session = Depends(get_db)):
+    """Verify the 6-digit MFA code and issue the final access token."""
+    return _auth_verify_mfa(body, db)
 
 
 if __name__ == "__main__":

@@ -76,130 +76,161 @@ function Customers() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Premium Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Customers</h1>
-          <p className="mt-2 text-gray-600">Manage your customer relationships</p>
+          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            Customers
+          </h1>
+          <p className="mt-2 text-sm text-gray-500 font-medium">Manage and view your customer relationships</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2"
+          className="group relative px-5 py-2.5 bg-gradient-to-r from-primary to-blue-600 text-white rounded-xl shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2 overflow-hidden"
         >
-          <Plus className="w-5 h-5" />
-          Add Customer
+          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out" />
+          <Plus className="w-5 h-5 relative z-10" />
+          <span className="font-semibold relative z-10">Add Customer</span>
         </button>
       </div>
 
-      {/* Search */}
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-        <div className="relative">
-          <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search customers..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent"
-          />
+      {/* Elegant Search */}
+      <div className="relative group max-w-md">
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <Search className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors" />
         </div>
+        <input
+          type="text"
+          placeholder="Search customers by name or email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="block w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl shadow-sm text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300"
+        />
       </div>
 
-      {/* Customers List */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      {/* Clean Minimalist Table */}
+      <div className="bg-white border border-gray-100 rounded-lg overflow-hidden mt-6">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-[#fafafa] border-b border-gray-100">
+                <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                  Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
+                <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                  Contact
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Projects
+                <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                  Region
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-center">
+                  Projects
+                </th>
+                <th className="px-6 py-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-center">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredCustomers.map((customer, index) => (
-                <motion.tr
-                  key={customer.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => {
-                    setSelectedCustomer(customer)
-                    setShowProfileModal(true)
-                  }}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Users className="w-5 h-5 text-primary" />
+            <tbody className="divide-y divide-gray-100">
+              {filteredCustomers.map((customer) => {
+                const initial = customer.companyName ? customer.companyName.charAt(0).toUpperCase() : 'C'
+
+                return (
+                  <tr
+                    key={customer.id}
+                    onClick={() => {
+                      setSelectedCustomer(customer)
+                      setShowProfileModal(true)
+                    }}
+                    className="hover:bg-gray-50/50 transition-colors cursor-pointer"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-semibold text-sm">
+                          {initial}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-semibold text-gray-900">
+                            {customer.companyName} {customer.id ? String(customer.id).substring(0, 4) : ''}
+                          </span>
+                          <span className="text-[13px] text-gray-500 mt-0.5">
+                            {customer.email}
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{customer.companyName}</div>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-[13px] font-medium text-gray-700">
+                        {customer.contactPerson || 'Primary Contact'}
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-600">{customer.email}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">-</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-3 py-1 text-xs font-medium rounded-full text-green-700 bg-green-50">
-                      active
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end gap-3">
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-[13px] font-medium text-gray-700">
+                        {customer.region || '-'}
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+                        Active
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
                           navigate(`/lab/management/projects?customerId=${customer.id}`)
                         }}
-                        className="text-primary hover:text-primary-dark flex items-center gap-1"
+                        className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200"
                       >
                         View Projects
-                        <ExternalLink className="w-4 h-4" />
                       </button>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setSelectedCustomer(customer)
-                          setShowProfileModal(true)
-                        }}
-                        className="text-gray-500 hover:text-gray-700 hover:underline"
+                        onClick={(e) => handleDeleteClick(e, customer)}
+                        className="inline-flex items-center justify-center p-2 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        title="Delete Customer"
                       >
-                        View Profile
+                        <Trash2 className="w-[18px] h-[18px] stroke-[1.5]" />
                       </button>
-                      {isAdmin && (
-                        <button
-                          onClick={(e) => handleDeleteClick(e, customer)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete customer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
+
+          {filteredCustomers.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 px-4">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <Users className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-1">No customers found</h3>
+              <p className="text-gray-500 text-center max-w-sm">
+                {searchTerm
+                  ? `We couldn't find any customers matching "${searchTerm}"`
+                  : "Get started by adding your first customer to the system."}
+              </p>
+              {!searchTerm && (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="mt-6 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors inline-flex items-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  Add Customer
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -209,6 +240,7 @@ function Customers() {
         onClose={() => setShowCreateModal(false)}
         title="Add Customer"
         size="lg"
+        showCloseIcon={false}
       >
         <CreateCustomerForm
           onSuccess={() => {
@@ -223,13 +255,19 @@ function Customers() {
       <Modal
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}
-        title="Customer Profile"
+        title={!selectedCustomer ? "Customer Profile" : ""} // Title is handled inside now if needed, but keeping empty or standard is fine
         size="lg"
+        showCloseIcon={false}
       >
         <CustomerProfileModal
           isOpen={showProfileModal}
           onClose={() => setShowProfileModal(false)}
           customer={selectedCustomer}
+          onUpdate={() => {
+            loadCustomers()
+            // Optionally close the modal upon save, or leave it open to view the updated profile
+            // setShowProfileModal(false) 
+          }}
         />
       </Modal>
 

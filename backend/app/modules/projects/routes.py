@@ -51,6 +51,23 @@ def create_customer(
     _: User = Depends(require_permission("customer:full"))
 ):
     """Create a new customer"""
+    # Custom uniqueness checks
+    if customer.phone:
+        existing_phone = db.query(crud.Customer).filter(
+            crud.Customer.phone == customer.phone, 
+            crud.Customer.is_deleted == False
+        ).first()
+        if existing_phone:
+            raise HTTPException(status_code=409, detail="A customer with this phone number already exists.")
+            
+    if customer.contact_person:
+        existing_contact = db.query(crud.Customer).filter(
+            crud.Customer.contact_person == customer.contact_person, 
+            crud.Customer.is_deleted == False
+        ).first()
+        if existing_contact:
+            raise HTTPException(status_code=409, detail="A customer with this contact person already exists.")
+
     try:
         return crud.create_customer(db, customer)
     except IntegrityError as e:

@@ -23,7 +23,7 @@ import {
   X,
   Search,
   Bell,
-  CheckCircle,
+  CheckCircle2,
   AlertCircle,
   Info,
   Building2,
@@ -41,12 +41,12 @@ import { notificationsService } from '../services/labManagementApi'
 const allNavItems = [
   { name: 'Dashboard', href: '/lab/management/dashboard', icon: LayoutDashboard },
   { name: 'Organization Details', href: '/lab/management/organization', icon: Building2, hideForRoles: ['Finance Manager'] },
+  { name: 'Projects', href: '/lab/management/projects', icon: FolderKanban, hideForRoles: ['Finance Manager'] },
   { name: 'Customers', href: '/lab/management/customers', icon: Users },
+  { name: 'Test Plans', href: '/lab/management/test-plans', icon: FlaskConical, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
   { name: 'RFQs', href: '/lab/management/rfqs', icon: FileText },
   { name: 'Estimations', href: '/lab/management/estimations', icon: IndianRupee },
-  { name: 'Projects', href: '/lab/management/projects', icon: FolderKanban, hideForRoles: ['Finance Manager'] },
   { name: 'Samples', href: '/lab/management/samples', icon: Package, hideForRoles: ['Finance Manager'] },
-  { name: 'Test Plans', href: '/lab/management/test-plans', icon: FlaskConical, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
   { name: 'Test Executions', href: '/lab/management/test-executions', icon: Play, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
   { name: 'Test Results', href: '/lab/management/test-results', icon: BarChart3, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
   { name: 'TRFs', href: '/lab/management/trfs', icon: FileCheck, hideForRoles: ['Finance Manager'] },
@@ -76,8 +76,10 @@ function LabManagementLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const navigate = useNavigate()
   const notificationRef = useRef(null)
+  const profileRef = useRef(null)
   const { user, logout } = useLabManagementAuth()
   const displayName = user?.full_name || user?.name || user?.email || 'User'
   const displayRole = user?.role || ''
@@ -110,6 +112,9 @@ function LabManagementLayout() {
     const handleClickOutside = (event) => {
       if (notificationRef.current && !notificationRef.current.contains(event.target)) {
         setNotificationsOpen(false)
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileDropdownOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -206,20 +211,25 @@ function LabManagementLayout() {
 
           {/* User Profile */}
           <div className="p-6 border-t border-gray-200 bg-gray-50">
-            <div className="flex items-center space-x-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white text-sm font-semibold">
-                <span>{getInitials(displayName)}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
-                <p className="text-xs text-gray-500 truncate capitalize">{displayRole || 'Role'}</p>
-              </div>
+            <div className="flex items-center space-x-4">
+              <Link 
+                to="/lab/management/profile"
+                className="flex flex-1 items-center space-x-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md hover:border-primary transition-all duration-200"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white text-sm font-semibold">
+                  <span>{getInitials(displayName)}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
+                  <p className="text-xs text-gray-500 truncate capitalize">{displayRole || 'Role'}</p>
+                </div>
+              </Link>
               <button
                 onClick={() => {
                   logout()
                   navigate('/')
                 }}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition-colors duration-200 hover:border-primary hover:text-primary"
+                className="flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all duration-200 hover:border-primary hover:text-primary hover:shadow-md"
                 title="Logout"
               >
                 <LogOut className="w-5 h-5" />
@@ -274,7 +284,7 @@ function LabManagementLayout() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden"
+                        className="fixed top-16 right-4 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-[9999] max-h-96 overflow-hidden"
                       >
                         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                           <h3 className="font-semibold text-gray-900">Notifications</h3>
@@ -304,6 +314,7 @@ function LabManagementLayout() {
                                     navigate(notification.entity_url)
                                   }
                                   setNotificationsOpen(false)
+                                  if (notification.link) navigate(notification.link)
                                 }}
                               >
                                 <div className="flex items-start gap-3">
@@ -311,7 +322,7 @@ function LabManagementLayout() {
                                     notification.type === 'warning' ? 'bg-yellow-100 text-yellow-600' :
                                       'bg-blue-100 text-blue-600'
                                     }`}>
-                                    {notification.type === 'success' && <CheckCircle className="w-4 h-4" />}
+                                    {notification.type === 'success' && <CheckCircle2 className="w-4 h-4" />}
                                     {notification.type === 'warning' && <AlertCircle className="w-4 h-4" />}
                                     {notification.type === 'info' && <Info className="w-4 h-4" />}
                                   </div>
@@ -336,21 +347,73 @@ function LabManagementLayout() {
                           )}
                         </div>
                         {notifications.length > 0 && (
-                            <div className="p-3 border-t border-gray-200">
-                              <button
-                                onClick={async () => {
-                                  try {
-                                    await notificationsService.markAllRead()
-                                    fetchNotifications()
-                                  } catch {/* ignore */}
-                                  setNotificationsOpen(false)
-                                }}
-                                className="w-full text-sm text-primary hover:text-primary-dark font-medium"
-                              >
-                                Mark all as read
-                              </button>
-                            </div>
+                          <div className="p-3 border-t border-gray-200">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await notificationsService.markAllRead()
+                                  fetchNotifications()
+                                } catch {/* ignore */}
+                                setNotificationsOpen(false)
+                              }}
+                              className="w-full text-sm text-primary hover:text-primary-dark font-medium"
+                            >
+                              Mark all as read
+                            </button>
+                          </div>
                         )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Profile Dropdown */}
+                <div className="relative" ref={profileRef}>
+                  <button
+                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                    className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white text-xs font-semibold shadow-sm">
+                      <span>{getInitials(displayName)}</span>
+                    </div>
+                    <div className="hidden sm:block text-left">
+                      <p className="text-xs font-semibold text-gray-900 leading-none">{displayName}</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5 leading-none capitalize">{displayRole}</p>
+                    </div>
+                  </button>
+
+                  <AnimatePresence>
+                    {profileDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 z-[9999] overflow-hidden"
+                      >
+                        <div className="p-3 border-b border-gray-200 bg-gray-50/50">
+                          <p className="text-xs font-semibold text-gray-900 truncate">{displayName}</p>
+                          <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
+                        </div>
+                        <div className="p-1">
+                          <Link 
+                            to="/lab/management/profile" 
+                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                            onClick={() => setProfileDropdownOpen(false)}
+                          >
+                            <User className="w-4 h-4" />
+                            <span>My Profile</span>
+                          </Link>
+                          <button
+                            onClick={() => {
+                              logout()
+                              navigate('/')
+                            }}
+                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            <span>Sign out</span>
+                          </button>
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -362,13 +425,18 @@ function LabManagementLayout() {
 
         {/* Content */}
         <main className="min-h-screen p-4 sm:p-6 lg:p-8">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-7xl mx-auto"
-          >
-            <Outlet />
-          </motion.div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="max-w-7xl mx-auto"
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 
