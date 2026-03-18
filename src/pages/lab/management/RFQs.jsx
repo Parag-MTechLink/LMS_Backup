@@ -16,6 +16,7 @@ function RFQs() {
   const [rfqs, setRfqs] = useState([])
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [uploadFile, setUploadFile] = useState(null)
@@ -59,6 +60,7 @@ function RFQs() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (isSubmitting) return;
 
     if (!formData.customerId || formData.customerId === 0) {
       toast.error('Please select a customer')
@@ -66,6 +68,7 @@ function RFQs() {
     }
 
     try {
+      setIsSubmitting(true)
       await rfqsService.create(formData)
       toast.success('RFQ created successfully')
       setShowModal(false)
@@ -73,6 +76,8 @@ function RFQs() {
       loadData()
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to create RFQ')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -643,9 +648,10 @@ function RFQs() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create RFQ
+                  {isSubmitting ? 'Creating...' : 'Create RFQ'}
                 </button>
               </div>
             </form>
