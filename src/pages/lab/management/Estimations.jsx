@@ -15,6 +15,7 @@ function Estimations() {
   const [rfqs, setRfqs] = useState([])
   const [testTypes, setTestTypes] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [selectedEstimation, setSelectedEstimation] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
@@ -63,6 +64,7 @@ function Estimations() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (isSubmitting) return;
     
     if (formData.rfqId === 0) {
       toast.error('Please select an RFQ')
@@ -81,6 +83,7 @@ function Estimations() {
     }
 
     try {
+      setIsSubmitting(true)
       await estimationsService.create({
         rfqId: formData.rfqId,
         tests: testItems,
@@ -94,6 +97,8 @@ function Estimations() {
       loadData()
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to create estimation')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -577,9 +582,10 @@ function Estimations() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create Estimation
+                  {isSubmitting ? 'Creating...' : 'Create Estimation'}
                 </button>
               </div>
             </form>

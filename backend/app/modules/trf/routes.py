@@ -21,6 +21,11 @@ def create_trf(
 ):
     from app.modules.projects.models import Project  # Import here to avoid circular imports?
     
+    if trf.trfNumber:
+        existing = db.query(TRF).filter(TRF.trfNumber == trf.trfNumber).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="TRF number must be unique. This TRF number already exists.")
+
     project = db.query(Project).filter(Project.id == trf.projectId).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")

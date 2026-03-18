@@ -24,6 +24,10 @@ def create_audit(
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("audit:full"))
 ):
+    existing = db.query(Audit).filter(Audit.auditNumber == data.auditNumber).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Audit number must be unique. This audit number already exists.")
+
     audit = Audit(**data.dict())
     db.add(audit)
     db.commit()

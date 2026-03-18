@@ -144,6 +144,15 @@ function Audits() {
                   </Badge>
                 </div>
 
+                <div className="mb-2">
+                  <span className="text-sm font-semibold text-primary bg-primary/10 px-2 py-1 rounded-md mb-1 inline-block">
+                    {audit.auditNumber}
+                  </span>
+                  <Badge variant="outline" className="ml-2 text-xs">
+                    {audit.auditType}
+                  </Badge>
+                </div>
+
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
                   {audit.title}
                 </h3>

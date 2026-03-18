@@ -48,7 +48,11 @@ export default function CreateTRFForm({ projectId, onSuccess, onCancel }) {
       toast.success('TRF created successfully!')
       onSuccess()
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create TRF')
+      if (error.response?.status === 400 && error.response?.data?.detail?.includes('unique')) {
+        window.alert(error.response.data.detail)
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to create TRF')
+      }
     } finally {
       setLoading(false)
     }
