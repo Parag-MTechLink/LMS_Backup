@@ -11,6 +11,11 @@ def create_sample(db: Session, sample: SampleCreate):
     denormalize its name into Sample.projectName so the UI can display it
     without an extra join.
     """
+    existing = db.query(Sample).filter(Sample.sampleNumber == sample.sampleNumber).first()
+    if existing:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Sample number must be unique. This sample number already exists.")
+
     project_name = sample.projectName
     if sample.projectId and not project_name:
         try:

@@ -15,6 +15,10 @@ def get_audits(db: Session = Depends(get_db)):
 # 🔹 CREATE AUDIT
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_audit(data: AuditCreate, db: Session = Depends(get_db)):
+    existing = db.query(Audit).filter(Audit.auditNumber == data.auditNumber).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Audit number must be unique. This audit number already exists.")
+
     audit = Audit(**data.dict())
     db.add(audit)
     db.commit()

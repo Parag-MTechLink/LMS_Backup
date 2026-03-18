@@ -70,7 +70,11 @@ export default function CreateSampleForm({ projectId, onSuccess, onCancel }) {
       toast.success('Sample created successfully!')
       onSuccess()
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create sample')
+      if (error.response?.status === 400 && error.response?.data?.detail?.includes('unique')) {
+        window.alert(error.response.data.detail)
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to create sample')
+      }
     } finally {
       setLoading(false)
     }

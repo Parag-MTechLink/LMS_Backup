@@ -6,6 +6,8 @@ import Input from '../Input'
 
 export default function CreateAuditForm({ onSuccess, onCancel }) {
   const [formData, setFormData] = useState({
+    auditNumber: '',
+    auditType: 'Internal Audit',
     title: '',
     description: '',
     auditDate: new Date().toISOString().split('T')[0],
@@ -18,6 +20,11 @@ export default function CreateAuditForm({ onSuccess, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
+    if (!formData.auditNumber.trim()) {
+      toast.error('Please enter Audit Number')
+      return
+    }
+
     if (!formData.title.trim()) {
       toast.error('Please enter Audit Title')
       return
@@ -39,7 +46,11 @@ export default function CreateAuditForm({ onSuccess, onCancel }) {
       toast.success('Audit created successfully!')
       onSuccess()
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create audit')
+      if (error.response?.status === 400 && error.response?.data?.detail?.includes('unique')) {
+        window.alert(error.response.data.detail)
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to create audit')
+      }
     } finally {
       setLoading(false)
     }
@@ -48,6 +59,35 @@ export default function CreateAuditForm({ onSuccess, onCancel }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="text-sm text-red-500">Please fill all mandatory details (*) in red</p>
+
+      <Input
+        label={
+          <span>
+            Audit Number <span className="text-red-500">*</span>
+          </span>
+        }
+        value={formData.auditNumber}
+        onChange={(e) => setFormData({ ...formData, auditNumber: e.target.value })}
+        placeholder="Enter audit number (e.g., AUD-001)"
+        required
+      />
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Audit Type <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={formData.auditType}
+          onChange={(e) => setFormData({ ...formData, auditType: e.target.value })}
+          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="Supplier Audit">Supplier Audit</option>
+          <option value="Customer Audit">Customer Audit</option>
+          <option value="Internal Audit">Internal Audit</option>
+          <option value="NABL Audit">NABL Audit</option>
+          <option value="External Audit">External Audit</option>
+        </select>
+      </div>
       <Input
         label={
           <span>

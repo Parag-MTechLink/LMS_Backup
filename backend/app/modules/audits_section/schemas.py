@@ -3,6 +3,8 @@ from datetime import date
 from typing import Optional
 
 class AuditCreate(BaseModel):
+    auditNumber: str
+    auditType: str
     title: str
     description: Optional[str] = None
     status: str
