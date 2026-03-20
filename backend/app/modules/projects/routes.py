@@ -108,12 +108,14 @@ def list_projects(
     client_id: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    """Get all projects with optional filtering"""
+    """Get all projects with optional filtering. Restricted by role."""
     return crud.get_projects(
         db, skip=skip, limit=limit,
-        client_id=client_id, status=status, search=search
+        client_id=client_id, status=status, search=search,
+        current_user=current_user
     )
 
 
@@ -127,19 +129,24 @@ def get_project(project_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/projects", response_model=schemas.ProjectResponse, status_code=201, tags=["Projects"])
-def create_project(project: schemas.ProjectCreate, db: Session = Depends(get_db)):
+def create_project(
+    project: schemas.ProjectCreate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("Admin", "Lab Manager"))
+):
     """Create a new project"""
-    return crud.create_project(db, project)
+    return crud.create_project(db, project, user_id=current_user.id)
 
 
 @router.put("/projects/{project_id}", response_model=schemas.ProjectResponse, tags=["Projects"])
 def update_project(
     project_id: int,
     project: schemas.ProjectUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("Admin", "Lab Manager"))
 ):
     """Update a project"""
-    updated_project = crud.update_project(db, project_id, project)
+    updated_project = crud.update_project(db, project_id, project, user_id=current_user.id)
     if not updated_project:
         raise HTTPException(status_code=404, detail="Project not found")
     return updated_project
@@ -162,3 +169,36 @@ def delete_project(
     )
     db.commit()
     return None
+
+
+@router.get("/projects/{project_id}/activity", tags=["Projects"])
+def get_project_activity(
+    project_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("Admin", "Lab Manager"))
+):
+    """Get activity logs for a project"""
+    from app.models.user_model import AuditLog
+    
+    logs = db.query(
+        AuditLog.action,
+        AuditLog.details,
+        AuditLog.created_at,
+        User.full_name.label("user_name")
+    ).join(
+        User, AuditLog.user_id == User.id
+    ).filter(
+        AuditLog.resource_type == "project",
+        AuditLog.resource_id == str(project_id)
+    ).order_by(
+        AuditLog.created_at.desc()
+    ).all()
+    
+    return [
+        {
+            "action": log.action,
+            "details": log.details,
+            "timestamp": log.created_at,
+            "user": log.user_name
+        } for log in logs
+    ]
