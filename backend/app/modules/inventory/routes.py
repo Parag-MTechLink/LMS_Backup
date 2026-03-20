@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from app.core.database import get_db
-from app.dependencies.auth_dependency import require_roles
+from app.dependencies.auth_dependency import require_roles, require_permission
 from app.models.user_model import User
 from app.services.rbac_service import log_audit
 from . import crud, schemas
@@ -24,14 +24,19 @@ def list_instruments(
     status: Optional[str] = Query(None),
     department: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:view"))
 ):
     """Get all instruments with optional filtering"""
     return crud.get_instruments(db, skip=skip, limit=limit, status=status, department=department, search=search)
 
 
 @router.get("/instruments/{instrument_id}", response_model=schemas.InstrumentResponse, tags=["Instruments"])
-def get_instrument(instrument_id: int, db: Session = Depends(get_db)):
+def get_instrument(
+    instrument_id: int, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:view"))
+):
     """Get a specific instrument"""
     instrument = crud.get_instrument(db, instrument_id)
     if not instrument:
@@ -40,7 +45,11 @@ def get_instrument(instrument_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/instruments", response_model=schemas.InstrumentResponse, status_code=201, tags=["Instruments"])
-def create_instrument(instrument: schemas.InstrumentCreate, db: Session = Depends(get_db)):
+def create_instrument(
+    instrument: schemas.InstrumentCreate, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:full"))
+):
     """Create a new instrument"""
     return crud.create_instrument(db, instrument)
 
@@ -49,7 +58,8 @@ def create_instrument(instrument: schemas.InstrumentCreate, db: Session = Depend
 def update_instrument(
     instrument_id: int,
     instrument: schemas.InstrumentUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:full"))
 ):
     """Update an instrument"""
     updated_instrument = crud.update_instrument(db, instrument_id, instrument)
@@ -62,7 +72,7 @@ def update_instrument(
 def delete_instrument(
     instrument_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("Admin")),
+    current_user: User = Depends(require_permission("inventory:full")),
 ):
     """Delete an instrument (Admin only). Audit logged."""
     success = crud.delete_instrument(db, instrument_id)
@@ -74,7 +84,11 @@ def delete_instrument(
 
 
 @router.patch("/instruments/{instrument_id}/deactivate", status_code=204, tags=["Instruments"])
-def deactivate_instrument(instrument_id: int, db: Session = Depends(get_db)):
+def deactivate_instrument(
+    instrument_id: int, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:full"))
+):
     """Deactivate an instrument"""
     instrument = crud.get_instrument(db, instrument_id)
     if not instrument:
@@ -92,14 +106,19 @@ def list_consumables(
     limit: int = Query(100, ge=1, le=1000),
     category: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:view"))
 ):
     """Get all consumables with optional filtering"""
     return crud.get_consumables(db, skip=skip, limit=limit, category=category, search=search)
 
 
 @router.get("/consumables/{consumable_id}", response_model=schemas.ConsumableResponse, tags=["Consumables"])
-def get_consumable(consumable_id: int, db: Session = Depends(get_db)):
+def get_consumable(
+    consumable_id: int, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:view"))
+):
     """Get a specific consumable"""
     consumable = crud.get_consumable(db, consumable_id)
     if not consumable:
@@ -108,7 +127,11 @@ def get_consumable(consumable_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/consumables", response_model=schemas.ConsumableResponse, status_code=201, tags=["Consumables"])
-def create_consumable(consumable: schemas.ConsumableCreate, db: Session = Depends(get_db)):
+def create_consumable(
+    consumable: schemas.ConsumableCreate, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:full"))
+):
     """Create a new consumable"""
     return crud.create_consumable(db, consumable)
 
@@ -117,7 +140,8 @@ def create_consumable(consumable: schemas.ConsumableCreate, db: Session = Depend
 def update_consumable(
     consumable_id: int,
     consumable: schemas.ConsumableUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:full"))
 ):
     """Update a consumable"""
     updated_consumable = crud.update_consumable(db, consumable_id, consumable)
@@ -130,7 +154,7 @@ def update_consumable(
 def delete_consumable(
     consumable_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("Admin")),
+    current_user: User = Depends(require_permission("inventory:full")),
 ):
     """Delete a consumable (Admin only). Audit logged."""
     success = crud.delete_consumable(db, consumable_id)
@@ -148,14 +172,19 @@ def list_calibrations(
     limit: int = Query(100, ge=1, le=1000),
     instrument_id: Optional[int] = Query(None),
     search: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:view"))
 ):
     """Get all calibrations with optional filtering"""
     return crud.get_calibrations(db, skip=skip, limit=limit, instrument_id=instrument_id, search=search)
 
 
 @router.get("/calibrations/{calibration_id}", response_model=schemas.CalibrationResponse, tags=["Calibrations"])
-def get_calibration(calibration_id: int, db: Session = Depends(get_db)):
+def get_calibration(
+    calibration_id: int, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:view"))
+):
     """Get a specific calibration"""
     calibration = crud.get_calibration(db, calibration_id)
     if not calibration:
@@ -164,7 +193,11 @@ def get_calibration(calibration_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/calibrations", response_model=schemas.CalibrationResponse, status_code=201, tags=["Calibrations"])
-def create_calibration(calibration: schemas.CalibrationCreate, db: Session = Depends(get_db)):
+def create_calibration(
+    calibration: schemas.CalibrationCreate, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:full"))
+):
     """Create a new calibration"""
     return crud.create_calibration(db, calibration)
 
@@ -173,7 +206,8 @@ def create_calibration(calibration: schemas.CalibrationCreate, db: Session = Dep
 def update_calibration(
     calibration_id: int,
     calibration: schemas.CalibrationUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:full"))
 ):
     """Update a calibration"""
     updated_calibration = crud.update_calibration(db, calibration_id, calibration)
@@ -186,7 +220,7 @@ def update_calibration(
 def delete_calibration(
     calibration_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("Admin")),
+    current_user: User = Depends(require_permission("inventory:full")),
 ):
     """Delete a calibration (Admin only). Audit logged."""
     success = crud.delete_calibration(db, calibration_id)
@@ -204,14 +238,19 @@ def list_transactions(
     limit: int = Query(100, ge=1, le=1000),
     transaction_type: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:view"))
 ):
     """Get all inventory transactions with optional filtering"""
     return crud.get_transactions(db, skip=skip, limit=limit, transaction_type=transaction_type, search=search)
 
 
 @router.get("/inventory-transactions/{transaction_id}", response_model=schemas.TransactionResponse, tags=["Transactions"])
-def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
+def get_transaction(
+    transaction_id: int, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:view"))
+):
     """Get a specific transaction"""
     transaction = crud.get_transaction(db, transaction_id)
     if not transaction:
@@ -220,6 +259,10 @@ def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/inventory-transactions", response_model=schemas.TransactionResponse, status_code=201, tags=["Transactions"])
-def create_transaction(transaction: schemas.TransactionCreate, db: Session = Depends(get_db)):
+def create_transaction(
+    transaction: schemas.TransactionCreate, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory:full"))
+):
     """Create a new inventory transaction"""
     return crud.create_transaction(db, transaction)

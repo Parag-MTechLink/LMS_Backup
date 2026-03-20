@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -57,6 +58,8 @@ const COLORS = [
 
 function Calendar() {
   const navigate = useNavigate()
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState(VIEW_TYPES.MONTH)
   const [events, setEvents] = useState([])
@@ -172,6 +175,7 @@ function Calendar() {
   }
 
   const handleDateClick = (date) => {
+    if (!canCreate) return
     setSelectedDate(date)
 
     // Use the actual time from the clicked date
@@ -235,7 +239,7 @@ function Calendar() {
   }
 
   const handleDeleteEvent = async () => {
-    if (!selectedEvent || !selectedEvent.isCustom) return
+    if (!canCreate || !selectedEvent || !selectedEvent.isCustom) return
 
     if (confirm('Are you sure you want to delete this event?')) {
       try {

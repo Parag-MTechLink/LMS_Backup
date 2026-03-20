@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import { motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search, Package, Calendar, MapPin, CheckCircle, ExternalLink } from 'lucide-react'
@@ -22,6 +23,8 @@ function Samples() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
 
   const projectId = searchParams.get('projectId')
 
@@ -103,12 +106,14 @@ function Samples() {
           </h1>
           <p className="text-gray-600 mt-1">Manage sample tracking and disposition</p>
         </div>
-        <Button
-          onClick={() => setShowCreateModal(true)}
-          icon={<Plus className="w-5 h-5" />}
-        >
-          New Sample
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            icon={<Plus className="w-5 h-5" />}
+          >
+            New Sample
+          </Button>
+        )}
       </motion.div>
 
       {/* Filters */}

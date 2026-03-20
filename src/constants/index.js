@@ -9,7 +9,7 @@ export const API_TIMEOUT_MS = 30000
 export const API_BASE_URL_DEFAULT = 'http://127.0.0.1:8001/api/v1'
 
 /** Lab management API base URL fallback */
-export const LAB_API_BASE_URL_DEFAULT = 'http://localhost:8000'
+export const LAB_API_BASE_URL_DEFAULT = 'http://127.0.0.1:8001'
 
 /** Local storage keys */
 export const STORAGE_KEYS = {

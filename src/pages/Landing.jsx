@@ -71,8 +71,8 @@ const roles = [
   { name: 'Admin', tagline: 'Full control and user management' },
   { name: 'Lab Manager', tagline: 'Approve RFQs, results, and QA' },
   { name: 'Sales Engineer', tagline: 'RFQs, estimations, customers' },
-  { name: 'Testing Engineer', tagline: 'Plans, executions, results' },
-  { name: 'Technician', tagline: 'Samples, executions, inventory' },
+  { name: 'Team Lead', tagline: 'Plans, executions, results' },
+  { name: 'Sales Engineer', tagline: 'RFQs, estimations, customers' },
 ]
 
 const trustItems = [

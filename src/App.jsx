@@ -59,6 +59,7 @@ const QAAReports = lazy(() => import('./pages/lab/management/QAAReports'))
 const Payment = lazy(() => import('./pages/lab/management/Payment'))
 const UserManagement = lazy(() => import('./pages/lab/management/UserManagement'))
 const LabManagementProfile = lazy(() => import('./pages/lab/management/Profile'))
+const LabManagementNotifications = lazy(() => import('./pages/lab/management/Notifications'))
 
 // Non-blocking skeleton for lazy routes (faster perceived load)
 const RouteFallback = () => <RouteSkeleton />
@@ -158,6 +159,7 @@ function AnimatedRoutes() {
           <Route path="lab-recommendations" element={<Suspense fallback={<RouteFallback />}><LabManagementRecommendations /></Suspense>} />
           <Route path="profile" element={<Suspense fallback={<RouteFallback />}><LabManagementProfile /></Suspense>} />
           <Route path="users" element={<Suspense fallback={<RouteFallback />}><UserManagement /></Suspense>} />
+          <Route path="notifications" element={<Suspense fallback={<RouteFallback />}><LabManagementNotifications /></Suspense>} />
 
           {/* Inventory Management */}
           <Route path="inventory" element={<Suspense fallback={<RouteFallback />}><Inventory /></Suspense>} />

@@ -35,40 +35,31 @@ import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useLabManagementAuth } from '../contexts/LabManagementAuthContext'
 import logo from '../assets/techlink-logo.svg'
 import LiveClock from '../components/labManagement/LiveClock'
-import { 
-  instrumentsService, 
-  projectsService, 
-  testPlansService,
-  rfqsService,
-  samplesService,
-  trfsService,
-  calibrationsService
-} from '../services/labManagementApi'
+import { notificationsService } from '../services/labManagementApi'
 
 
 const allNavItems = [
   { name: 'Dashboard', href: '/lab/management/dashboard', icon: LayoutDashboard },
-  { name: 'Organization Details', href: '/lab/management/organization', icon: Building2, roles: ['Admin'] },
-  // { name: 'Scope Management', href: '/lab/management/scope-management', icon: Target },
-  { name: 'Projects', href: '/lab/management/projects', icon: FolderKanban },
+  { name: 'Organization Details', href: '/lab/management/organization', icon: Building2, hideForRoles: ['Finance Manager'] },
+  { name: 'Projects', href: '/lab/management/projects', icon: FolderKanban, hideForRoles: ['Finance Manager'] },
   { name: 'Customers', href: '/lab/management/customers', icon: Users },
-  { name: 'Test Plans', href: '/lab/management/test-plans', icon: FlaskConical },
+  { name: 'Test Plans', href: '/lab/management/test-plans', icon: FlaskConical, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
   { name: 'RFQs', href: '/lab/management/rfqs', icon: FileText },
-  { name: 'Estimations', href: '/lab/management/estimations', icon: IndianRupee, hideForRoles: ['Testing Engineer', 'Technician'] },
-  { name: 'Samples', href: '/lab/management/samples', icon: Package },
-  { name: 'Test Executions', href: '/lab/management/test-executions', icon: Play },
-  { name: 'Test Results', href: '/lab/management/test-results', icon: BarChart3 },
-  { name: 'TRFs', href: '/lab/management/trfs', icon: FileCheck },
-  { name: 'Documents', href: '/lab/management/documents', icon: FolderOpen },
-  { name: 'Reports', href: '/lab/management/reports', icon: FileBarChart },
-  { name: 'Audits', href: '/lab/management/audits', icon: ClipboardCheck, hideForRoles: ['Testing Engineer', 'Technician', 'Sales Engineer'] },
-  { name: 'NCRs', href: '/lab/management/ncrs', icon: AlertTriangle },
-  { name: 'Certifications', href: '/lab/management/certifications', icon: Shield },
+  { name: 'Estimations', href: '/lab/management/estimations', icon: IndianRupee },
+  { name: 'Samples', href: '/lab/management/samples', icon: Package, hideForRoles: ['Finance Manager'] },
+  { name: 'Test Executions', href: '/lab/management/test-executions', icon: Play, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
+  { name: 'Test Results', href: '/lab/management/test-results', icon: BarChart3, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
+  { name: 'TRFs', href: '/lab/management/trfs', icon: FileCheck, hideForRoles: ['Finance Manager'] },
+  { name: 'Documents', href: '/lab/management/documents', icon: FolderOpen, hideForRoles: ['Finance Manager'] },
+  { name: 'Reports', href: '/lab/management/reports', icon: FileBarChart, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
+  { name: 'Audits', href: '/lab/management/audits', icon: ClipboardCheck, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
+  { name: 'NCRs', href: '/lab/management/ncrs', icon: AlertTriangle, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
+  { name: 'Certifications', href: '/lab/management/certifications', icon: Shield, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
   { name: 'Calendar', href: '/lab/management/calendar', icon: Calendar },
-  { name: 'Inventory Management', href: '/lab/management/inventory', icon: Package, hideForRoles: ['Sales Engineer'] },
-  { name: 'Quality Assurance', href: '/lab/management/qa', icon: Shield, hideForRoles: ['Sales Engineer', 'Technician'] },
-  { name: 'Lab Recommendations', href: '/lab/management/lab-recommendations', icon: TrendingUp },
-  { name: 'User Management', href: '/lab/management/users', icon: Users, roles: ['Admin'] },
+  { name: 'Inventory Management', href: '/lab/management/inventory', icon: Package, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
+  { name: 'Quality Assurance', href: '/lab/management/qa', icon: Shield, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
+  { name: 'Lab Recommendations', href: '/lab/management/lab-recommendations', icon: TrendingUp, hideForRoles: ['Sales Engineer', 'Finance Manager'] },
+  { name: 'User Management', href: '/lab/management/users', icon: Users, roles: ['Project Manager', 'Admin'] },
 ]
 
 function getNavigationForRole(role) {
@@ -95,156 +86,27 @@ function LabManagementLayout() {
 
   const navItems = useMemo(() => getNavigationForRole(displayRole), [displayRole])
 
-  // Dynamic operational notifications — fetched from API
-  const [notifReadState, setNotifReadState] = useState(() => {
-    try {
-      const saved = localStorage.getItem('lab_notif_read_state')
-      return saved ? JSON.parse(saved) : {}
-    } catch (e) {
-      return {}
-    }
-  })
-
-  // Persistence: Save read state to local storage when it changes
-  useEffect(() => {
-    localStorage.setItem('lab_notif_read_state', JSON.stringify(notifReadState))
-  }, [notifReadState])
-
   const [notifications, setNotifications] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [loadingNotifs, setLoadingNotifs] = useState(false)
 
-  useEffect(() => {
-    const buildNotifications = async () => {
-      try {
-        const [allInstruments, projects, testPlans, rfqs, samples, trfs, allCalibrations] = await Promise.all([
-          instrumentsService.getAll().catch(() => []),
-          projectsService.getAll().catch(() => []),
-          testPlansService.getAll().catch(() => []),
-          rfqsService.getAll().catch(() => []),
-          samplesService.getAll().catch(() => []),
-          trfsService.getAll().catch(() => []),
-          calibrationsService.getAll().catch(() => [])
-        ])
-        const now = new Date()
-        const built = []
-        // Instrument calibration alerts
-        // Instrument calibration alerts
-        allCalibrations.forEach(cal => {
-          const instName = cal.instrumentName || 'Instrument'
-          const calDate = cal.nextDueDate || cal.dueDate || cal.due_date || cal.nextCalibrationDate
-          if (calDate) {
-            const due = new Date(calDate)
-            const daysUntil = Math.round((due - now) / (1000 * 60 * 60 * 24))
-            
-            if (cal.status === 'Overdue') {
-              built.push({ 
-                id: `cal-overdue-${cal.id}`, 
-                type: 'warning', 
-                title: 'Calibration Overdue', 
-                message: `${instName} (ID: ${cal.instrumentId}) is ${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} overdue.`, 
-                time: `${Math.abs(daysUntil)}d overdue`, 
-                read: false, 
-                link: `/lab/management/inventory/calibration?search=${encodeURIComponent(instName)}` 
-              })
-            } else if (cal.status === 'Due Soon' || (daysUntil <= 7 && daysUntil >= 0)) {
-              built.push({ 
-                id: `cal-soon-${cal.id}`, 
-                type: 'warning', 
-                title: 'Calibration Due Soon', 
-                message: `${instName} (ID: ${cal.instrumentId}) calibration due in ${daysUntil} day${daysUntil !== 1 ? 's' : ''}.`, 
-                time: `In ${daysUntil}d`, 
-                read: false, 
-                link: `/lab/management/inventory/calibration?search=${encodeURIComponent(instName)}` 
-              })
-            }
-          }
-        })
-
-        // Instrument status alerts (Maintenance & Faults)
-        allInstruments.forEach((inst, idx) => {
-          const instName = inst.name || inst.instrumentName || inst.instrument_name || `Instrument #${idx + 1}`
-          const status = (inst.status || '').toLowerCase()
-          if (status === 'maintenance') {
-            built.push({ id: `maint-${inst.id}`, type: 'warning', title: 'Instrument Under Maintenance', message: `${instName} is currently under scheduled maintenance.`, time: 'Now', read: false, link: `/lab/management/inventory/instruments?search=${encodeURIComponent(instName)}` })
-          }
-          if (status === 'faulty' || status === 'out_of_service' || status === 'out of service') {
-            built.push({ id: `fault-${inst.id}`, type: 'warning', title: 'Instrument Fault', message: `${instName} is reported as faulty or out of service.`, time: 'Now', read: false, link: `/lab/management/inventory/instruments?search=${encodeURIComponent(instName)}` })
-          }
-        })
-        // Overdue project alerts
-        projects.filter(p => {
-          const end = new Date(p.end_date || p.endDate)
-          return (p.status !== 'completed' && p.status !== 'Completed') && end < now && !isNaN(end)
-        }).slice(0, 3).forEach(p => {
-          built.push({ id: `proj-overdue-${p.id}`, type: 'warning', title: 'Project Past Deadline', message: `Project "${p.name}" is past its end date.`, time: 'Overdue', read: false, link: `/lab/management/projects?search=${encodeURIComponent(p.name)}` })
-        })
-
-        // Overdue test plan alerts
-        testPlans.filter(t => {
-          const end = new Date(t.end_date || t.endDate || t.due_date)
-          return (t.status !== 'completed' && t.status !== 'Completed') && end < now && !isNaN(end)
-        }).slice(0, 5).forEach(t => {
-          built.push({ id: `test-overdue-${t.id}`, type: 'warning', title: 'Test Plan Overdue', message: `Test plan "${t.name}" is past its deadline.`, time: 'Overdue', read: false, link: `/lab/management/test-plans?search=${encodeURIComponent(t.name)}` })
-        })
-
-        // New RFQ notifications (Recent 3)
-        rfqs.slice(0, 3).forEach(rfq => {
-          built.push({
-            id: `rfq-${rfq.id}`,
-            type: 'info',
-            title: 'New RFQ Received',
-            message: `RFQ from ${rfq.customerName || 'New Customer'} for ${rfq.productName || 'Product'}`,
-            time: 'Recently',
-            read: false,
-            link: `/lab/management/rfqs?search=${encodeURIComponent(rfq.customerName || '')}`
-          })
-        })
-
-        // Sample notifications (Recent 3)
-        samples.slice(0, 3).forEach(s => {
-          const sNum = s.sampleNumber || `Sample-${s.id}`
-          built.push({
-            id: `sample-${s.id}`,
-            type: s.condition === 'Incomplete' ? 'warning' : 'info',
-            title: s.condition === 'Incomplete' ? 'Sample Review Due' : 'New Sample Received',
-            message: `Sample ${sNum} (${s.condition || 'New'}) is in the system.`,
-            time: 'Recently',
-            read: s.condition === 'Good',
-            link: `/lab/management/samples?search=${encodeURIComponent(sNum)}`
-          })
-        })
-
-        // TRF Status updates (Recent 3)
-        trfs.slice(0, 3).forEach(trf => {
-          const tNum = trf.trfNumber || `TRF-${trf.id}`
-          const tStatus = trf.status || 'Draft'
-          built.push({
-            id: `trf-${trf.id}`,
-            type: tStatus === 'Approved' ? 'success' : 'info',
-            title: `TRF ${tStatus}`,
-            message: `TRF ${tNum} is currently in ${tStatus} status.`,
-            time: 'Updated',
-            read: tStatus === 'Approved',
-            link: `/lab/management/trfs?search=${encodeURIComponent(tNum)}`
-          })
-        })
-
-        // Fallback removed — we now only show real data
-        // Sort: unread critical first, then warnings, then info; within each group newest first
-        const order = { warning: 0, info: 1, success: 2 }
-        built.sort((a, b) => {
-          if (!a.read && b.read) return -1
-          if (a.read && !b.read) return 1
-          return (order[a.type] ?? 3) - (order[b.type] ?? 3)
-        })
-        setNotifications(built.slice(0, 12))
-      } catch {
-        // silently ignore
-      }
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const data = await notificationsService.getMyNotifications(false) // get all, not just unread
+      setNotifications(Array.isArray(data) ? data : [])
+      setUnreadCount((Array.isArray(data) ? data : []).filter(n => !n.is_read).length)
+    } catch (err) {
+      // Silently fail — notifications are non-critical
+      console.warn('Notifications fetch failed:', err)
     }
-    buildNotifications()
   }, [])
 
-  const unreadCount = notifications.filter(n => !n.read && !notifReadState[n.id]).length
+  useEffect(() => {
+    // Check immediately, then every 10s
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 10000) // poll every 10s
+    return () => clearInterval(interval)
+  }, [fetchNotifications])
 
   // Close notifications when clicking outside
   useEffect(() => {
@@ -441,10 +303,17 @@ function LabManagementLayout() {
                             notifications.map((notification) => (
                               <div
                                 key={notification.id}
-                                className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.read && !notifReadState[notification.id] ? 'bg-blue-50' : 'bg-white'
-                                  }`}
-                                onClick={() => {
-                                  setNotifReadState(r => ({...r, [notification.id]: true}))
+                                className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${
+                                  !notification.is_read ? 'bg-blue-50/50' : ''
+                                }`}
+                                onClick={async () => {
+                                  try {
+                                    await notificationsService.markAsRead(notification.id)
+                                    fetchNotifications()
+                                  } catch {/* ignore */}
+                                  if (notification.entity_url) {
+                                    navigate(notification.entity_url)
+                                  }
                                   setNotificationsOpen(false)
                                   if (notification.link) navigate(notification.link)
                                 }}
@@ -459,17 +328,18 @@ function LabManagementLayout() {
                                     {notification.type === 'info' && <Info className="w-4 h-4" />}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <p className={`text-sm font-medium ${!notification.read && !notifReadState[notification.id] ? 'text-gray-900' : 'text-gray-700'}`}>
+                                    <p className={`text-sm font-medium ${!notification.is_read ? 'text-gray-900' : 'text-gray-700'}`}>
                                       {notification.title}
                                     </p>
                                     <p className="text-xs text-gray-500 mt-1 line-clamp-2">
                                       {notification.message}
                                     </p>
                                     <p className="text-xs text-gray-400 mt-1">
-                                      {notification.time}
+                                      {notification.triggered_by_name ? `From: ${notification.triggered_by_name} (${notification.triggered_by_role})` : ''}
+                                      {notification.created_at ? ' · ' + new Date(notification.created_at).toLocaleString() : ''}
                                     </p>
                                   </div>
-                                  {(!notification.read && !notifReadState[notification.id]) && (
+                                  {!notification.is_read && (
                                     <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
                                   )}
                                 </div>
@@ -478,18 +348,26 @@ function LabManagementLayout() {
                           )}
                         </div>
                         {notifications.length > 0 && (
-                          <div className="p-3 border-t border-gray-200">
+                          <div className="p-3 border-t border-gray-200 flex items-center justify-between">
                             <button
-                              onClick={() => {
-                                  const allRead = {}
-                                  notifications.forEach(n => allRead[n.id] = true)
-                                  setNotifReadState(allRead)
-                                  setNotificationsOpen(false)
-                                }}
-                              className="w-full text-sm text-primary hover:text-primary-dark font-medium"
+                              onClick={async () => {
+                                try {
+                                  await notificationsService.markAllRead()
+                                  fetchNotifications()
+                                } catch {/* ignore */}
+                                setNotificationsOpen(false)
+                              }}
+                              className="text-sm text-primary hover:text-primary-dark font-medium"
                             >
-                              Mark all as read
+                              Mark all read
                             </button>
+                            <Link
+                              to="/lab/management/notifications"
+                              onClick={() => setNotificationsOpen(false)}
+                              className="text-sm text-gray-500 hover:text-primary font-medium"
+                            >
+                              View All
+                            </Link>
                           </div>
                         )}
                       </motion.div>

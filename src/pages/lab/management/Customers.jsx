@@ -16,7 +16,7 @@ import { Trash2 } from 'lucide-react'
 function Customers() {
   const navigate = useNavigate()
   const { user } = useLabManagementAuth()
-  const isAdmin = user?.role === 'Admin'
+  const isAdmin = user?.role === 'Sales Manager'
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')

@@ -43,6 +43,7 @@ import {
   calibrationsService
 } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import RouteSkeleton from '../../../components/RouteSkeleton'
 import Modal from '../../../components/labManagement/Modal'
 import Button from '../../../components/labManagement/Button'
@@ -50,6 +51,8 @@ import Input from '../../../components/labManagement/Input'
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area, RadialBarChart, RadialBar } from 'recharts'
 
 function LabManagementDashboard() {
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
@@ -211,11 +214,36 @@ function LabManagementDashboard() {
       setAllTestExecutions(testExecutions)
       setAllInstruments(allInstruments)
       setAllCalibrations(allCalibrations)
+      const processList = (list) => {
+        return [...list]
+          .map(item => {
+            const created = new Date(item.createdAt || item.created_at || item.receivedDate || item.received_date)
+            const isNew = (new Date() - created) < 24 * 60 * 60 * 1000
+            return { ...item, isNew }
+          })
+          .sort((a, b) => {
+            const dateA = new Date(a.updatedAt || a.updated_at || a.createdAt || a.created_at || a.receivedDate)
+            const dateB = new Date(b.updatedAt || b.updated_at || b.createdAt || b.created_at || b.receivedDate)
+            return dateB - dateA
+          })
+      }
+
+      const processedProjects = processList(projects)
+      const processedRfqs = processList(rfqs)
+      const processedCustomers = processList(customers)
+      const processedTestPlans = processList(testPlans)
+
       setRawLists({
-        projects: projects.slice(0, 5),
-        customers: customers.slice(0, 5),
-        testPlans: testPlans.slice(0, 5),
-        rfqs: rfqs.slice(0, 5)
+        projects: processedProjects.slice(0, 5),
+        customers: processedCustomers.slice(0, 5),
+        testPlans: processedTestPlans.slice(0, 5),
+        rfqs: processedRfqs.slice(0, 5),
+        feasibility: processedRfqs.filter(r => r.status === 'pending').slice(0, 5),
+        quotations: processedRfqs.filter(r => r.status === 'quotation_review').slice(0, 5),
+        payments: processedProjects.filter(p => (p.status || '').toLowerCase() === 'report_submitted').slice(0, 5), // Adjust based on actual status for payment pending
+        approvals: processedProjects.filter(p => p.pendingApprovals && p.pendingApprovals.length > 0).slice(0, 5),
+        rfqs_sales: processedRfqs.slice(0, 5),
+        samples: processList(samples).slice(0, 5)
       })
 
       setStats({
@@ -229,53 +257,83 @@ function LabManagementDashboard() {
         trfs: trfs.length
       })
 
-      // Create recent activities from actual data
+      // Create role-aware recent activities
       const activities = []
-      if (projects.length > 0) {
-        const recentProject = projects[0]
+      const role = user?.role
+      const isAdmin = role === 'Admin' || role === 'Project Manager'
+
+      // RFQ Activities (Sales, Finance, Technical, PM, Admin)
+      if (rfqs.length > 0 && (isAdmin || ['Sales Manager', 'Finance Manager', 'Technical Manager'].includes(role))) {
+        const recentRfq = rfqs[0]
         activities.push({
-          id: 1,
-          type: 'project',
-          title: `Project: ${recentProject.name}`,
-          time: 'Recently',
-          status: recentProject.status === 'active' ? 'active' : 'pending',
-          link: `/lab/management/projects/${recentProject.id}`
+          id: 'rfq-1',
+          type: 'trf', // reuse trf icon for RFQ
+          title: `RFQ: ${recentRfq.product || 'New Request'}`,
+          time: 'Recently updated',
+          status: recentRfq.status === 'approved' ? 'completed' : 'pending',
+          link: '/lab/management/rfqs'
         })
       }
-      if (testPlans.length > 0) {
+
+      // Project Activities (Available to most roles)
+      if (projects.length > 0) {
+        const recentProject = projects[0]
+        const canSeeProject = isAdmin || 
+          (role === 'Team Lead' && recentProject.teamLeadId === user?.id) ||
+          ['Technical Manager', 'Quality Manager', 'Finance Manager', 'Technician'].includes(role)
+
+        if (canSeeProject) {
+          activities.push({
+            id: 'proj-1',
+            type: 'project',
+            title: `Project: ${recentProject.name}`,
+            time: 'Check status',
+            status: recentProject.status === 'completed' ? 'completed' : 'active',
+            link: `/lab/management/projects/${recentProject.id}`
+          })
+        }
+      }
+
+      // Test Plan / Technical Activities (TM, TL, Tech, PM, Admin)
+      if (testPlans.length > 0 && (isAdmin || ['Technical Manager', 'Team Lead', 'Technician'].includes(role))) {
         const recentPlan = testPlans[0]
         activities.push({
-          id: 2,
+          id: 'test-1',
           type: 'test',
-          title: `Test Plan: ${recentPlan.name}`,
-          time: 'Recently',
+          title: `Test: ${recentPlan.name}`,
+          time: 'Execution update',
           status: recentPlan.status === 'Completed' ? 'completed' : 'pending',
           link: `/lab/management/test-plans/${recentPlan.id}`
         })
       }
-      if (samples.length > 0) {
+
+      // Sample / Logistics Activities (TM, TL, Tech, PM, Admin)
+      if (samples.length > 0 && (isAdmin || ['Technical Manager', 'Team Lead', 'Technician'].includes(role))) {
         const recentSample = samples[0]
         activities.push({
-          id: 3,
+          id: 'sample-1',
           type: 'sample',
           title: `Sample: ${recentSample.sampleNumber || 'Sample-' + recentSample.id}`,
-          time: 'Recently',
-          status: 'pending',
+          time: 'Lab inventory',
+          status: 'active',
           link: `/lab/management/samples/${recentSample.id}`
         })
       }
-      if (trfs.length > 0) {
-        const recentTRF = trfs[0]
+
+      // Finance specific activity
+      if (estimations.length > 0 && (isAdmin || role === 'Finance Manager' || role === 'Sales Manager')) {
+        const recentEst = estimations[0]
         activities.push({
-          id: 4,
+          id: 'est-1',
           type: 'trf',
-          title: `TRF: ${recentTRF.trfNumber || 'TRF-' + recentTRF.id}`,
-          time: 'Recently',
-          status: recentTRF.status === 'Approved' ? 'completed' : 'review',
-          link: `/lab/management/trfs/${recentTRF.id}`
+          title: `Estimation: ₹${recentEst.totalCost?.toLocaleString() || '0'}`,
+          time: 'Financial update',
+          status: 'completed',
+          link: '/lab/management/estimations'
         })
       }
-      setRecentActivities(activities.slice(0, 4))
+
+      setRecentActivities(activities.slice(0, 5))
 
       // Prepare chart data
       const projectStatusCounts = {
@@ -385,9 +443,14 @@ function LabManagementDashboard() {
         personnelWorkload,
         spaceUtilization,
         storageCapacity,
-        avgTAT,          // null = no data yet
-        tatImprovement: tatVsTarget,  // null = no data yet
-        completedCount: completedProjectsList.length // Capture for UI display
+        avgTAT,
+        tatImprovement: tatVsTarget,
+        completedCount: completedProjectsList.length,
+        feasibilityPending: rfqs.filter(r => r.status === 'pending').length,
+        quotationReview: rfqs.filter(r => r.status === 'quotation_review').length,
+        paymentPending: projects.filter(p => p.status === 'approved' && !p.paymentCompleted).length,
+        pendingApprovals: projects.filter(p => p.status === 'tl_reviewed' || p.status === 'report_submitted').length,
+        myAssignedProjects: projects.filter(p => p.teamLeadId === user?.id).length
       })
 
     } catch (error) {
@@ -409,72 +472,152 @@ function LabManagementDashboard() {
     loadDashboardData()
   }
 
-  const statsData = [
-    {
-      id: 'projects',
-      name: 'Active Projects',
-      value: stats.projects.toString(),
-      change: `${stats.projects} total projects`,
-      icon: FolderKanban,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      link: '/lab/management/projects',
-      renderDetails: (list) => list.map(item => (
-        <div key={item.id} className="text-sm border-b border-gray-100 py-2 last:border-0 flex justify-between items-center gap-2">
-           <span className="font-medium text-gray-800 truncate">{item.name}</span>
-           <span className="text-xs text-gray-500 whitespace-nowrap">{item.clientName || 'N/A'}</span>
+  const getFilteredStats = () => {
+    const role = user?.role
+    const isAdmin = role === 'Admin'
+
+    const renderRow = (title, subtitle, date, isNew, onClick) => (
+      <div 
+        key={title + date} 
+        className="flex items-center justify-between text-xs p-2.5 hover:bg-primary/5 rounded-lg border border-transparent hover:border-primary/10 transition-all cursor-pointer mb-1 group"
+        onClick={onClick}
+      >
+        <div className="flex flex-col min-w-0 pr-2">
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-gray-900 truncate">{title}</span>
+            {isNew && (
+              <span className="flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              </span>
+            )}
+          </div>
+          <span className="text-gray-500 truncate text-[10px]">{subtitle}</span>
         </div>
-      ))
-    },
-    {
-      id: 'customers',
-      name: 'Customers',
-      value: stats.customers.toString(),
-      change: `${stats.customers} total customers`,
-      icon: Users,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-      link: '/lab/management/customers',
-      renderDetails: (list) => list.map(item => (
-        <div key={item.id} className="text-sm border-b border-gray-100 py-2 last:border-0 flex justify-between items-center gap-2">
-           <span className="font-medium text-gray-800 truncate">{item.companyName}</span>
-           <span className="text-xs text-gray-500 whitespace-nowrap">{item.industry || 'Unknown'}</span>
-        </div>
-      ))
-    },
-    {
-      id: 'testPlans',
-      name: 'Test Plans',
-      value: stats.testPlans.toString(),
-      change: `${stats.completedTests} completed`,
-      icon: FlaskConical,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      link: '/lab/management/test-plans',
-      renderDetails: (list) => list.map(item => (
-        <div key={item.id} className="text-sm border-b border-gray-100 py-2 last:border-0 flex justify-between items-center gap-2">
-           <span className="font-medium text-gray-800 truncate">{item.name}</span>
-           <span className="text-xs text-blue-600 font-medium whitespace-nowrap">{item.status}</span>
-        </div>
-      ))
-    },
-    {
-      id: 'rfqs',
-      name: 'RFQs',
-      value: stats.rfqs.toString(),
-      change: `${stats.estimations} estimations`,
-      icon: FileText,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50',
-      link: '/lab/management/rfqs',
-      renderDetails: (list) => list.map(item => (
-        <div key={item.id} className="text-sm border-b border-gray-100 py-2 last:border-0 flex justify-between items-center gap-2">
-           <span className="font-medium text-gray-800 truncate">{item.companyName || 'Unknown'}</span>
-           <span className="text-xs text-gray-500 whitespace-nowrap">{item.expectedDate ? new Date(item.expectedDate).toLocaleDateString() : 'N/A'}</span>
-        </div>
-      ))
-    },
-  ]
+        <span className="text-gray-400 whitespace-nowrap text-[10px] tabular-nums group-hover:text-primary transition-colors">
+          {new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+        </span>
+      </div>
+    )
+
+    const allStats = [
+      {
+        id: 'projects',
+        name: 'Active Projects',
+        value: stats.projects.toString(),
+        change: role === 'Team Lead' ? 'Assigned to you' : 'Total active tasks',
+        icon: FolderKanban,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-50',
+        link: '/lab/management/projects',
+        roles: ['Admin', 'Project Manager', 'Technical Manager', 'Team Lead', 'Technician', 'Quality Manager'],
+        renderDetails: (list) => list.map(p => renderRow(p.name, p.clientName || 'Project', p.updatedAt || p.updated_at || p.createdAt || p.created_at, p.isNew, () => navigate(`/lab/management/projects/${p.id}`)))
+      },
+      {
+        id: 'feasibility',
+        name: 'Feasibility Pending',
+        value: operationalStats.feasibilityPending?.toString() || '0',
+        change: 'Requires technical check',
+        icon: AlertCircle,
+        color: 'text-amber-600',
+        bgColor: 'bg-amber-50',
+        link: '/lab/management/rfqs',
+        roles: ['Technical Manager'],
+        renderDetails: (list) => list.map(r => renderRow(r.product, r.customerName || 'RFQ', r.updatedAt || r.updated_at || r.receivedDate, r.isNew, () => navigate('/lab/management/rfqs')))
+      },
+      {
+        id: 'quotations',
+        name: 'Quotation Review',
+        value: operationalStats.quotationReview?.toString() || '0',
+        change: 'Finance team action',
+        icon: FileText,
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-50',
+        link: '/lab/management/rfqs',
+        roles: ['Finance Manager', 'Project Manager'],
+        renderDetails: (list) => list.map(r => renderRow(r.product, r.customerName || 'RFQ', r.updatedAt || r.updated_at || r.receivedDate, r.isNew, () => navigate('/lab/management/rfqs')))
+      },
+      {
+        id: 'payments',
+        name: 'Payment Pending',
+        value: operationalStats.paymentPending?.toString() || '0',
+        change: 'Awaiting verification',
+        icon: DollarSign,
+        color: 'text-emerald-600',
+        bgColor: 'bg-emerald-50',
+        link: '/lab/management/projects',
+        roles: ['Finance Manager'],
+        renderDetails: (list) => list.map(p => renderRow(p.name, p.clientName || 'Project', p.updatedAt || p.updated_at || p.createdAt || p.created_at, p.isNew, () => navigate(`/lab/management/projects/${p.id}`)))
+      },
+      {
+        id: 'approvals',
+        name: 'Pending Approvals',
+        value: operationalStats.pendingApprovals?.toString() || '0',
+        change: 'Workflow bottleneck',
+        icon: CheckCircle2,
+        color: 'text-rose-600',
+        bgColor: 'bg-rose-50',
+        link: '/lab/management/projects',
+        roles: ['Quality Manager', 'Project Manager', 'Technical Manager'],
+        renderDetails: (list) => list.map(p => renderRow(p.name, `${p.pendingApprovals?.length || 0} pending`, p.updatedAt || p.updated_at || p.createdAt || p.created_at, p.isNew, () => navigate(`/lab/management/projects/${p.id}`)))
+      },
+      {
+        id: 'customers',
+        name: 'Active Customers',
+        value: stats.customers.toString(),
+        change: 'Client base size',
+        icon: Users,
+        color: 'text-green-600',
+        bgColor: 'bg-green-50',
+        link: '/lab/management/customers',
+        roles: ['Admin', 'Sales Manager'],
+        renderDetails: (list) => list.map(c => renderRow(c.companyName, c.contactPerson || 'Customer', c.updatedAt || c.updated_at || c.createdAt || c.created_at, c.isNew, () => navigate('/lab/management/customers')))
+      },
+      {
+        id: 'rfqs_sales',
+        name: 'Total RFQs',
+        value: stats.rfqs.toString(),
+        change: 'In-pipeline requests',
+        icon: FileCheck,
+        color: 'text-indigo-600',
+        bgColor: 'bg-indigo-50',
+        link: '/lab/management/rfqs',
+        roles: ['Sales Manager'],
+        renderDetails: (list) => list.map(r => renderRow(r.product, r.customerName || 'RFQ', r.updatedAt || r.updated_at || r.receivedDate, r.isNew, () => navigate('/lab/management/rfqs')))
+      },
+      {
+        id: 'revenue',
+        name: 'Est. Revenue',
+        value: `₹${revenueData.reduce((acc, curr) => acc + curr.revenue, 0).toLocaleString()}`,
+        change: 'Confirmed quotations',
+        icon: DollarSign,
+        color: 'text-emerald-600',
+        bgColor: 'bg-emerald-50',
+        link: '/lab/management/estimations',
+        roles: ['Admin', 'Sales Manager'],
+        renderDetails: (list) => <p className="text-xs text-gray-500 py-2 text-center">Revenue details shown in chart below.</p>
+      },
+      {
+        id: 'samples',
+        name: 'Samples',
+        value: stats.samples.toString(),
+        change: 'Items in lab',
+        icon: Package,
+        color: 'text-orange-600',
+        bgColor: 'bg-orange-50',
+        link: '/lab/management/samples',
+        roles: ['Technician', 'Team Lead'],
+        renderDetails: (list) => list.map(s => renderRow(s.name || s.sampleName, s.clientName || 'Sample', s.updatedAt || s.updated_at || s.createdAt || s.created_at, s.isNew, () => navigate('/lab/management/samples')))
+      }
+    ]
+
+    const filtered = allStats.filter(s => isAdmin || s.roles.includes(role))
+    return filtered.length > 0 ? filtered.slice(0, 4) : allStats.slice(0, 4)
+  }
+
+  const statsData = getFilteredStats()
+
+
 
   if (loading) {
     return <RouteSkeleton />
@@ -601,450 +744,450 @@ function LabManagementDashboard() {
       </div>
 
       {/* Performance Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className={`bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200 relative ${activeInfoPopup === 'perf_completion' ? 'z-[60]' : 'z-10'}`}
-        >
-          <div className="absolute top-2 right-2 z-30">
-            <button
-               onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_completion' ? null : 'perf_completion') }}
-               className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_completion' ? 'text-blue-700 bg-blue-200' : 'text-blue-400'}`}
-               title="View logic"
-            >
-               <Info className="w-4 h-4" />
-            </button>
-          </div>
-          <AnimatePresence>
-            {activeInfoPopup === 'perf_completion' && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                onClick={(e) => e.stopPropagation()}
-                className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+      {(user?.role === 'Admin' || user?.role === 'Project Manager' || user?.role === 'Technical Manager' || user?.role === 'Quality Manager') && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className={`bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200 relative ${activeInfoPopup === 'perf_completion' ? 'z-[60]' : 'z-10'}`}
+          >
+            <div className="absolute top-2 right-2 z-30">
+              <button
+                 onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_completion' ? null : 'perf_completion') }}
+                 className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_completion' ? 'text-blue-700 bg-blue-200' : 'text-blue-400'}`}
+                 title="View logic"
               >
-                 <div className="flex justify-between items-center mb-2">
-                   <h4 className="font-semibold text-gray-900 text-sm">Completion Rate</h4>
-                   <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
-                 </div>
-                 <p className="text-xs text-gray-600 mb-2">Percentage of all projects marked as completed.</p>
-                 <div className="bg-blue-50 p-2 rounded text-xs font-mono text-blue-800 break-all">
-                    (Completed Projects / Total) × 100
-                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-blue-500 rounded-lg">
-              <Target className="w-6 h-6 text-white" />
+                 <Info className="w-4 h-4" />
+              </button>
             </div>
-            <span className="text-xs font-medium text-blue-700 bg-blue-200 px-2 py-1 rounded-full">KPI</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Completion Rate</h3>
-          <div className="flex items-baseline gap-2">
-            <p className="text-3xl font-bold text-gray-900">{performanceMetrics.completionRate}%</p>
-            <ArrowUpRight className="w-5 h-5 text-green-600" />
-          </div>
-          <div className="mt-4 w-full bg-blue-200 rounded-full h-2">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${performanceMetrics.completionRate}%` }}
-              transition={{ duration: 1, delay: 0.5 }}
-              className="bg-blue-600 h-2 rounded-full"
-            />
-          </div>
-        </motion.div>
+            <AnimatePresence>
+              {activeInfoPopup === 'perf_completion' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+                >
+                   <div className="flex justify-between items-center mb-2">
+                     <h4 className="font-semibold text-gray-900 text-sm">Completion Rate</h4>
+                     <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                   </div>
+                   <p className="text-xs text-gray-600 mb-2">Percentage of all projects marked as completed.</p>
+                   <div className="bg-blue-50 p-2 rounded text-xs font-mono text-blue-800 break-all">
+                      (Completed Projects / Total) × 100
+                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-blue-500 rounded-lg">
+                <Target className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Completion Rate</h3>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-bold text-gray-900">{performanceMetrics.completionRate}%</p>
+              <ArrowUpRight className="w-5 h-5 text-green-600" />
+            </div>
+            <div className="mt-4 w-full bg-blue-200 rounded-full h-2">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${performanceMetrics.completionRate}%` }}
+                transition={{ duration: 1, delay: 0.5 }}
+                className="bg-blue-600 h-2 rounded-full"
+              />
+            </div>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className={`bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200 relative ${activeInfoPopup === 'perf_ontime' ? 'z-[60]' : 'z-10'}`}
-        >
-          <div className="absolute top-2 right-2 z-30">
-            <button
-               onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_ontime' ? null : 'perf_ontime') }}
-               className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_ontime' ? 'text-green-700 bg-green-200' : 'text-green-400'}`}
-               title="View logic"
-            >
-               <Info className="w-4 h-4" />
-            </button>
-          </div>
-          <AnimatePresence>
-            {activeInfoPopup === 'perf_ontime' && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                onClick={(e) => e.stopPropagation()}
-                className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className={`bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200 relative ${activeInfoPopup === 'perf_ontime' ? 'z-[60]' : 'z-10'}`}
+          >
+            <div className="absolute top-2 right-2 z-30">
+              <button
+                 onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_ontime' ? null : 'perf_ontime') }}
+                 className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_ontime' ? 'text-green-700 bg-green-200' : 'text-green-400'}`}
+                 title="View logic"
               >
-                 <div className="flex justify-between items-center mb-2">
-                   <h4 className="font-semibold text-gray-900 text-sm">On-Time Delivery</h4>
-                   <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
-                 </div>
-                 <p className="text-xs text-gray-600 mb-2">Percentage of test plans completed on or before schedule.</p>
-                 <div className="bg-green-50 p-2 rounded text-xs font-mono text-green-800 break-all">
-                    (Completed Tests / Total Tests) × 100
-                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-green-500 rounded-lg">
-              <Zap className="w-6 h-6 text-white" />
+                 <Info className="w-4 h-4" />
+              </button>
             </div>
-            <span className="text-xs font-medium text-green-700 bg-green-200 px-2 py-1 rounded-full">EFFICIENCY</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">On-Time Delivery</h3>
-          <div className="flex items-baseline gap-2">
-            <p className="text-3xl font-bold text-gray-900">{performanceMetrics.onTimeDelivery}%</p>
-            <ArrowUpRight className="w-5 h-5 text-green-600" />
-          </div>
-          <div className="mt-4 w-full bg-green-200 rounded-full h-2">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${performanceMetrics.onTimeDelivery}%` }}
-              transition={{ duration: 1, delay: 0.6 }}
-              className="bg-green-600 h-2 rounded-full"
-            />
-          </div>
-        </motion.div>
+            <AnimatePresence>
+              {activeInfoPopup === 'perf_ontime' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+                >
+                   <div className="flex justify-between items-center mb-2">
+                     <h4 className="font-semibold text-gray-900 text-sm">On-Time Delivery</h4>
+                     <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                   </div>
+                   <p className="text-xs text-gray-600 mb-2">Percentage of test plans completed on or before schedule.</p>
+                   <div className="bg-green-50 p-2 rounded text-xs font-mono text-green-800 break-all">
+                      (Completed Tests / Total Tests) × 100
+                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-green-500 rounded-lg">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">On-Time Delivery</h3>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-bold text-gray-900">{performanceMetrics.onTimeDelivery}%</p>
+              <ArrowUpRight className="w-5 h-5 text-green-600" />
+            </div>
+            <div className="mt-4 w-full bg-green-200 rounded-full h-2">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${performanceMetrics.onTimeDelivery}%` }}
+                transition={{ duration: 1, delay: 0.6 }}
+                className="bg-green-600 h-2 rounded-full"
+              />
+            </div>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className={`bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200 relative ${activeInfoPopup === 'perf_cycletime' ? 'z-[60]' : 'z-10'}`}
-        >
-          <div className="absolute top-2 right-2 z-30">
-            <button
-               onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_cycletime' ? null : 'perf_cycletime') }}
-               className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_cycletime' ? 'text-purple-700 bg-purple-200' : 'text-purple-400'}`}
-               title="View logic"
-            >
-               <Info className="w-4 h-4" />
-            </button>
-          </div>
-          <AnimatePresence>
-            {activeInfoPopup === 'perf_cycletime' && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                onClick={(e) => e.stopPropagation()}
-                className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className={`bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200 relative ${activeInfoPopup === 'perf_cycletime' ? 'z-[60]' : 'z-10'}`}
+          >
+            <div className="absolute top-2 right-2 z-30">
+              <button
+                 onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_cycletime' ? null : 'perf_cycletime') }}
+                 className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_cycletime' ? 'text-purple-700 bg-purple-200' : 'text-purple-400'}`}
+                 title="View logic"
               >
-                 <div className="flex justify-between items-center mb-2">
-                   <h4 className="font-semibold text-gray-900 text-sm">Avg Cycle Time</h4>
-                   <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
-                 </div>
-                 <p className="text-xs text-gray-600 mb-2">Average duration from test initialization to completion.</p>
-                 <div className="bg-purple-50 p-2 rounded text-xs font-mono text-purple-800 break-all">
-                    Σ(Completion Date - Start Date) / Completed Tests
-                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-purple-500 rounded-lg">
-              <Clock className="w-6 h-6 text-white" />
+                 <Info className="w-4 h-4" />
+              </button>
             </div>
-            <span className="text-xs font-medium text-purple-700 bg-purple-200 px-2 py-1 rounded-full">AVG</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Avg Cycle Time</h3>
-          <div className="flex items-baseline gap-2">
-            <p className="text-3xl font-bold text-gray-900">{performanceMetrics.averageCycleTime}</p>
-            <span className="text-sm text-gray-600">days</span>
-          </div>
-          <p className="mt-2 text-xs text-gray-600">Target: {targets.tatTarget} days</p>
-        </motion.div>
+            <AnimatePresence>
+              {activeInfoPopup === 'perf_cycletime' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+                >
+                   <div className="flex justify-between items-center mb-2">
+                     <h4 className="font-semibold text-gray-900 text-sm">Avg Cycle Time</h4>
+                     <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                   </div>
+                   <p className="text-xs text-gray-600 mb-2">Average duration from test initialization to completion.</p>
+                   <div className="bg-purple-50 p-2 rounded text-xs font-mono text-purple-800 break-all">
+                      Σ(Completion Date - Start Date) / Completed Tests
+                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-purple-500 rounded-lg">
+                <Clock className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Avg Cycle Time</h3>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-bold text-gray-900">{performanceMetrics.averageCycleTime}</p>
+              <span className="text-sm text-gray-600">days</span>
+            </div>
+            <p className="mt-2 text-xs text-gray-600">Target: {targets.tatTarget} days</p>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className={`bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200 relative ${activeInfoPopup === 'perf_passrate' ? 'z-[60]' : 'z-10'}`}
-        >
-          <div className="absolute top-2 right-2 z-30">
-            <button
-               onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_passrate' ? null : 'perf_passrate') }}
-               className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_passrate' ? 'text-orange-700 bg-orange-200' : 'text-orange-400'}`}
-               title="View logic"
-            >
-               <Info className="w-4 h-4" />
-            </button>
-          </div>
-          <AnimatePresence>
-            {activeInfoPopup === 'perf_passrate' && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                onClick={(e) => e.stopPropagation()}
-                className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className={`bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200 relative ${activeInfoPopup === 'perf_passrate' ? 'z-[60]' : 'z-10'}`}
+          >
+            <div className="absolute top-2 right-2 z-30">
+              <button
+                 onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_passrate' ? null : 'perf_passrate') }}
+                 className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_passrate' ? 'text-orange-700 bg-orange-200' : 'text-orange-400'}`}
+                 title="View logic"
               >
-                 <div className="flex justify-between items-center mb-2">
-                   <h4 className="font-semibold text-gray-900 text-sm">Pass Rate</h4>
-                   <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
-                 </div>
-                 <p className="text-xs text-gray-600 mb-2">Percentage of all processed test results marked as Passed.</p>
-                 <div className="bg-orange-50 p-2 rounded text-xs font-mono text-orange-800 break-all">
-                    (Passed Results / Total Results) × 100
-                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-orange-500 rounded-lg">
-              <Award className="w-6 h-6 text-white" />
+                 <Info className="w-4 h-4" />
+              </button>
             </div>
-            <span className="text-xs font-medium text-orange-700 bg-orange-200 px-2 py-1 rounded-full">QUALITY</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Pass Rate</h3>
-          <div className="flex items-baseline gap-2">
-            <p className="text-3xl font-bold text-gray-900">{performanceMetrics.customerSatisfaction}%</p>
-            <ArrowUpRight className="w-5 h-5 text-green-600" />
-          </div>
-          <div className="mt-4 w-full bg-orange-200 rounded-full h-2">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${performanceMetrics.customerSatisfaction}%` }}
-              transition={{ duration: 1, delay: 0.8 }}
-              className="bg-orange-600 h-2 rounded-full"
-            />
-          </div>
-        </motion.div>
-      </div>
+            <AnimatePresence>
+              {activeInfoPopup === 'perf_passrate' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-10 right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 text-left cursor-default"
+                >
+                   <div className="flex justify-between items-center mb-2">
+                     <h4 className="font-semibold text-gray-900 text-sm">Pass Rate</h4>
+                     <button onClick={() => setActiveInfoPopup(null)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                   </div>
+                   <p className="text-xs text-gray-600 mb-2">Percentage of all processed test results marked as Passed.</p>
+                   <div className="bg-orange-50 p-2 rounded text-xs font-mono text-orange-800 break-all">
+                      (Passed Results / Total Results) × 100
+                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-orange-500 rounded-lg">
+                <Award className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Pass Rate</h3>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-bold text-gray-900">{performanceMetrics.customerSatisfaction}%</p>
+              <ArrowUpRight className="w-5 h-5 text-green-600" />
+            </div>
+            <div className="mt-4 w-full bg-orange-200 rounded-full h-2">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${performanceMetrics.customerSatisfaction}%` }}
+                transition={{ duration: 1, delay: 0.8 }}
+                className="bg-orange-600 h-2 rounded-full"
+              />
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Operational Metrics Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-primary" />
-              Operational Metrics
-            </h2>
-            <p className="mt-1 text-sm text-gray-600">Real-time insights into lab efficiency and capacity</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full border border-green-100">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-              Live System
-            </span>
-            <button 
-              onClick={() => setIsTargetModalOpen(true)}
-              className="p-2 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
-              title="Configure Targets"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Equipment Utilization */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-700">Equipment Utilization</h3>
-            <div className="h-48 flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadialBarChart 
-                  innerRadius="60%" 
-                  outerRadius="80%" 
-                  data={[
-                    { name: 'Utilization', value: operationalStats.equipmentUtilization, fill: '#3b82f6' }
-                  ]} 
-                  startAngle={180} 
-                  endAngle={0}
-                >
-                  <RadialBar 
-                    background={{ fill: '#f1f5f9' }} 
-                    dataKey="value" 
-                    cornerRadius={15} 
-                  />
-                  <text
-                    x="50%"
-                    y="55%"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className="fill-gray-900 text-2xl font-bold"
-                  >
-                    {operationalStats.equipmentUtilization}%
-                  </text>
-                </RadialBarChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="text-center text-xs text-gray-500">
-              Target: {targets.utilizationTarget}% • {operationalStats.activeEquipmentCount}/{operationalStats.totalEquipmentCount} Active
-            </p>
-          </div>
-
-          {/* Lab Capacity */}
-          <div className="space-y-6">
-            <h3 className="text-sm font-medium text-gray-700">Resource Capacity</h3>
-            <div className="space-y-5">
-
-              {/* Personnel Workload */}
-              {(() => {
-                const val = operationalStats.personnelWorkload
-                const tgt = targets.personnelTarget
-                const over = val > tgt
-                return (
-                  <div>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-600">Personnel Workload</span>
-                      <span className={`font-semibold ${over ? 'text-red-600' : 'text-gray-900'}`}>{val}%</span>
-                    </div>
-                    <div className="relative w-full bg-gray-100 rounded-full h-2">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${val}%` }}
-                        className={`h-2 rounded-full ${over ? 'bg-red-500' : 'bg-primary'}`}
-                      />
-                      {/* Target marker */}
-                      <div
-                        className="absolute top-0 h-2 w-0.5 bg-gray-400 rounded"
-                        style={{ left: `${tgt}%` }}
-                        title={`Target: ${tgt}%`}
-                      />
-                    </div>
-                  </div>
-                )
-              })()}
-
-              {/* Lab Space Utilization */}
-              {(() => {
-                const val = operationalStats.spaceUtilization
-                const tgt = targets.spaceTarget
-                const over = val > tgt
-                return (
-                  <div>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-600">Lab Space Utilization</span>
-                      <span className={`font-semibold ${over ? 'text-red-600' : 'text-gray-900'}`}>{val}%</span>
-                    </div>
-                    <div className="relative w-full bg-gray-100 rounded-full h-2">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${val}%` }}
-                        className={`h-2 rounded-full ${over ? 'bg-red-500' : 'bg-green-500'}`}
-                      />
-                      <div
-                        className="absolute top-0 h-2 w-0.5 bg-gray-400 rounded"
-                        style={{ left: `${tgt}%` }}
-                        title={`Target: ${tgt}%`}
-                      />
-                    </div>
-                  </div>
-                )
-              })()}
-
-              {/* Storage Capacity */}
-              {(() => {
-                const val = operationalStats.storageCapacity
-                const tgt = targets.storageTarget
-                const over = val > tgt
-                return (
-                  <div>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-600">Storage Capacity</span>
-                      <span className={`font-semibold ${over ? 'text-red-600' : 'text-gray-900'}`}>{val}%</span>
-                    </div>
-                    <div className="relative w-full bg-gray-100 rounded-full h-2">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${val}%` }}
-                        className={`h-2 rounded-full ${over ? 'bg-red-500' : 'bg-yellow-500'}`}
-                      />
-                      <div
-                        className="absolute top-0 h-2 w-0.5 bg-gray-400 rounded"
-                        style={{ left: `${tgt}%` }}
-                        title={`Target: ${tgt}%`}
-                      />
-                    </div>
-                  </div>
-                )
-              })()}
-
-            </div>
-          </div>
-          {/* TAT Performance */}
-          <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 flex flex-col justify-between">
+      {(user?.role === 'Admin' || user?.role === 'Technical Manager' || user?.role === 'Team Lead' || user?.role === 'Technician') && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-4">Turnaround Time (TAT)</h3>
-              {operationalStats.avgTAT === null ? (
-                <div className="flex flex-col items-center justify-center py-4 text-center">
-                  <Clock className="w-8 h-8 text-gray-300 mb-2" />
-                  <p className="text-sm font-medium text-gray-500">No Data Yet</p>
-                  <p className="text-xs text-gray-400 mt-1">TAT is calculated once projects are completed</p>
-                  <p className="text-xs text-gray-400">Target: {targets.tatTarget} Days</p>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-white rounded-lg shadow-sm">
-                      <Clock className={`w-6 h-6 ${operationalStats.avgTAT <= targets.tatTarget ? 'text-green-500' : 'text-red-500'}`} />
-                    </div>
-                    <div>
-                      <p className={`text-2xl font-bold ${operationalStats.avgTAT <= targets.tatTarget ? 'text-gray-900' : 'text-red-600'}`}>
-                        {operationalStats.avgTAT} Days
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Based on {operationalStats.completedCount || 0} completions
-                      </p>
-                      <p className="text-[10px] text-gray-400">
-                        Target: {targets.tatTarget} Days
-                      </p>
-                      {operationalStats.tatImprovement !== null && (
-                        operationalStats.avgTAT <= targets.tatTarget ? (
-                          <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
-                            <TrendingUp className="w-3 h-3" />
-                            {operationalStats.tatImprovement}% improvement
-                          </p>
-                        ) : (
-                          <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
-                            <TrendingDown className="w-3 h-3" />
-                            {Math.round(((operationalStats.avgTAT - targets.tatTarget) / targets.tatTarget) * 100)}% above target
-                          </p>
-                        )
-                      )}
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>Target</span>
-                      <span>Actual</span>
-                    </div>
-                    <div className="flex justify-between mt-1 font-medium text-gray-900">
-                      <span>{targets.tatTarget} Days</span>
-                      <span className={operationalStats.avgTAT <= targets.tatTarget ? 'text-green-600' : 'text-red-600'}>
-                        {operationalStats.avgTAT <= targets.tatTarget ? 'Under Target ✓' : 'Over Target ✗'}
-                      </span>
-                    </div>
-                    {/* Visual TAT progress bar */}
-                    <div className="mt-3">
-                      <div className="w-full bg-gray-200 rounded-full h-1.5">
-                        <div
-                          className={`h-1.5 rounded-full transition-all duration-700 ${operationalStats.avgTAT <= targets.tatTarget ? 'bg-green-500' : 'bg-red-500'}`}
-                          style={{ width: `${Math.min(100, (operationalStats.avgTAT / (targets.tatTarget * 1.5)) * 100)}%` }}
-                        />
-                      </div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {operationalStats.avgTAT <= targets.tatTarget
-                          ? `${(targets.tatTarget - operationalStats.avgTAT).toFixed(1)} days under target`
-                          : `${(operationalStats.avgTAT - targets.tatTarget).toFixed(1)} days over target`}
-                      </p>
-                    </div>
-                  </div>
-                </>
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-primary" />
+                Operational Metrics
+              </h2>
+              <p className="mt-1 text-sm text-gray-600">Real-time insights into lab efficiency and capacity</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full border border-green-100">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                Live System
+              </span>
+              {canCreate && (
+                <button 
+                  onClick={() => setIsTargetModalOpen(true)}
+                  className="p-2 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
+                  title="Configure Targets"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
               )}
             </div>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Equipment Utilization */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-gray-700">Equipment Utilization</h3>
+              <div className="h-48 flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadialBarChart 
+                    innerRadius="60%" 
+                    outerRadius="100%" 
+                    data={[
+                      { name: 'In Use', value: operationalStats.equipmentUtilization, fill: '#3b82f6' },
+                      { name: 'Idle', value: 100 - operationalStats.equipmentUtilization, fill: '#e5e7eb' }
+                    ]} 
+                    startAngle={180} 
+                    endAngle={0}
+                  >
+                    <RadialBar background dataKey="value" cornerRadius={10} />
+                    <text
+                      x="50%"
+                      y="50%"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="fill-gray-900 text-2xl font-bold"
+                    >
+                      {operationalStats.equipmentUtilization}%
+                    </text>
+                  </RadialBarChart>
+                </ResponsiveContainer>
+              </div>
+              <p className="text-center text-xs text-gray-500">
+                Target: {targets.utilizationTarget}% • {operationalStats.activeEquipmentCount}/{operationalStats.totalEquipmentCount} Active
+              </p>
+            </div>
+
+            {/* Lab Capacity */}
+            <div className="space-y-6">
+              <h3 className="text-sm font-medium text-gray-700">Resource Capacity</h3>
+              <div className="space-y-5">
+
+                {/* Personnel Workload */}
+                {(() => {
+                  const val = operationalStats.personnelWorkload
+                  const tgt = targets.personnelTarget
+                  const over = val > tgt
+                  return (
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-gray-600">Personnel Workload</span>
+                        <span className={`font-semibold ${over ? 'text-red-600' : 'text-gray-900'}`}>{val}%</span>
+                      </div>
+                      <div className="relative w-full bg-gray-100 rounded-full h-2">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${val}%` }}
+                          className={`h-2 rounded-full ${over ? 'bg-red-500' : 'bg-primary'}`}
+                        />
+                        {/* Target marker */}
+                        <div
+                          className="absolute top-0 h-2 w-0.5 bg-gray-400 rounded"
+                          style={{ left: `${tgt}%` }}
+                          title={`Target: ${tgt}%`}
+                        />
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* Lab Space Utilization */}
+                {(() => {
+                  const val = operationalStats.spaceUtilization
+                  const tgt = targets.spaceTarget
+                  const over = val > tgt
+                  return (
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-gray-600">Lab Space Utilization</span>
+                        <span className={`font-semibold ${over ? 'text-red-600' : 'text-gray-900'}`}>{val}%</span>
+                      </div>
+                      <div className="relative w-full bg-gray-100 rounded-full h-2">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${val}%` }}
+                          className={`h-2 rounded-full ${over ? 'bg-red-500' : 'bg-green-500'}`}
+                        />
+                        <div
+                          className="absolute top-0 h-2 w-0.5 bg-gray-400 rounded"
+                          style={{ left: `${tgt}%` }}
+                          title={`Target: ${tgt}%`}
+                        />
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* Storage Capacity */}
+                {(() => {
+                  const val = operationalStats.storageCapacity
+                  const tgt = targets.storageTarget
+                  const over = val > tgt
+                  return (
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-gray-600">Storage Capacity</span>
+                        <span className={`font-semibold ${over ? 'text-red-600' : 'text-gray-900'}`}>{val}%</span>
+                      </div>
+                      <div className="relative w-full bg-gray-100 rounded-full h-2">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${val}%` }}
+                          className={`h-2 rounded-full ${over ? 'bg-red-500' : 'bg-yellow-500'}`}
+                        />
+                        <div
+                          className="absolute top-0 h-2 w-0.5 bg-gray-400 rounded"
+                          style={{ left: `${tgt}%` }}
+                          title={`Target: ${tgt}%`}
+                        />
+                      </div>
+                    </div>
+                  )
+                })()}
+
+              </div>
+            </div>
+            {/* TAT Performance */}
+            <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 flex flex-col justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-4">Turnaround Time (TAT)</h3>
+                {operationalStats.avgTAT === null ? (
+                  <div className="flex flex-col items-center justify-center py-4 text-center">
+                    <Clock className="w-8 h-8 text-gray-300 mb-2" />
+                    <p className="text-sm font-medium text-gray-500">No Data Yet</p>
+                    <p className="text-xs text-gray-400 mt-1">TAT is calculated once projects are completed</p>
+                    <p className="text-xs text-gray-400">Target: {targets.tatTarget} Days</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-white rounded-lg shadow-sm">
+                        <Clock className={`w-6 h-6 ${operationalStats.avgTAT <= targets.tatTarget ? 'text-green-500' : 'text-red-500'}`} />
+                      </div>
+                      <div>
+                        <p className={`text-2xl font-bold ${operationalStats.avgTAT <= targets.tatTarget ? 'text-gray-900' : 'text-red-600'}`}>
+                          {operationalStats.avgTAT} Days
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Based on {operationalStats.completedCount || 0} completions
+                        </p>
+                        <p className="text-[10px] text-gray-400">
+                          Target: {targets.tatTarget} Days
+                        </p>
+                        {operationalStats.tatImprovement !== null && (
+                          operationalStats.avgTAT <= targets.tatTarget ? (
+                            <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                              <TrendingUp className="w-3 h-3" />
+                              {operationalStats.tatImprovement}% improvement
+                            </p>
+                          ) : (
+                            <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
+                              <TrendingDown className="w-3 h-3" />
+                              {Math.round(((operationalStats.avgTAT - targets.tatTarget) / targets.tatTarget) * 100)}% above target
+                            </p>
+                          )
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Target</span>
+                        <span>Actual</span>
+                      </div>
+                      <div className="flex justify-between mt-1 font-medium text-gray-900">
+                        <span>{targets.tatTarget} Days</span>
+                        <span className={operationalStats.avgTAT <= targets.tatTarget ? 'text-green-600' : 'text-red-600'}>
+                          {operationalStats.avgTAT <= targets.tatTarget ? 'Under Target ✓' : 'Over Target ✗'}
+                        </span>
+                      </div>
+                      {/* Visual TAT progress bar */}
+                      <div className="mt-3">
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div
+                            className={`h-1.5 rounded-full transition-all duration-700 ${operationalStats.avgTAT <= targets.tatTarget ? 'bg-green-500' : 'bg-red-500'}`}
+                            style={{ width: `${Math.min(100, (operationalStats.avgTAT / (targets.tatTarget * 1.5)) * 100)}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {operationalStats.avgTAT <= targets.tatTarget
+                            ? `${(targets.tatTarget - operationalStats.avgTAT).toFixed(1)} days under target`
+                            : `${(operationalStats.avgTAT - targets.tatTarget).toFixed(1)} days over target`}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}

@@ -1,10 +1,8 @@
-import { useState, useEffect } from 'react'
-import { calibrationsService } from '../../../services/labManagementApi'
-import toast from 'react-hot-toast'
-import Button from '../Button'
-import Input from '../Input'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 
 export default function CreateCalibrationForm({ calibration, instruments, onSuccess, onCancel }) {
+  const { user } = useLabManagementAuth()
+  const isReadOnly = user?.role === 'Quality Manager'
   const [formData, setFormData] = useState({
     calibrationId: '',
     instrumentId: '',
@@ -126,6 +124,7 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
           onChange={(e) => setFormData({ ...formData, calibrationId: e.target.value })}
           placeholder="CAL-001"
           required
+          disabled={isReadOnly}
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -134,8 +133,9 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
           <select
             value={formData.instrumentId}
             onChange={(e) => setFormData({ ...formData, instrumentId: e.target.value })}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:cursor-not-allowed"
             required
+            disabled={isReadOnly}
           >
             <option value="">Select Instrument</option>
             {instruments?.map(inst => (
@@ -155,6 +155,7 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
           value={formData.lastCalibrationDate}
           onChange={(e) => setFormData({ ...formData, lastCalibrationDate: e.target.value })}
           required
+          disabled={isReadOnly}
         />
         <Input
           label={
@@ -166,6 +167,7 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
           value={formData.nextDueDate}
           onChange={(e) => setFormData({ ...formData, nextDueDate: e.target.value })}
           required
+          disabled={isReadOnly}
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -174,7 +176,8 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
           <select
             value={formData.calibrationFrequency}
             onChange={(e) => setFormData({ ...formData, calibrationFrequency: e.target.value })}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:cursor-not-allowed"
+            disabled={isReadOnly}
           >
             <option value="3 months">3 months</option>
             <option value="6 months">6 months</option>
@@ -189,7 +192,8 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
           <select
             value={formData.calibrationMethod}
             onChange={(e) => setFormData({ ...formData, calibrationMethod: e.target.value })}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:cursor-not-allowed"
+            disabled={isReadOnly}
           >
             <option value="ISO/IEC 17025">ISO/IEC 17025</option>
             <option value="NIST Traceable">NIST Traceable</option>
@@ -207,6 +211,7 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
           onChange={(e) => setFormData({ ...formData, certifiedBy: e.target.value })}
           placeholder="NIST Accredited Lab"
           required
+          disabled={isReadOnly}
         />
         <Input
           label={
@@ -218,6 +223,7 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
           onChange={(e) => setFormData({ ...formData, certificateNumber: e.target.value })}
           placeholder="CAL-2024-001"
           required
+          disabled={isReadOnly}
         />
       </div>
       
@@ -229,7 +235,8 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
           type="file"
           accept=".pdf"
           onChange={handleFileUpload}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:cursor-not-allowed"
+          disabled={isReadOnly}
         />
         {formData.certificateUrl && (
           <p className="text-sm text-gray-500 mt-1">
@@ -247,7 +254,8 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           placeholder="Additional notes about the calibration"
           rows={3}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none disabled:bg-gray-50 disabled:cursor-not-allowed"
+          disabled={isReadOnly}
         />
       </div>
 
@@ -258,15 +266,17 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
           variant="outline"
           className="flex-1"
         >
-          Cancel
+          {isReadOnly ? 'Close' : 'Cancel'}
         </Button>
-        <Button
-          type="submit"
-          isLoading={loading}
-          className="flex-1"
-        >
-          {calibration ? 'Update Calibration' : 'Create Calibration'}
-        </Button>
+        {!isReadOnly && (
+          <Button
+            type="submit"
+            isLoading={loading}
+            className="flex-1"
+          >
+            {calibration ? 'Update Calibration' : 'Create Calibration'}
+          </Button>
+        )}
       </div>
     </form>
   )

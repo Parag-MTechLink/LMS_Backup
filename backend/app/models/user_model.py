@@ -11,7 +11,15 @@ from app.core.database import Base
 
 
 # Allowed role values (stored as TEXT; no FK to avoid circular deps)
-ROLES = ("Admin", "Lab Manager", "Sales Engineer", "Testing Engineer", "Technician")
+ROLES = (
+    "Admin",
+    "Sales Manager",
+    "Project Manager",
+    "Finance Manager",
+    "Quality Manager",
+    "Team Lead",
+    "Technical Manager",
+)
 
 
 class User(Base):
@@ -24,6 +32,8 @@ class User(Base):
     password_hash = Column(Text, nullable=False)
     role = Column(Text, nullable=False)  # One of ROLES
     is_active = Column(Boolean, default=True, nullable=False)
+    is_main = Column(Boolean, default=False, nullable=False)
+    parent_id = Column(UUID(as_uuid=True), nullable=True, index=True)
     
     # Password Reset Fields
     reset_token = Column(Text, nullable=True, index=True)

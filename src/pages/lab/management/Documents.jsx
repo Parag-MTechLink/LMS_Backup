@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -26,6 +27,8 @@ function Documents() {
   const [showUploadModal, setShowUploadModal] = useState(false)
 
   const navigate = useNavigate()
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
 
   useEffect(() => {
     loadDocuments()
@@ -131,12 +134,14 @@ function Documents() {
           </p>
         </div>
 
-        <Button
-          onClick={() => setShowUploadModal(true)}
-          icon={<Plus className="w-5 h-5" />}
-        >
-          Upload Document
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => setShowUploadModal(true)}
+            icon={<Plus className="w-5 h-5" />}
+          >
+            Upload Document
+          </Button>
+        )}
       </motion.div>
 
       {/* Filters */}

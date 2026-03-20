@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.dependencies.auth_dependency import require_permission
+from app.models.user_model import User
+
 from app.core.database import get_db
 from app.modules.trf.models import TRF
 from app.modules.trf.schemas import TRFCreate, TRFResponse
@@ -11,7 +14,11 @@ router = APIRouter(
 )
 
 @router.post("", response_model=TRFResponse)
-def create_trf(trf: TRFCreate, db: Session = Depends(get_db)):
+def create_trf(
+    trf: TRFCreate, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("trf:full"))
+):
     from app.modules.projects.models import Project  # Import here to avoid circular imports?
     
     if trf.trfNumber:
@@ -33,11 +40,18 @@ def create_trf(trf: TRFCreate, db: Session = Depends(get_db)):
     return new_trf
 
 @router.get("", response_model=list[TRFResponse])
-def get_trfs(db: Session = Depends(get_db)):
+def get_trfs(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("trf:view"))
+):
     return db.query(TRF).all()
 
 @router.get("/{id}", response_model=TRFResponse)
-def get_trf(id: int, db: Session = Depends(get_db)):
+def get_trf(
+    id: int, 
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("trf:view"))
+):
     trf = db.query(TRF).filter(TRF.id == id).first()
     if not trf:
         raise HTTPException(status_code=404, detail="TRF not found")

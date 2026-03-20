@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Building2,
@@ -103,6 +104,8 @@ const waterSourceOptions = [
 export default function OrganizationDetails() {
   const navigate = useNavigate()
   const { organizationData, updateOrganizationData } = useLabData()
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
   const [currentStep, setCurrentStep] = useState(1)
   const [organizationId, setOrganizationId] = useState(null)  // Always start fresh
   const [loading, setLoading] = useState(false)
@@ -1253,7 +1256,7 @@ export default function OrganizationDetails() {
                     <div key={member.id} className="p-4 bg-gray-50 rounded-xl space-y-4">
                       <div className="flex items-center justify-between">
                         <h3 className="font-medium text-gray-900">Person {index + 1}</h3>
-                        {formData.topManagement.length > 1 && (
+                        {formData.topManagement.length > 1 && canCreate && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -1326,14 +1329,16 @@ export default function OrganizationDetails() {
                     </div>
                   ))}
 
-                  <Button
-                    variant="outline"
-                    onClick={addTopManagement}
-                    className="w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add more
-                  </Button>
+                  {canCreate && (
+                    <Button
+                      variant="outline"
+                      onClick={addTopManagement}
+                      className="w-full"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add more
+                    </Button>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1358,7 +1363,7 @@ export default function OrganizationDetails() {
                           />
                         </label>
                       </div>
-                      {formData.topManagementDocument && (
+                      {formData.topManagementDocument && canCreate && (
                         <Button
                           variant="outline"
                           onClick={() => handleInputChange('topManagementDocument', null)}
@@ -1561,7 +1566,7 @@ export default function OrganizationDetails() {
                           />
                         </label>
                       </div>
-                      {formData.cancelledCheque && (
+                      {formData.cancelledCheque && canCreate && (
                         <Button
                           variant="outline"
                           onClick={() => handleInputChange('cancelledCheque', null)}
@@ -1662,7 +1667,7 @@ export default function OrganizationDetails() {
                                 <Plus className="w-4 h-4 text-primary" />
                               </Button>
                             )}
-                            {formData.shiftTimings.length > 1 && (
+                            {formData.shiftTimings.length > 1 && canCreate && (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1789,7 +1794,7 @@ export default function OrganizationDetails() {
                           />
                         </label>
                       </div>
-                      {formData.legalIdentityDocument && (
+                      {formData.legalIdentityDocument && canCreate && (
                         <Button
                           variant="outline"
                           onClick={() => handleInputChange('legalIdentityDocument', null)}
@@ -1832,13 +1837,15 @@ export default function OrganizationDetails() {
                       <div key={doc.id} className="p-4 bg-gray-50 rounded-xl space-y-4">
                         <div className="flex items-center justify-between">
                           <h3 className="font-medium text-gray-900">Document {index + 1}</h3>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeComplianceDocument(doc.id)}
-                          >
-                            <X className="w-4 h-4 text-red-600" />
-                          </Button>
+                          {canCreate && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeComplianceDocument(doc.id)}
+                            >
+                              <X className="w-4 h-4 text-red-600" />
+                            </Button>
+                          )}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1922,7 +1929,7 @@ export default function OrganizationDetails() {
                                 />
                               </label>
                             </div>
-                            {doc.file && (
+                            {doc.file && canCreate && (
                               <Button
                                 variant="outline"
                                 onClick={() => updateComplianceDocument(doc.id, 'file', null)}
@@ -1935,14 +1942,16 @@ export default function OrganizationDetails() {
                       </div>
                     ))}
 
-                    <Button
-                      variant="outline"
-                      onClick={addComplianceDocument}
-                      className="w-full"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add more
-                    </Button>
+                    {canCreate && (
+                      <Button
+                        variant="outline"
+                        onClick={addComplianceDocument}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add more
+                      </Button>
+                    )}
                   </>
                 )}
               </div>
@@ -1988,7 +1997,7 @@ export default function OrganizationDetails() {
                           />
                         </label>
                       </div>
-                      {formData.impartialityDocument && (
+                      {formData.impartialityDocument && canCreate && (
                         <Button
                           variant="outline"
                           onClick={() => handleInputChange('impartialityDocument', null)}
@@ -2026,7 +2035,7 @@ export default function OrganizationDetails() {
                           />
                         </label>
                       </div>
-                      {formData.termsConditionsDocument && (
+                      {formData.termsConditionsDocument && canCreate && (
                         <Button
                           variant="outline"
                           onClick={() => handleInputChange('termsConditionsDocument', null)}
@@ -2064,7 +2073,7 @@ export default function OrganizationDetails() {
                           />
                         </label>
                       </div>
-                      {formData.codeOfEthicsDocument && (
+                      {formData.codeOfEthicsDocument && canCreate && (
                         <Button
                           variant="outline"
                           onClick={() => handleInputChange('codeOfEthicsDocument', null)}
@@ -2102,7 +2111,7 @@ export default function OrganizationDetails() {
                           />
                         </label>
                       </div>
-                      {formData.testingChargesPolicyDocument && (
+                      {formData.testingChargesPolicyDocument && canCreate && (
                         <Button
                           variant="outline"
                           onClick={() => handleInputChange('testingChargesPolicyDocument', null)}
@@ -2233,13 +2242,15 @@ export default function OrganizationDetails() {
                         <div key={doc.id} className="p-4 bg-gray-50 rounded-xl space-y-4">
                           <div className="flex items-center justify-between">
                             <h3 className="font-medium text-gray-900">Accreditation {index + 1}</h3>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeAccreditationDocument(doc.id)}
-                            >
-                              <X className="w-4 h-4 text-red-600" />
-                            </Button>
+                            {canCreate && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeAccreditationDocument(doc.id)}
+                              >
+                                <X className="w-4 h-4 text-red-600" />
+                              </Button>
+                            )}
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2324,7 +2335,7 @@ export default function OrganizationDetails() {
                                     />
                                   </label>
                                 </div>
-                                {doc.certificateFile && (
+                                {doc.certificateFile && canCreate && (
                                   <Button
                                     variant="outline"
                                     onClick={() => updateAccreditationDocument(doc.id, 'certificateFile', null)}
@@ -2383,7 +2394,7 @@ export default function OrganizationDetails() {
                                     />
                                   </label>
                                 </div>
-                                {doc.scopeFile && (
+                                {doc.scopeFile && canCreate && (
                                   <Button
                                     variant="outline"
                                     onClick={() => updateAccreditationDocument(doc.id, 'scopeFile', null)}
@@ -2397,14 +2408,16 @@ export default function OrganizationDetails() {
                         </div>
                       ))}
 
-                      <Button
-                        variant="outline"
-                        onClick={addAccreditationDocument}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add more
-                      </Button>
+                      {canCreate && (
+                        <Button
+                          variant="outline"
+                          onClick={addAccreditationDocument}
+                          className="w-full"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add more
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>
@@ -2456,7 +2469,7 @@ export default function OrganizationDetails() {
                           />
                         </label>
                       </div>
-                      {formData.otherDetailsDocument && (
+                      {formData.otherDetailsDocument && canCreate && (
                         <Button
                           variant="outline"
                           onClick={() => handleInputChange('otherDetailsDocument', null)}
@@ -2506,7 +2519,7 @@ export default function OrganizationDetails() {
                             />
                           </label>
                         </div>
-                        {formData.layoutLabPremises && (
+                        {formData.layoutLabPremises && canCreate && (
                           <Button
                             variant="outline"
                             onClick={() => handleInputChange('layoutLabPremises', null)}
@@ -2545,7 +2558,7 @@ export default function OrganizationDetails() {
                             />
                           </label>
                         </div>
-                        {formData.organizationChart && (
+                        {formData.organizationChart && canCreate && (
                           <Button
                             variant="outline"
                             onClick={() => handleInputChange('organizationChart', null)}
@@ -2690,7 +2703,7 @@ export default function OrganizationDetails() {
                           />
                         </label>
                       </div>
-                      {formData.qualityManualDocument && (
+                      {formData.qualityManualDocument && canCreate && (
                         <Button
                           variant="outline"
                           onClick={() => handleInputChange('qualityManualDocument', null)}
@@ -2729,13 +2742,15 @@ export default function OrganizationDetails() {
                         <div key={sop.id} className="p-4 bg-gray-50 rounded-xl space-y-4">
                           <div className="flex items-center justify-between">
                             <h3 className="font-medium text-gray-900">SOP {index + 1}</h3>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeSOP(sop.id)}
-                            >
-                              <X className="w-4 h-4 text-red-600" />
-                            </Button>
+                            {canCreate && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeSOP(sop.id)}
+                              >
+                                <X className="w-4 h-4 text-red-600" />
+                              </Button>
+                            )}
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2803,14 +2818,16 @@ export default function OrganizationDetails() {
                         </div>
                       ))}
 
-                      <Button
-                        variant="outline"
-                        onClick={addSOP}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add more
-                      </Button>
+                      {canCreate && (
+                        <Button
+                          variant="outline"
+                          onClick={addSOP}
+                          className="w-full"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add more
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>
@@ -2836,10 +2853,12 @@ export default function OrganizationDetails() {
                     <div className="text-center py-8">
                       <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                       <p className="text-gray-500 mb-4">No quality formats added yet</p>
-                      <Button onClick={addQualityFormat}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Quality Format
-                      </Button>
+                      {canCreate && (
+                        <Button onClick={addQualityFormat}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Quality Format
+                        </Button>
+                      )}
                     </div>
                   ) : (
                     <>
@@ -2847,13 +2866,15 @@ export default function OrganizationDetails() {
                         <div key={format.id} className="p-4 bg-gray-50 rounded-xl space-y-4">
                           <div className="flex items-center justify-between">
                             <h3 className="font-medium text-gray-900">Quality Format {index + 1}</h3>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeQualityFormat(format.id)}
-                            >
-                              <X className="w-4 h-4 text-red-600" />
-                            </Button>
+                            {canCreate && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeQualityFormat(format.id)}
+                              >
+                                <X className="w-4 h-4 text-red-600" />
+                              </Button>
+                            )}
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2905,14 +2926,16 @@ export default function OrganizationDetails() {
                         </div>
                       ))}
 
-                      <Button
-                        variant="outline"
-                        onClick={addQualityFormat}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add more
-                      </Button>
+                      {canCreate && (
+                        <Button
+                          variant="outline"
+                          onClick={addQualityFormat}
+                          className="w-full"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add more
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>
@@ -2933,10 +2956,12 @@ export default function OrganizationDetails() {
                     <div className="text-center py-8">
                       <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                       <p className="text-gray-500 mb-4">No quality procedures added yet</p>
-                      <Button onClick={addQualityProcedure}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Quality Procedure
-                      </Button>
+                      {canCreate && (
+                        <Button onClick={addQualityProcedure}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Quality Procedure
+                        </Button>
+                      )}
                     </div>
                   ) : (
                     <>
@@ -2944,13 +2969,15 @@ export default function OrganizationDetails() {
                         <div key={procedure.id} className="p-4 bg-gray-50 rounded-xl space-y-4">
                           <div className="flex items-center justify-between">
                             <h3 className="font-medium text-gray-900">Quality Procedure {index + 1}</h3>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeQualityProcedure(procedure.id)}
-                            >
-                              <X className="w-4 h-4 text-red-600" />
-                            </Button>
+                            {canCreate && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeQualityProcedure(procedure.id)}
+                              >
+                                <X className="w-4 h-4 text-red-600" />
+                              </Button>
+                            )}
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3017,7 +3044,7 @@ export default function OrganizationDetails() {
                                   />
                                 </label>
                               </div>
-                              {procedure.file && (
+                              {procedure.file && canCreate && (
                                 <Button
                                   variant="outline"
                                   onClick={() => updateQualityProcedure(procedure.id, 'file', null)}
@@ -3065,14 +3092,16 @@ export default function OrganizationDetails() {
                         </div>
                       ))}
 
-                      <Button
-                        variant="outline"
-                        onClick={addQualityProcedure}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add more
-                      </Button>
+                      {canCreate && (
+                        <Button
+                          variant="outline"
+                          onClick={addQualityProcedure}
+                          className="w-full"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add more
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>
@@ -3126,12 +3155,14 @@ export default function OrganizationDetails() {
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <button
-                                  onClick={() => setCurrentStep(checklistStep.step_id)}
-                                  className="text-primary hover:text-primary-dark"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </button>
+                                {canCreate && (
+                                  <button
+                                    onClick={() => setCurrentStep(checklistStep.step_id)}
+                                    className="text-primary hover:text-primary-dark"
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                  </button>
+                                )}
                               </td>
                             </tr>
                           )
@@ -3149,19 +3180,21 @@ export default function OrganizationDetails() {
                 </div>
 
                 <div className="flex justify-center pt-6">
-                  <Button
-                    size="lg"
-                    disabled={!checklist || !checklist.is_ready_for_submission}
-                    onClick={() => navigate('/lab/management/payment', {
-                      state: {
-                        organizationId,
-                        organizationName: formData.labName
-                      }
-                    })}
-                    className="px-8"
-                  >
-                    Make Payment
-                  </Button>
+                  {canCreate && (
+                    <Button
+                      size="lg"
+                      disabled={!checklist || !checklist.is_ready_for_submission}
+                      onClick={() => navigate('/lab/management/payment', {
+                        state: {
+                          organizationId,
+                          organizationName: formData.labName
+                        }
+                      })}
+                      className="px-8"
+                    >
+                      Make Payment
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
@@ -3177,25 +3210,27 @@ export default function OrganizationDetails() {
               </Button>
 
               <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleSave}
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Save & Next
-                </Button>
+                {canCreate && (
+                  <Button
+                    variant="outline"
+                    onClick={handleSave}
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Save & Next
+                  </Button>
+                )}
 
                 {currentStep < steps.length ? (
                   <Button onClick={handleNext}>
                     Next
                     <ChevronRight className="w-4 h-4 ml-2" />
                   </Button>
-                ) : (
+                ) : canCreate ? (
                   <Button onClick={handleSubmit}>
                     <Check className="w-4 h-4 mr-2" />
                     Submit
                   </Button>
-                )}
+                ) : null}
               </div>
             </div>
           </Card>

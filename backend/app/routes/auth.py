@@ -63,7 +63,7 @@ class SignupRequest(BaseModel):
     full_name: str
     email: EmailStr
     password: str
-    role: str = "Testing Engineer"
+    role: str = "Sales Engineer"
 
 
 class SignupResponse(BaseModel):
@@ -99,6 +99,8 @@ class MeResponse(BaseModel):
     full_name: str
     role: str
     is_active: bool
+    is_main: bool
+    parent_id: str | None = None
     gender: str | None = None
     country: str | None = None
     language: str | None = None
@@ -140,15 +142,22 @@ def signup(
     db: Session = Depends(get_db),
     current_user: User | None = Depends(get_current_user_optional),
 ):
-    """Register a new user. Only Admin can create Admin accounts."""
-    created_by_admin = current_user is not None and current_user.role == "Admin"
+    """Register a new user. First user becomes Primary Admin. Only Primary Admin can create Admin accounts."""
+    is_bootstrap = db.query(User).count() == 0
+
+    # During bootstrap, force role to Admin and is_main=True (handled in create_user)
+    if is_bootstrap:
+        body.role = "Admin"
+
     user, err = create_user(
         db,
         full_name=body.full_name,
         email=body.email,
         password=body.password,
         role=body.role.strip(),
-        created_by_admin=created_by_admin,
+        created_by_admin=(current_user is not None and current_user.role in ["Admin", "Project Manager"]),
+        creator_user=current_user,
+        is_main=is_bootstrap,  # first user is primary admin
     )
     if err:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=err)
@@ -207,6 +216,7 @@ def login(
             "email": user.email,
             "full_name": user.full_name,
             "role": user.role,
+            "is_main": user.is_main,
             "gender": user.gender,
             "country": user.country,
             "language": user.language,
@@ -240,6 +250,7 @@ def verify_mfa(body: VerifyMFARequest, db: Session = Depends(get_db)):
             "email": user.email,
             "full_name": user.full_name,
             "role": user.role,
+            "is_main": user.is_main,
             "gender": user.gender,
             "country": user.country,
             "language": user.language,
@@ -263,6 +274,7 @@ def me(current_user: User = Depends(get_current_user)):
         full_name=current_user.full_name,
         role=current_user.role,
         is_active=current_user.is_active,
+        is_main=current_user.is_main,
         gender=current_user.gender,
         country=current_user.country,
         language=current_user.language,
@@ -291,6 +303,7 @@ def update_profile(
         full_name=updated_user.full_name,
         role=updated_user.role,
         is_active=updated_user.is_active,
+        is_main=updated_user.is_main,
         gender=updated_user.gender,
         country=updated_user.country,
         language=updated_user.language,
@@ -323,11 +336,11 @@ def change_password(
 
 @router.get("/users", response_model=List[MeResponse])
 def get_users(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Return all users in the system. Admin only."""
-    if current_user.role != "Admin":
+    """Return all users in the system. Admin or Project Manager only."""
+    if current_user.role not in ["Project Manager", "Admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only administrators can view the user directory.",
+            detail="Only Project Managers or Admins can view the user directory.",
         )
     users = get_all_users(db)
     return [
@@ -337,6 +350,8 @@ def get_users(current_user: User = Depends(get_current_user), db: Session = Depe
             full_name=u.full_name,
             role=u.role,
             is_active=u.is_active,
+            is_main=u.is_main,
+            parent_id=str(u.parent_id) if u.parent_id else None,
             gender=u.gender,
             country=u.country,
             language=u.language,
@@ -349,42 +364,55 @@ def get_users(current_user: User = Depends(get_current_user), db: Session = Depe
         )
         for u in users
     ]
+
 @router.delete("/users/{user_id}")
 def delete_user_route(
     user_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Delete a user account. Admin only."""
-    if current_user.role != "Admin":
+    """Delete a user account. Admin or Project Manager only. Sub-admins cannot delete the Primary Admin."""
+    if current_user.role not in ["Project Manager", "Admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only administrators can delete user accounts.",
+            detail="Only Admins or Project Managers can delete user accounts.",
         )
-    
-    # Optional: Prevent admin from deleting themselves
+
+    # Prevent self-deletion
     if str(current_user.id) == user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You cannot delete your own admin account from here.",
+            detail="You cannot delete your own account.",
         )
 
     from uuid import UUID
     try:
-        success = delete_user(db, UUID(user_id))
-        if not success:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found.",
-            )
-        
-        log_audit(db, current_user.id, "user.delete", "user", user_id, {"deleted_by": str(current_user.id)})
-        return {"message": "User deleted successfully."}
+        target_uuid = UUID(user_id)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid user ID format.",
         )
+
+    # Fetch target user to check if they are the Primary Admin
+    target_user = db.query(User).filter(User.id == target_uuid).first()
+    if not target_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+    # Sub-admins cannot delete the Primary Admin
+    if target_user.role == "Admin" and target_user.is_main:
+        if current_user.role == "Admin" and not current_user.is_main:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Sub-admins cannot delete the Primary Admin account.",
+            )
+
+    success = delete_user(db, target_uuid)
+    if not success:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+    log_audit(db, current_user.id, "user.delete", "user", user_id, {"deleted_by": str(current_user.id)})
+    return {"message": "User deleted successfully."}
 
 @router.post("/request-reset")
 def request_password_reset(body: ResetRequest, db: Session = Depends(get_db)):

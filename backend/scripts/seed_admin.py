@@ -27,19 +27,25 @@ def main():
     try:
         existing = db.query(User).filter(User.email == DEFAULT_EMAIL).first()
         if existing:
-            print(f"Admin user already exists: {DEFAULT_EMAIL}")
-            print("Use the password you set when you created it, or reset it in the database.")
+            if existing.role != "Project Manager" or not existing.is_main:
+                existing.role = "Project Manager"
+                existing.is_main = True
+                db.commit()
+                print(f"Updated existing user to main Project Manager: {DEFAULT_EMAIL}")
+            else:
+                print(f"User already exists as main Project Manager: {DEFAULT_EMAIL}")
             return
         user = User(
             full_name=DEFAULT_NAME,
             email=DEFAULT_EMAIL,
             password_hash=hash_password(DEFAULT_PASSWORD),
-            role="Admin",
+            role="Project Manager",
             is_active=True,
+            is_main=True,
         )
         db.add(user)
         db.commit()
-        print("Default Admin user created successfully.")
+        print("Default main Project Manager user created successfully.")
         print(f"  Email:    {DEFAULT_EMAIL}")
         print(f"  Password: {DEFAULT_PASSWORD}")
         print("  Change this password after first login in production.")

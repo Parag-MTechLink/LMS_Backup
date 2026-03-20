@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react'
-import { projectsService } from '../../../services/labManagementApi'
-import { customersService } from '../../../services/labManagementApi'
-import { estimationsService } from '../../../services/labManagementApi'
+import { projectsService, customersService, estimationsService, rfqsService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Button from '../Button'
 import Input from '../Input'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 
-export default function CreateProjectForm({ onSuccess, onCancel, estimationId, customerId }) {
+export default function CreateProjectForm({ onSuccess, onCancel, estimationId, rfqId, customerId }) {
+  const { user } = useLabManagementAuth()
+  const isReadOnly = user?.role === 'Quality Manager'
   const [formData, setFormData] = useState({
     name: '',
     code: '',
     clientId: customerId || 0,
-    status: 'pending',
+    status: 'pending_team_lead',
     oem: '',
     description: ''
   })
@@ -30,7 +31,12 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
     if (estimationId) {
       loadEstimationData()
     }
-  }, [customerId, estimationId])
+
+    // If coming from RFQ, load RFQ data
+    if (rfqId) {
+      loadRfqData()
+    }
+  }, [customerId, estimationId, rfqId])
 
   const loadCustomers = async () => {
     try {
@@ -58,6 +64,22 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
     }
   }
 
+  const loadRfqData = async () => {
+    try {
+      const rfq = await rfqsService.getById(rfqId)
+      if (rfq) {
+        setFormData(prev => ({
+          ...prev,
+          clientId: rfq.customerId || rfq.client_id || prev.clientId,
+          name: rfq.product || rfq.project_title || prev.name,
+          description: rfq.description || rfq.message || ''
+        }))
+      }
+    } catch (error) {
+      console.error('Failed to load RFQ data:', error)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     
@@ -77,11 +99,13 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
       toast.success('Project created successfully!')
       onSuccess()
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create project')
+      toast.error(error.response?.data?.detail || error.response?.data?.message || 'Failed to create project')
     } finally {
       setLoading(false)
     }
   }
+
+  const inputClass = "w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -97,8 +121,9 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
             <select
               value={formData.clientId}
               onChange={(e) => setFormData({ ...formData, clientId: parseInt(e.target.value) })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+              className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed`}
               required
+              disabled={isReadOnly}
             >
               <option value={0}>Select a customer</option>
               {customers.map(customer => (
@@ -112,19 +137,21 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
       )}
 
       <Input
-        label={<>Project Name <span className="text-red-500">*</span></>}
+        label={<span>Project Name <span className="text-red-500">*</span></span>}
         value={formData.name}
         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         placeholder="Enter project name"
         required
+        disabled={isReadOnly}
       />
 
       <Input
-        label={<>Project Code <span className="text-red-500">*</span></>}
+        label={<span>Project Code <span className="text-red-500">*</span></span>}
         value={formData.code}
         onChange={(e) => setFormData({ ...formData, code: e.target.value })}
         placeholder="Enter project code"
         required
+        disabled={isReadOnly}
       />
 
       <Input
@@ -132,6 +159,7 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
         value={formData.oem}
         onChange={(e) => setFormData({ ...formData, oem: e.target.value })}
         placeholder="Enter OEM name (optional)"
+        disabled={isReadOnly}
       />
 
       <div>
@@ -141,10 +169,11 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
         <select
           value={formData.status}
           onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+          className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed`}
+          disabled={isReadOnly}
         >
-          <option value="pending">Pending</option>
-          <option value="active">Active</option>
+          <option value="pending_team_lead">Pending Team Lead</option>
+          <option value="testing_in_progress">Testing In Progress</option>
           <option value="completed">Completed</option>
         </select>
       </div>
@@ -158,7 +187,8 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           placeholder="Enter project description"
           rows={4}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+          className={`${inputClass} resize-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed`}
+          disabled={isReadOnly}
         />
       </div>
 
@@ -169,15 +199,17 @@ export default function CreateProjectForm({ onSuccess, onCancel, estimationId, c
           variant="outline"
           className="flex-1"
         >
-          Cancel
+          {isReadOnly ? 'Close' : 'Cancel'}
         </Button>
-        <Button
-          type="submit"
-          isLoading={loading}
-          className="flex-1"
-        >
-          Create Project
-        </Button>
+        {!isReadOnly && (
+          <Button
+            type="submit"
+            isLoading={loading}
+            className="flex-1"
+          >
+            Create Project
+          </Button>
+        )}
       </div>
     </form>
   )
