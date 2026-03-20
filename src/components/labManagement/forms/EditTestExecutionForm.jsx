@@ -3,11 +3,8 @@ import { testExecutionsService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Button from '../Button'
 import Input from '../Input'
-import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 
 export default function EditTestExecutionForm({ execution, onSuccess, onCancel }) {
-    const { user } = useLabManagementAuth()
-    const isReadOnly = user?.role === 'Quality Manager'
     const [formData, setFormData] = useState({
         name: '',
         startTime: '',
@@ -90,7 +87,7 @@ export default function EditTestExecutionForm({ execution, onSuccess, onCancel }
     }
 
     const inputClass =
-        'w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200'
+        'w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -106,7 +103,6 @@ export default function EditTestExecutionForm({ execution, onSuccess, onCancel }
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. EMC Run #1"
                 required
-                disabled={isReadOnly}
             />
 
             {/* Status */}
@@ -117,9 +113,8 @@ export default function EditTestExecutionForm({ execution, onSuccess, onCancel }
                 <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed`}
+                    className={inputClass}
                     required
-                    disabled={isReadOnly}
                 >
                     <option value="Pending">Pending</option>
                     <option value="InProgress">In Progress</option>
@@ -138,8 +133,7 @@ export default function EditTestExecutionForm({ execution, onSuccess, onCancel }
                         type="datetime-local"
                         value={formData.startTime}
                         onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                        className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed`}
-                        disabled={isReadOnly}
+                        className={inputClass}
                     />
                 </div>
 
@@ -151,8 +145,7 @@ export default function EditTestExecutionForm({ execution, onSuccess, onCancel }
                         type="datetime-local"
                         value={formData.endTime}
                         onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                        className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed`}
-                        disabled={isReadOnly}
+                        className={inputClass}
                     />
                 </div>
             </div>
@@ -165,21 +158,18 @@ export default function EditTestExecutionForm({ execution, onSuccess, onCancel }
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     placeholder="Additional notes about the execution"
                     rows={3}
-                    className={`${inputClass} resize-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed`}
-                    disabled={isReadOnly}
+                    className={`${inputClass} resize-none`}
                 />
             </div>
 
             {/* Actions */}
             <div className="flex gap-3 pt-2">
                 <Button type="button" onClick={onCancel} variant="outline" className="flex-1">
-                    {isReadOnly ? 'Close' : 'Cancel'}
+                    Cancel
                 </Button>
-                {!isReadOnly && (
-                    <Button type="submit" isLoading={loading} className="flex-1">
-                        Update Execution
-                    </Button>
-                )}
+                <Button type="submit" isLoading={loading} className="flex-1">
+                    Update Execution
+                </Button>
             </div>
         </form>
     )

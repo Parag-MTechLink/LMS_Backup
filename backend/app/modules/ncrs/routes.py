@@ -2,8 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 
-from app.dependencies.auth_dependency import require_permission
-from app.models.user_model import User
 from app.core.database import get_db
 from app.modules.ncrs.models import NCR
 from app.modules.ncrs.schemas import NCRCreate, NCROut
@@ -12,19 +10,12 @@ router = APIRouter(prefix="/ncrs", tags=["NCRs"])
 
 # 🔹 GET ALL NCRs
 @router.get("", response_model=List[NCROut])
-def get_ncrs(
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("ncr:view"))
-):
+def get_ncrs(db: Session = Depends(get_db)):
     return db.query(NCR).order_by(NCR.id.desc()).all()
 
 # 🔹 CREATE NCR
 @router.post("", status_code=status.HTTP_201_CREATED)
-def create_ncr(
-    data: NCRCreate, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("ncr:full"))
-):
+def create_ncr(data: NCRCreate, db: Session = Depends(get_db)):
     if data.ncrNumber:
         existing = db.query(NCR).filter(
             NCR.ncrNumber == data.ncrNumber
@@ -47,11 +38,7 @@ def create_ncr(
 
 # 🔹 GET NCR BY ID (optional – future)
 @router.get("/{ncr_id}", response_model=NCROut)
-def get_ncr(
-    ncr_id: int, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("ncr:view"))
-):
+def get_ncr(ncr_id: int, db: Session = Depends(get_db)):
     ncr = db.query(NCR).filter(NCR.id == ncr_id).first()
     if not ncr:
         raise HTTPException(status_code=404, detail="NCR not found")

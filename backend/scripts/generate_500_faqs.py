@@ -5,10 +5,10 @@ Run from backend: python scripts/generate_500_faqs.py
 import json
 import os
 
-SALES_MGR, PROJ_MGR, FIN_MGR, QUAL_MGR, TEAM_LEAD, SALES_ENG = "Sales Manager", "Project Manager", "Finance Manager", "Quality Manager", "Team Lead", "Sales Engineer"
-ALL = [SALES_MGR, PROJ_MGR, FIN_MGR, QUAL_MGR, TEAM_LEAD, SALES_ENG]
-MGMT = [SALES_MGR, PROJ_MGR]
-RFQ_ROLES = [SALES_MGR, PROJ_MGR, SALES_ENG, FIN_MGR]
+ADMIN, LAB_MGR, SALES, TEST_ENG, TECH = "Admin", "Lab Manager", "Sales Engineer", "Testing Engineer", "Technician"
+ALL = [ADMIN, LAB_MGR, SALES, TEST_ENG, TECH]
+MGMT = [ADMIN, LAB_MGR]
+RFQ_ROLES = [ADMIN, LAB_MGR, SALES]
 
 
 def e(q, a, module, roles=None):

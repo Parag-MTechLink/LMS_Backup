@@ -21,13 +21,7 @@ class LabRecommendationService:
         self._database_url = database_url.strip()
 
     def _get_conn(self):
-        from app.core.database import get_connect_args
-        connect_args = get_connect_args(self._database_url)
-        # Convert hostaddr to kwargs if present
-        kwargs = {}
-        if "hostaddr" in connect_args:
-             kwargs["hostaddr"] = connect_args["hostaddr"]
-        return psycopg2.connect(self._database_url, **kwargs)
+        return psycopg2.connect(self._database_url)
 
     def health(self) -> dict[str, Any]:
         """Return health info: status, active_labs count or error."""

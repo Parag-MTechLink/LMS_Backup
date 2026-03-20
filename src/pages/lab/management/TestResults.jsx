@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { Search, BarChart3, CheckCircle, XCircle, Clock, Eye, Download, Plus } from 'lucide-react'
@@ -22,8 +21,6 @@ function TestResults() {
   const [showSampleModal, setShowSampleModal] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [selectedResult, setSelectedResult] = useState(null)
-  const { user } = useLabManagementAuth()
-  const canCreate = user?.role !== 'Quality Manager'
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -110,14 +107,12 @@ function TestResults() {
           <p className="text-gray-600 mt-1">View and analyze test results</p>
         </div>
 
-        {canCreate && (
-          <Button
-            onClick={() => setShowUploadModal(true)}
-            icon={<Plus className="w-5 h-5" />}
-          >
-            Upload Result
-          </Button>
-        )}
+        <Button
+          onClick={() => setShowUploadModal(true)}
+          icon={<Plus className="w-5 h-5" />}
+        >
+          Upload Result
+        </Button>
       </motion.div>
 
       {/* Filters */}

@@ -3,9 +3,8 @@ Pydantic schemas for Projects and Customers
 """
 
 from pydantic import BaseModel, Field, EmailStr
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime
-from uuid import UUID
 
 
 # Customer Schemas
@@ -66,16 +65,9 @@ class ProjectBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     code: Optional[str] = None
     client_id: int = Field(..., alias="clientId")
-    status: str = "pending_team_lead"
+    status: str = "pending"
     oem: Optional[str] = None
     description: Optional[str] = None
-    
-    # Approval fields
-    quality_manager_approved: bool = False
-    project_manager_approved: bool = False
-    technical_manager_approved: bool = False
-    payment_completed: bool = False
-    team_lead_id: Optional[UUID] = None
 
 
 class ProjectCreate(ProjectBase):
@@ -91,12 +83,6 @@ class ProjectUpdate(BaseModel):
     status: Optional[str] = None
     oem: Optional[str] = None
     description: Optional[str] = None
-    
-    quality_manager_approved: Optional[bool] = None
-    project_manager_approved: Optional[bool] = None
-    technical_manager_approved: Optional[bool] = None
-    payment_completed: Optional[bool] = None
-    team_lead_id: Optional[UUID] = None
 
 
 class ProjectResponse(BaseModel):
@@ -109,33 +95,9 @@ class ProjectResponse(BaseModel):
     status: str
     oem: Optional[str] = None
     description: Optional[str] = None
-    
-    quality_manager_approved: bool = Field(..., alias="qualityManagerApproved")
-    project_manager_approved: bool = Field(..., alias="projectManagerApproved")
-    technical_manager_approved: bool = Field(..., alias="technicalManagerApproved")
-    payment_completed: bool = Field(..., alias="paymentCompleted")
-    team_lead_id: Optional[UUID] = Field(None, alias="teamLeadId")
-    team_lead_name: Optional[str] = Field(None, alias="teamLeadName")
-    pending_approvals: List[str] = Field(default=[], alias="pendingApprovals")
-    
     created_at: datetime = Field(..., alias="createdAt")
     updated_at: datetime = Field(..., alias="updatedAt")
     is_deleted: bool = Field(..., alias="isDeleted")
-
-    class Config:
-        from_attributes = True
-        populate_by_name = True
-
-
-class ProjectActivityResponse(BaseModel):
-    """Schema for project activity response"""
-    id: UUID
-    project_id: int = Field(..., alias="projectId")
-    process_step: str = Field(..., alias="processStep")
-    action: str
-    user_name: str = Field(..., alias="userName")
-    user_role: str = Field(..., alias="userRole")
-    timestamp: datetime
 
     class Config:
         from_attributes = True
