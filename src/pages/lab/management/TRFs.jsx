@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import { motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search, FileCheck, CheckCircle, Clock, ExternalLink } from 'lucide-react'
@@ -23,8 +22,6 @@ function TRFs() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { user } = useLabManagementAuth()
-  const canCreate = user?.role !== 'Quality Manager'
 
   const projectId = searchParams.get('projectId')
 
@@ -108,14 +105,12 @@ function TRFs() {
           </h1>
           <p className="text-gray-600 mt-1">Test Request Forms management</p>
         </div>
-        {canCreate && (
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            icon={<Plus className="w-5 h-5" />}
-          >
-            New TRF
-          </Button>
-        )}
+        <Button
+          onClick={() => setShowCreateModal(true)}
+          icon={<Plus className="w-5 h-5" />}
+        >
+          New TRF
+        </Button>
       </motion.div>
 
       {/* Filters */}

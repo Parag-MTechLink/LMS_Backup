@@ -1,9 +1,8 @@
 """
 Database models for Projects and Customers
 """
-import uuid
+
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
@@ -41,17 +40,7 @@ class Project(Base):
     code = Column(String(100), nullable=True, unique=True, index=True)
     client_id = Column(Integer, ForeignKey("customers.id", ondelete="CASCADE"), nullable=False, index=True)
     client_name = Column(String(255), nullable=True)  # Denormalized for performance
-    status = Column(String(50), nullable=False, default="pending_team_lead") # pending_team_lead, testing_in_progress, report_submitted, tl_reviewed, approved, payment_pending, completed
-    
-    # Multi-stage Approval
-    quality_manager_approved = Column(Boolean, default=False, nullable=False)
-    project_manager_approved = Column(Boolean, default=False, nullable=False)
-    technical_manager_approved = Column(Boolean, default=False, nullable=False)
-    payment_completed = Column(Boolean, default=False, nullable=False)
-    
-    # Execution Info
-    team_lead_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    
+    status = Column(String(50), nullable=False, default="pending")
     oem = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
     
@@ -62,16 +51,3 @@ class Project(Base):
     
     # Relationships
     client = relationship("Customer", back_populates="projects")
-
-
-class ProjectActivity(Base):
-    """Chronological workflow activities for projects"""
-    __tablename__ = "project_activities"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
-    process_step = Column(Text, nullable=False)
-    action = Column(Text, nullable=False)
-    user_name = Column(Text, nullable=False)
-    user_role = Column(Text, nullable=False)
-    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)

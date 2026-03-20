@@ -1,9 +1,0 @@
-﻿Generated Token for Sales Manager: eyJhbGciOiJIUzI1NiIs...
-
-Testing GET /rfqs...
-Code: 200
-Result Type: <class 'list'>
-
-Testing POST /rfqs...
-Code: 500
-Result: {"success":false,"error":"An unexpected error occurred.","details":["(psycopg2.errors.UndefinedColumn) column \"technical_manager_id\" of relation \"rfqs\" does not exist\nLINE 1: ...s (\"customerId\", product, \"receivedDate\", status, technical_...\n                                                             ^\n\n[SQL: INSERT INTO rfqs (\"customerId\", product, \"receivedDate\", status, technical_manager_id, finance_manager_id, feasibility_notes, quotation_notes, is_deleted, created_at, updated_at) VALUES (%(customerId)s, %(product)s, %(receivedDate)s, %(status)s, %(technical_manager_id)s::UUID, %(finance_manager_id)s::UUID, %(feasibility_notes)s, %(quotation_notes)s, %(is_deleted)s, %(created_at)s, %(updated_at)s) RETURNING rfqs.id]\n[parameters: {'customerId': 1, 'product': 'Test Product from Repro', 'receivedDate': '2026-03-17', 'status': 'pending', 'technical_manager_id': None, 'finance_manager_id': None, 'feasibility_notes': None, 'quotation_notes': None, 'is_deleted': False, 'created_at': datetime.datetime(2026, 3, 17, 7, 24, 17, 342399), 'updated_at': datetime.datetime(2026, 3, 17, 7, 24, 17, 342399)}]\n(Background on this error at: https://sqlalche.me/e/20/f405)"]}
