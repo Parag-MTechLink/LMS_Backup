@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Search, ClipboardCheck, Eye, Download, AlertCircle, CheckCircle } from 'lucide-react'
-import { auditService } from '../../../services/labManagementApi'
+import { Link } from 'react-router-dom'
+import { Plus, Search, ClipboardCheck, Eye, Download, AlertCircle, CheckCircle, Target, ArrowLeft } from 'lucide-react'
+import { auditService, testExecutionsService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Button from '../../../components/labManagement/Button'
@@ -12,6 +13,7 @@ import CreateQAAuditForm from '../../../components/labManagement/forms/CreateQAA
 
 function QAAuditCompliance() {
   const [audits, setAudits] = useState([])
+  const [completedExecutions, setCompletedExecutions] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedType, setSelectedType] = useState('all')
@@ -27,8 +29,18 @@ function QAAuditCompliance() {
   const loadAudits = async () => {
     try {
       setLoading(true)
-      const data = await auditService.getAll()
-      setAudits(data)
+      const [auditData, execsData] = await Promise.all([
+        auditService.getAll().catch(() => []),
+        testExecutionsService.getAll().catch(() => [])
+      ])
+      setAudits(auditData)
+      
+      const recentCompletions = execsData
+        .filter(e => e.status === 'Completed' || e.status === 'Done' || e.status === 'Closed')
+        .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
+        .slice(0, 5)
+        
+      setCompletedExecutions(recentCompletions)
     } catch (error) {
       toast.error('Failed to load audits')
     } finally {
@@ -77,6 +89,12 @@ function QAAuditCompliance() {
 
   return (
     <div className="space-y-6">
+      <div className="mb-2">
+        <Link to="/lab/management/qa" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back to QA Dashboard
+        </Link>
+      </div>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -130,6 +148,57 @@ function QAAuditCompliance() {
           </select>
         </div>
       </Card>
+
+      {/* Spot Audit Section */}
+      {completedExecutions.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card className="border-l-4 border-l-purple-500">
+            <div className="flex items-center gap-2 mb-4">
+              <Target className="w-5 h-5 text-purple-500" />
+              <h2 className="text-xl font-bold text-gray-900">Recently Completed Executions (Spot-Audit Pool)</h2>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="pb-3 text-sm font-semibold text-gray-500">Execution ID</th>
+                    <th className="pb-3 text-sm font-semibold text-gray-500">Test Plan</th>
+                    <th className="pb-3 text-sm font-semibold text-gray-500">Completion Date</th>
+                    <th className="pb-3 text-sm font-semibold text-gray-500 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {completedExecutions.map((exec) => (
+                    <tr key={exec.id} className="hover:bg-purple-50 transition-colors">
+                      <td className="py-3 text-sm font-medium text-gray-900">EXEC-{exec.id}</td>
+                      <td className="py-3 text-sm text-gray-600">Plan #{exec.test_plan_id || exec.id}</td>
+                      <td className="py-3 text-sm text-gray-500">
+                        {new Date(exec.updated_at || exec.created_at || new Date()).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 text-sm text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            // Normally we'd pass pre-filled data to CreateQAAuditForm or router state
+                            setShowCreateModal(true)
+                          }}
+                        >
+                          Spot Audit
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Audits Grid */}
       {filteredAudits.length === 0 ? (

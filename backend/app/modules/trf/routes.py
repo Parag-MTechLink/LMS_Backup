@@ -42,3 +42,17 @@ def get_trf(id: int, db: Session = Depends(get_db)):
     if not trf:
         raise HTTPException(status_code=404, detail="TRF not found")
     return trf
+
+@router.put("/{id}", response_model=TRFResponse)
+def update_trf(id: int, trf_data: dict, db: Session = Depends(get_db)):
+    trf = db.query(TRF).filter(TRF.id == id).first()
+    if not trf:
+        raise HTTPException(status_code=404, detail="TRF not found")
+        
+    for key, value in trf_data.items():
+        if hasattr(trf, key):
+            setattr(trf, key, value)
+            
+    db.commit()
+    db.refresh(trf)
+    return trf

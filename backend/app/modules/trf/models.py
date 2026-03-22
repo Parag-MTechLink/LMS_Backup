@@ -10,5 +10,6 @@ class TRF(Base):
 
     projectId = Column(Integer, nullable=False)
     projectName = Column(String, nullable=False)
+    status = Column(String, default="Pending QA")
 
     notes = Column(String, nullable=True)
