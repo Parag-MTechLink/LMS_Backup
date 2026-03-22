@@ -92,6 +92,12 @@ class Settings(BaseSettings):
     # Reset Password
     RESET_TOKEN_EXPIRE_MINUTES: int = 30
 
+    # CRM OAuth (Salesforce/HubSpot)
+    SALESFORCE_CLIENT_ID: str = ""
+    SALESFORCE_CLIENT_SECRET: str = ""
+    HUBSPOT_CLIENT_ID: str = ""
+    HUBSPOT_CLIENT_SECRET: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
