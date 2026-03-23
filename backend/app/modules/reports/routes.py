@@ -4,8 +4,6 @@ from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-from app.dependencies.auth_dependency import require_permission
-from app.models.user_model import User
 from app.core.database import get_db
 from app.modules.reports.models import Report
 from app.modules.reports.schemas import ReportResponse
@@ -22,7 +20,6 @@ def upload_report(
     description: str = Form(None),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    _: User = Depends(require_permission("report:full"))
 ):
     file_path = os.path.join(UPLOAD_DIR, file.filename)
 
@@ -44,20 +41,12 @@ def upload_report(
 
 
 @router.get("", response_model=list[ReportResponse])
-def get_reports(
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("report:view"))
-):
+def get_reports(db: Session = Depends(get_db)):
     return db.query(Report).order_by(Report.created_at.desc()).all()
 
 
 @router.get("/{report_id}/download")
-@router.get("/{report_id}/download")
-def download_report(
-    report_id: int, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("report:view"))
-):
+def download_report(report_id: int, db: Session = Depends(get_db)):
     report = db.query(Report).filter(Report.id == report_id).first()
 
     if not report or not os.path.exists(report.file_path):

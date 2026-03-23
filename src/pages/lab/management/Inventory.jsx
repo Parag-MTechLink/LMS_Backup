@@ -7,7 +7,8 @@ import {
   Calendar,
   ShoppingCart,
   BarChart3,
-  ChevronRight
+  ChevronRight,
+  ArrowLeft
 } from 'lucide-react'
 import Card from '../../../components/labManagement/Card'
 import toast from 'react-hot-toast'
@@ -155,14 +156,23 @@ function Inventory() {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg">
-              <Package className="w-6 h-6 text-white" />
-            </div>
-            Inventory Management
-          </h1>
-          <p className="text-gray-600 mt-1">Comprehensive inventory tracking and management system</p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/lab/management/dashboard')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg">
+                <Package className="w-6 h-6 text-white" />
+              </div>
+              Inventory Management
+            </h1>
+            <p className="text-gray-600 mt-1">Comprehensive inventory tracking and management system</p>
+          </div>
         </div>
       </motion.div>
 

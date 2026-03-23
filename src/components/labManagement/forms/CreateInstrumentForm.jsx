@@ -1,8 +1,10 @@
-import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
+import { useState, useEffect } from 'react'
+import { instrumentsService } from '../../../services/labManagementApi'
+import toast from 'react-hot-toast'
+import Button from '../Button'
+import Input from '../Input'
 
 export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }) {
-  const { user } = useLabManagementAuth()
-  const isReadOnly = user?.role === 'Quality Manager'
   const [formData, setFormData] = useState({
     instrumentId: '',
     name: '',
@@ -136,7 +138,6 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, instrumentId: e.target.value })}
           placeholder="INST-001"
           required
-          disabled={isReadOnly}
         />
         <Input
           label={
@@ -148,7 +149,6 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           placeholder="Spectrum Analyzer"
           required
-          disabled={isReadOnly}
         />
         <Input
           label={
@@ -160,7 +160,6 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, manufacturer: e.target.value })}
           placeholder="Keysight Technologies"
           required
-          disabled={isReadOnly}
         />
         <Input
           label={
@@ -172,7 +171,6 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, model: e.target.value })}
           placeholder="N9020B"
           required
-          disabled={isReadOnly}
         />
         <Input
           label={
@@ -184,7 +182,6 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
           placeholder="US12345678"
           required
-          disabled={isReadOnly}
         />
         <Input
           label={
@@ -196,7 +193,6 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, labLocation: e.target.value })}
           placeholder="Lab A - Room 101"
           required
-          disabled={isReadOnly}
         />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -205,8 +201,7 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
           <select
             value={formData.assignedDepartment}
             onChange={(e) => setFormData({ ...formData, assignedDepartment: e.target.value })}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:cursor-not-allowed"
-            disabled={isReadOnly}
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">Select Department</option>
             {departments.map(dept => (
@@ -221,8 +216,7 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
           <select
             value={formData.status}
             onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:cursor-not-allowed"
-            disabled={isReadOnly}
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="Active">Active</option>
             <option value="Under Maintenance">Under Maintenance</option>
@@ -239,7 +233,6 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
           value={formData.purchaseDate}
           onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
           required
-          disabled={isReadOnly}
         />
         <Input
           label={
@@ -251,7 +244,6 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
           value={formData.warrantyExpiry}
           onChange={(e) => setFormData({ ...formData, warrantyExpiry: e.target.value })}
           required
-          disabled={isReadOnly}
         />
         <Input
           label={
@@ -263,7 +255,6 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, serviceVendor: e.target.value })}
           placeholder="Keysight Service Center"
           required
-          disabled={isReadOnly}
         />
         <Input
           label={
@@ -276,7 +267,6 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, serviceVendorContact: e.target.value })}
           placeholder="service@keysight.com"
           required
-          disabled={isReadOnly}
         />
       </div>
       
@@ -289,8 +279,7 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           placeholder="Additional notes about the instrument"
           rows={3}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none disabled:bg-gray-50 disabled:cursor-not-allowed"
-          disabled={isReadOnly}
+          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
         />
       </div>
 
@@ -301,17 +290,15 @@ export default function CreateInstrumentForm({ instrument, onSuccess, onCancel }
           variant="outline"
           className="flex-1"
         >
-          {isReadOnly ? 'Close' : 'Cancel'}
+          Cancel
         </Button>
-        {!isReadOnly && (
-          <Button
-            type="submit"
-            isLoading={loading}
-            className="flex-1"
-          >
-            {instrument ? 'Update Instrument' : 'Create Instrument'}
-          </Button>
-        )}
+        <Button
+          type="submit"
+          isLoading={loading}
+          className="flex-1"
+        >
+          {instrument ? 'Update Instrument' : 'Create Instrument'}
+        </Button>
       </div>
     </form>
   )

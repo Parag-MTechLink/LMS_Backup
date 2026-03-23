@@ -4,8 +4,6 @@ from typing import List, Optional
 from datetime import datetime
 from app.core.database import get_db
 from . import crud, schemas
-from app.dependencies.auth_dependency import require_permission
-from app.models.user_model import User
 
 router = APIRouter(prefix="/calendar")
 
@@ -14,8 +12,7 @@ router = APIRouter(prefix="/calendar")
 @router.post("/event-types", response_model=schemas.EventTypeResponse, status_code=201)
 def create_event_type(
     event_type: schemas.EventTypeCreate,
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("calendar:full"))
+    db: Session = Depends(get_db)
 ):
     """Create a new event type"""
     return crud.create_event_type(db, event_type)
@@ -47,8 +44,7 @@ def get_event_type(
 def update_event_type(
     event_type_id: int,
     event_type: schemas.EventTypeUpdate,
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("calendar:full"))
+    db: Session = Depends(get_db)
 ):
     """Update an event type"""
     updated_event_type = crud.update_event_type(db, event_type_id, event_type)
@@ -72,8 +68,7 @@ def delete_event_type(
 @router.post("/events", response_model=schemas.CalendarEventResponse, status_code=201)
 def create_event(
     event: schemas.CalendarEventCreate,
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("calendar:full"))
+    db: Session = Depends(get_db)
 ):
     """Create a new calendar event"""
     return crud.create_event(db, event)
@@ -108,8 +103,7 @@ def get_events(
 @router.get("/events/{event_id}", response_model=schemas.CalendarEventResponse)
 def get_event(
     event_id: int,
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("calendar:view"))
+    db: Session = Depends(get_db)
 ):
     """Get event by ID"""
     event = crud.get_event(db, event_id)
@@ -122,8 +116,7 @@ def get_event(
 def update_event(
     event_id: int,
     event: schemas.CalendarEventUpdate,
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("calendar:full"))
+    db: Session = Depends(get_db)
 ):
     """Update a calendar event"""
     updated_event = crud.update_event(db, event_id, event)
@@ -136,8 +129,7 @@ def update_event(
 def delete_event(
     event_id: int,
     hard_delete: bool = Query(False, description="Permanently delete the event"),
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("calendar:full"))
+    db: Session = Depends(get_db)
 ):
     """Delete a calendar event"""
     if not crud.delete_event(db, event_id, soft_delete=not hard_delete):

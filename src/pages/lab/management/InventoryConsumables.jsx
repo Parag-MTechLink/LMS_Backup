@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import { motion } from 'framer-motion'
-import { Plus, Search, Package, AlertTriangle, CheckCircle } from 'lucide-react'
+import { Plus, Search, Package, AlertTriangle, CheckCircle, ArrowLeft, Edit } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { consumablesService } from '../../../services/labManagementApi'
+import { useLabData } from '../../../contexts/LabDataContext'
 import toast from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Button from '../../../components/labManagement/Button'
@@ -12,15 +13,15 @@ import Modal from '../../../components/labManagement/Modal'
 import CreateConsumableForm from '../../../components/labManagement/forms/CreateConsumableForm'
 
 function InventoryConsumables() {
-  const [consumables, setConsumables] = useState([])
-  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
+  const { inventoryData } = useLabData()
+  const { consumables, setConsumables } = inventoryData
+  const [loading, setLoading] = useState(consumables.length === 0)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedConsumable, setSelectedConsumable] = useState(null)
-  const { user } = useLabManagementAuth()
-  const canCreate = user?.role !== 'Quality Manager'
 
   useEffect(() => {
     loadConsumables()
@@ -28,7 +29,9 @@ function InventoryConsumables() {
 
   const loadConsumables = async () => {
     try {
-      setLoading(true)
+      if (consumables.length === 0) {
+        setLoading(true)
+      }
       const data = await consumablesService.getAll()
       setConsumables(data)
     } catch (error) {
@@ -68,11 +71,14 @@ function InventoryConsumables() {
       item.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.batchLotNumber?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory
-    const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus
+    const matchesStatus = selectedStatus === 'all' || 
+      item.status === selectedStatus ||
+      (selectedStatus === 'Expiring Soon' && isExpiringSoon(item.expiryDate)) ||
+      (selectedStatus === 'Expired' && isExpired(item.expiryDate))
     return matchesSearch && matchesCategory && matchesStatus
   })
 
-  if (loading) {
+  if (loading && consumables.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -91,23 +97,30 @@ function InventoryConsumables() {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg">
-              <Package className="w-6 h-6 text-white" />
-            </div>
-            Accessories & Consumables
-          </h1>
-          <p className="text-gray-600 mt-1">Manage consumables, track stock levels, and expiry dates</p>
-        </div>
-        {canCreate && (
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            icon={<Plus className="w-5 h-5" />}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/lab/management/inventory')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Back to Inventory Dashboard"
           >
-            Add Item
-          </Button>
-        )}
+            <ArrowLeft className="w-6 h-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg">
+                <Package className="w-6 h-6 text-white" />
+              </div>
+              Accessories & Consumables
+            </h1>
+            <p className="text-gray-600 mt-1">Manage consumables, track stock levels, and expiry dates</p>
+          </div>
+        </div>
+        <Button
+          onClick={() => setShowCreateModal(true)}
+          icon={<Plus className="w-5 h-5" />}
+        >
+          Add Item
+        </Button>
       </motion.div>
 
       {/* Filters */}
@@ -175,9 +188,22 @@ function InventoryConsumables() {
                       <Package className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <Badge variant={getStatusColor(item)}>
-                        {item.status}
-                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedConsumable(item)
+                            setShowCreateModal(true)
+                          }}
+                          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-primary"
+                          title="Edit Item"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <Badge variant={getStatusColor(item)}>
+                          {item.status}
+                        </Badge>
+                      </div>
                       {expired && (
                         <Badge variant="danger" className="text-xs">
                           Expired
@@ -238,13 +264,10 @@ function InventoryConsumables() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        setSelectedConsumable(item)
-                        setShowCreateModal(true)
-                      }}
+                      onClick={() => navigate(`/lab/management/inventory/consumables/${item.id}`)}
                       className="w-full"
                     >
-                      {canCreate ? 'View Details' : 'View Item'}
+                      View Details
                     </Button>
                   </div>
                 </Card>

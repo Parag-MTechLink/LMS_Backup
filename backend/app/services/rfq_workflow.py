@@ -61,7 +61,7 @@ def execute_workflow(
     db.refresh(rfq)
 
     if is_valid:
-        logger.info("RFQ request %s set to Pending Review; assign to Project Manager if needed.", rfq.id)
+        logger.info("RFQ request %s set to Pending Review; assign to Lab Manager if needed.", rfq.id)
     else:
         logger.info("RFQ request %s set to Incomplete; errors: %s", rfq.id, all_errors)
 
