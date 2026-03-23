@@ -14,6 +14,7 @@ import Badge from '../../../components/labManagement/Badge'
 import Input from '../../../components/labManagement/Input'
 import Modal from '../../../components/labManagement/Modal'
 import CreateTRFForm from '../../../components/labManagement/forms/CreateTRFForm'
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 
 // ─── Priority config ──────────────────────────────────────────────────────────
 const PRIORITY_CONFIG = {
@@ -31,6 +32,8 @@ const STATUS_ACTIONS = {
 }
 
 function TRFs() {
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
   const [trfs, setTrfs] = useState([])
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
@@ -154,20 +157,11 @@ function TRFs() {
             )}
           </p>
         </div>
-<<<<<<< HEAD
         {canCreate && (
           <Button onClick={() => setShowCreateModal(true)} icon={<Plus className="w-5 h-5" />}>
             New TRF
           </Button>
         )}
-=======
-        <Button
-          onClick={() => setShowCreateModal(true)}
-          icon={<Plus className="w-5 h-5" />}
-        >
-          New TRF
-        </Button>
->>>>>>> b18e4bd3a1ccd273b68bfd6c2f5920e21f7ef638
       </motion.div>
 
       {/* ── Filters ── */}

@@ -23,18 +23,21 @@ import {
   MoreVertical,
   Plus,
   X
-  ExternalLink
 } from 'lucide-react'
 import { projectsService } from '../../../services/labManagementApi'
 import { samplesService } from '../../../services/labManagementApi'
 import { trfsService } from '../../../services/labManagementApi'
 import { testPlansService } from '../../../services/labManagementApi'
 import CreateTRFForm from '../../../components/labManagement/forms/CreateTRFForm'
-import toast from 'react-hot-toast'
+import toast, { Toaster } from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Badge from '../../../components/labManagement/Badge'
 
+import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
+
 function ProjectDetail() {
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
   const { id } = useParams()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
@@ -492,17 +495,6 @@ function ProjectDetail() {
           </motion.div>
         </div>
       )}
-    </div>
-  )
-}
-
-function Card({ children, className = '', hover = false, onClick }) {
-  return (
-    <div 
-      onClick={onClick}
-      className={`bg-white rounded-xl p-6 shadow-sm border border-gray-200 transition-all ${hover ? 'hover:shadow-md hover:border-primary/30' : ''} ${className}`}
-    >
-      {children}
     </div>
   )
 }
