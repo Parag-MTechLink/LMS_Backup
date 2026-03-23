@@ -151,6 +151,7 @@ class CalibrationBase(BaseModel):
     calibration_frequency: Optional[str] = Field(None, alias="calibrationFrequency")
     certified_by: Optional[str] = Field(None, alias="certifiedBy")
     certificate_number: Optional[str] = Field(None, alias="certificateNumber")
+    certificate_url: Optional[str] = Field(None, alias="certificateUrl")
     notes: Optional[str] = None
 
     class Config:
@@ -171,6 +172,7 @@ class CalibrationUpdate(BaseModel):
     calibration_frequency: Optional[str] = Field(None, alias="calibrationFrequency")
     certified_by: Optional[str] = Field(None, alias="certifiedBy")
     certificate_number: Optional[str] = Field(None, alias="certificateNumber")
+    certificate_url: Optional[str] = Field(None, alias="certificateUrl")
     notes: Optional[str] = None
 
     class Config:
@@ -188,6 +190,7 @@ class CalibrationResponse(BaseModel):
     calibration_frequency: Optional[str] = Field(None, alias="calibrationFrequency")
     certified_by: Optional[str] = Field(None, alias="certifiedBy")
     certificate_number: Optional[str] = Field(None, alias="certificateNumber")
+    certificate_url: Optional[str] = Field(None, alias="certificateUrl")
     status: Optional[str] = None
     notes: Optional[str] = None
     created_at: datetime = Field(..., alias="createdAt")
@@ -222,6 +225,25 @@ class TransactionBase(BaseModel):
 class TransactionCreate(TransactionBase):
     """Schema for creating a transaction"""
     pass
+
+
+class TransactionUpdate(BaseModel):
+    """Schema for updating a transaction"""
+    transaction_id: Optional[str] = Field(None, alias="transactionId")
+    item_id: Optional[int] = Field(None, alias="itemId")
+    item_name: Optional[str] = Field(None, alias="itemName")
+    item_type: Optional[str] = Field(None, alias="itemType")
+    transaction_type: Optional[str] = Field(None, alias="transactionType")
+    quantity: Optional[int] = None
+    used_by: Optional[str] = Field(None, alias="usedBy")
+    date: Optional[date] = None
+    purpose: Optional[str] = None
+    linked_test_id: Optional[int] = Field(None, alias="linkedTestId")
+    linked_test_name: Optional[str] = Field(None, alias="linkedTestName")
+    notes: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
 
 
 class TransactionResponse(BaseModel):

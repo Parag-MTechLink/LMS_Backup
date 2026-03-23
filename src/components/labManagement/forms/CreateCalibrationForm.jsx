@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { calibrationsService } from '../../../services/labManagementApi'
+import { calibrationsService, documentsService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Button from '../Button'
 import Input from '../Input'
@@ -86,11 +86,37 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
 
     try {
       setLoading(true)
+      let finalCertificateUrl = formData.certificateUrl
+
+      // If certificateUrl is a File, upload it first
+      if (formData.certificateUrl instanceof File) {
+        const fileData = new FormData()
+        fileData.append('file', formData.certificateUrl)
+        fileData.append('name', `Calibration Certificate - ${formData.calibrationId}`)
+        fileData.append('type', 'Calibration')
+        fileData.append('description', `Certificate for Calibration ${formData.calibrationId}`)
+        
+        try {
+          const docResponse = await documentsService.create(fileData)
+          // Store the internal download link
+          finalCertificateUrl = `/api/v1/documents/${docResponse.id}/download`
+        } catch (uploadError) {
+          toast.error('Failed to upload certificate file')
+          setLoading(false)
+          return
+        }
+      }
+
+      const submissionData = {
+        ...formData,
+        certificateUrl: finalCertificateUrl
+      }
+
       if (calibration) {
-        await calibrationsService.update(calibration.id, formData)
+        await calibrationsService.update(calibration.id, submissionData)
         toast.success('Calibration updated successfully!')
       } else {
-        await calibrationsService.create(formData)
+        await calibrationsService.create(submissionData)
         toast.success('Calibration created successfully!')
       }
       onSuccess()
@@ -223,7 +249,7 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Certificate Upload (PDF, max 2MB) <span className="text-red-500">*</span>
+          {calibration ? 'Update Certificate (Optional)' : 'Certificate Upload (PDF, max 2MB) *'}
         </label>
         <input
           type="file"
@@ -232,8 +258,10 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
           className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
         />
         {formData.certificateUrl && (
-          <p className="text-sm text-gray-500 mt-1">
-            {formData.certificateUrl.name || 'File selected'}
+          <p className="text-sm text-blue-600 mt-1 flex items-center gap-1">
+            {formData.certificateUrl instanceof File 
+              ? `New file: ${formData.certificateUrl.name}` 
+              : 'Existing certificate preserved'}
           </p>
         )}
       </div>

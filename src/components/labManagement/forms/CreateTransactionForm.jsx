@@ -1,40 +1,49 @@
 import { useState, useEffect } from 'react'
-import { inventoryTransactionsService, consumablesService } from '../../../services/labManagementApi'
+import { inventoryTransactionsService, consumablesService, instrumentsService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Button from '../Button'
 import Input from '../Input'
 
-export default function CreateTransactionForm({ onSuccess, onCancel }) {
+export default function CreateTransactionForm({ onSuccess, onCancel, transaction }) {
   const [formData, setFormData] = useState({
-    transactionId: '',
-    itemId: '',
-    transactionType: 'Usage',
-    quantity: 0,
-    usedBy: '',
-    purpose: '',
-    linkedTestId: null,
-    date: new Date().toISOString().split('T')[0],
-    notes: ''
+    transactionId: transaction?.transactionId || '',
+    itemId: transaction?.itemId || '',
+    itemType: transaction?.itemType || 'Consumable',
+    transactionType: transaction?.transactionType || 'Usage',
+    quantity: transaction?.quantity || 0,
+    usedBy: transaction?.usedBy || '',
+    purpose: transaction?.purpose || '',
+    linkedTestId: transaction?.linkedTestId || null,
+    date: transaction?.date ? new Date(transaction.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    notes: transaction?.notes || ''
   })
-  const [consumables, setConsumables] = useState([])
+  const [items, setItems] = useState({ consumables: [], instruments: [] })
   const [loading, setLoading] = useState(false)
   const [loadingItems, setLoadingItems] = useState(true)
 
   useEffect(() => {
-    loadConsumables()
+    loadItems()
   }, [])
 
-  const loadConsumables = async () => {
+  const loadItems = async () => {
     try {
       setLoadingItems(true)
-      const data = await consumablesService.getAll()
-      setConsumables(data)
+      const [consumableData, instrumentData] = await Promise.all([
+        consumablesService.getAll(),
+        instrumentsService.getAll()
+      ])
+      setItems({
+        consumables: consumableData,
+        instruments: instrumentData
+      })
     } catch (error) {
       toast.error('Failed to load items')
     } finally {
       setLoadingItems(false)
     }
   }
+
+  const selectedList = formData.itemType === 'Instrument' ? items.instruments : items.consumables
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -71,11 +80,16 @@ export default function CreateTransactionForm({ onSuccess, onCancel }) {
 
     try {
       setLoading(true)
-      await inventoryTransactionsService.create(formData)
-      toast.success('Transaction created successfully!')
+      if (transaction?.id) {
+        await inventoryTransactionsService.update(transaction.id, formData)
+        toast.success('Transaction updated successfully!')
+      } else {
+        await inventoryTransactionsService.create(formData)
+        toast.success('Transaction created successfully!')
+      }
       onSuccess()
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create transaction')
+      toast.error(error.response?.data?.message || 'Failed to save transaction')
     } finally {
       setLoading(false)
     }
@@ -113,6 +127,20 @@ export default function CreateTransactionForm({ onSuccess, onCancel }) {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
+            Category <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={formData.itemType}
+            onChange={(e) => setFormData({ ...formData, itemType: e.target.value, itemId: '' })}
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+            required
+          >
+            <option value="Consumable">Accessories & Consumables</option>
+            <option value="Instrument">Instruments</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Item <span className="text-red-500">*</span>
           </label>
           {loadingItems ? (
@@ -125,9 +153,10 @@ export default function CreateTransactionForm({ onSuccess, onCancel }) {
               required
             >
               <option value="">Select Item</option>
-              {consumables.map(item => (
+              {selectedList.map(item => (
                 <option key={item.id} value={item.id}>
-                  {item.itemName} ({item.itemId}) - {item.quantityAvailable} {item.unit} available
+                  {item.itemName || item.name} ({item.itemId || item.instrumentId})
+                  {item.quantityAvailable !== undefined ? ` - ${item.quantityAvailable} ${item.unit} available` : ''}
                 </option>
               ))}
             </select>
@@ -214,7 +243,7 @@ export default function CreateTransactionForm({ onSuccess, onCancel }) {
           isLoading={loading}
           className="flex-1"
         >
-          Create Transaction
+          {transaction?.id ? 'Update Transaction' : 'Create Transaction'}
         </Button>
       </div>
     </form>

@@ -203,11 +203,21 @@ def list_transactions(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     transaction_type: Optional[str] = Query(None),
+    item_id: Optional[int] = Query(None),
+    item_type: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     """Get all inventory transactions with optional filtering"""
-    return crud.get_transactions(db, skip=skip, limit=limit, transaction_type=transaction_type, search=search)
+    return crud.get_transactions(
+        db, 
+        skip=skip, 
+        limit=limit, 
+        transaction_type=transaction_type, 
+        item_id=item_id,
+        item_type=item_type,
+        search=search
+    )
 
 
 @router.get("/inventory-transactions/{transaction_id}", response_model=schemas.TransactionResponse, tags=["Transactions"])
@@ -223,3 +233,28 @@ def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
 def create_transaction(transaction: schemas.TransactionCreate, db: Session = Depends(get_db)):
     """Create a new inventory transaction"""
     return crud.create_transaction(db, transaction)
+
+
+@router.put("/inventory-transactions/{transaction_id}", response_model=schemas.TransactionResponse, tags=["Transactions"])
+def update_transaction(
+    transaction_id: int,
+    transaction: schemas.TransactionUpdate,
+    db: Session = Depends(get_db)
+):
+    """Update an inventory transaction"""
+    updated_transaction = crud.update_transaction(db, transaction_id, transaction)
+    if not updated_transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    return updated_transaction
+
+
+@router.delete("/inventory-transactions/{transaction_id}", status_code=204, tags=["Transactions"])
+def delete_transaction(
+    transaction_id: int,
+    db: Session = Depends(get_db)
+):
+    """Delete an inventory transaction"""
+    success = crud.delete_transaction(db, transaction_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    return None

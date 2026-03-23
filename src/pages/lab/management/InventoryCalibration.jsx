@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Search, Calendar, AlertCircle, CheckCircle, Clock } from 'lucide-react'
+import { Plus, Search, Calendar, AlertCircle, CheckCircle, Clock, ArrowLeft, Edit, Eye } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { calibrationsService, instrumentsService } from '../../../services/labManagementApi'
+import { useLabData } from '../../../contexts/LabDataContext'
 import toast from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Button from '../../../components/labManagement/Button'
@@ -11,9 +13,10 @@ import Modal from '../../../components/labManagement/Modal'
 import CreateCalibrationForm from '../../../components/labManagement/forms/CreateCalibrationForm'
 
 function InventoryCalibration() {
-  const [calibrations, setCalibrations] = useState([])
-  const [instruments, setInstruments] = useState([])
-  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
+  const { inventoryData } = useLabData()
+  const { calibrations, setCalibrations, instruments, setInstruments } = inventoryData
+  const [loading, setLoading] = useState(calibrations.length === 0)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -25,15 +28,17 @@ function InventoryCalibration() {
 
   const loadData = async () => {
     try {
-      setLoading(true)
-      const [calData, instData] = await Promise.all([
+      if (calibrations.length === 0) {
+        setLoading(true)
+      }
+      const [calibs, insts] = await Promise.all([
         calibrationsService.getAll(),
         instrumentsService.getAll()
       ])
-      setCalibrations(calData)
-      setInstruments(instData)
+      setCalibrations(calibs)
+      setInstruments(insts)
     } catch (error) {
-      toast.error('Failed to load calibration data')
+      toast.error('Failed to load data')
     } finally {
       setLoading(false)
     }
@@ -66,7 +71,7 @@ function InventoryCalibration() {
     return matchesSearch && matchesStatus
   })
 
-  if (loading) {
+  if (loading && calibrations.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -85,14 +90,23 @@ function InventoryCalibration() {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
-              <Calendar className="w-6 h-6 text-white" />
-            </div>
-            Calibration Management
-          </h1>
-          <p className="text-gray-600 mt-1">Track calibration schedules, certificates, and compliance</p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/lab/management/inventory')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Back to Inventory Dashboard"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
+                <Calendar className="w-6 h-6 text-white" />
+              </div>
+              Calibration Management
+            </h1>
+            <p className="text-gray-600 mt-1">Track calibration schedules, certificates, and compliance</p>
+          </div>
         </div>
         <Button
           onClick={() => setShowCreateModal(true)}
@@ -197,17 +211,29 @@ function InventoryCalibration() {
                   </div>
                   
                   <div className="mt-auto pt-4 border-t border-gray-200">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedCalibration(calibration)
-                        setShowCreateModal(true)
-                      }}
-                      className="w-full"
-                    >
-                      View Details
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/lab/management/inventory/calibration/${calibration.id}`)}
+                        className="flex-1"
+                        icon={<Eye className="w-4 h-4" />}
+                      >
+                        View
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedCalibration(calibration)
+                          setShowCreateModal(true)
+                        }}
+                        className="flex-1"
+                        icon={<Edit className="w-4 h-4 text-primary" />}
+                      >
+                        Edit
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               </motion.div>

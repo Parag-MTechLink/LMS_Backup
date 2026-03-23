@@ -233,6 +233,12 @@ export const LabDataProvider = ({ children }) => {
     return data;
   })
 
+  // Inventory state
+  const [inventoryInstruments, setInventoryInstruments] = useState([])
+  const [inventoryConsumables, setInventoryConsumables] = useState([])
+  const [inventoryCalibrations, setInventoryCalibrations] = useState([])
+  const [inventoryTransactions, setInventoryTransactions] = useState([])
+
   // Save to localStorage whenever state changes
   useEffect(() => {
     saveToStorage('techlink_lab_requests', labRequests)
@@ -355,6 +361,16 @@ export const LabDataProvider = ({ children }) => {
     schedule,
     organizationData,
     scopeData,
+    inventoryData: {
+      instruments: inventoryInstruments,
+      consumables: inventoryConsumables,
+      calibrations: inventoryCalibrations,
+      transactions: inventoryTransactions,
+      setInstruments: setInventoryInstruments,
+      setConsumables: setInventoryConsumables,
+      setCalibrations: setInventoryCalibrations,
+      setTransactions: setInventoryTransactions
+    },
     setLabRequests,
     setTechnicians,
     setSchedule,
@@ -362,14 +378,15 @@ export const LabDataProvider = ({ children }) => {
     assignRequest,
     updateRequestStatus,
     updateRequestProgress,
-    addScheduleItem,
-    updateScheduleItem,
-    deleteScheduleItem,
+    addSchedule_item: addScheduleItem,
+    updateSchedule_item: updateScheduleItem,
+    deleteSchedule_item: deleteScheduleItem,
     updateOrganizationData,
     updateScopeData,
     getStats,
   }), [
     labRequests, technicians, schedule, organizationData, scopeData,
+    inventoryInstruments, inventoryConsumables, inventoryCalibrations, inventoryTransactions,
     updateRequest, assignRequest, updateRequestStatus, updateRequestProgress,
     addScheduleItem, updateScheduleItem, deleteScheduleItem,
     updateOrganizationData, updateScopeData, getStats,
