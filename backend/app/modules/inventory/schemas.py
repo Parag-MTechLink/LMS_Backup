@@ -149,10 +149,8 @@ class CalibrationBase(BaseModel):
     last_calibration_date: date = Field(..., alias="lastCalibrationDate")
     next_due_date: date = Field(..., alias="nextDueDate")
     calibration_frequency: Optional[str] = Field(None, alias="calibrationFrequency")
-    calibration_method: Optional[str] = Field(None, alias="calibrationMethod")
     certified_by: Optional[str] = Field(None, alias="certifiedBy")
     certificate_number: Optional[str] = Field(None, alias="certificateNumber")
-    certificate_url: Optional[str] = Field(None, alias="certificateUrl")
     notes: Optional[str] = None
 
     class Config:
@@ -171,10 +169,8 @@ class CalibrationUpdate(BaseModel):
     last_calibration_date: Optional[date] = Field(None, alias="lastCalibrationDate")
     next_due_date: Optional[date] = Field(None, alias="nextDueDate")
     calibration_frequency: Optional[str] = Field(None, alias="calibrationFrequency")
-    calibration_method: Optional[str] = Field(None, alias="calibrationMethod")
     certified_by: Optional[str] = Field(None, alias="certifiedBy")
     certificate_number: Optional[str] = Field(None, alias="certificateNumber")
-    certificate_url: Optional[str] = Field(None, alias="certificateUrl")
     notes: Optional[str] = None
 
     class Config:
@@ -190,10 +186,8 @@ class CalibrationResponse(BaseModel):
     last_calibration_date: date = Field(..., alias="lastCalibrationDate")
     next_due_date: date = Field(..., alias="nextDueDate")
     calibration_frequency: Optional[str] = Field(None, alias="calibrationFrequency")
-    calibration_method: Optional[str] = Field(None, alias="calibrationMethod")
     certified_by: Optional[str] = Field(None, alias="certifiedBy")
     certificate_number: Optional[str] = Field(None, alias="certificateNumber")
-    certificate_url: Optional[str] = Field(None, alias="certificateUrl")
     status: Optional[str] = None
     notes: Optional[str] = None
     created_at: datetime = Field(..., alias="createdAt")

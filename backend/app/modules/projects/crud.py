@@ -115,24 +115,10 @@ def create_project(db: Session, project: ProjectCreate) -> Project:
     
     project_data = project.model_dump(by_alias=False)
     db_project = Project(**project_data, client_name=client_name)
-    
-    try:
-        db.add(db_project)
-        db.commit()
-        db.refresh(db_project)
-        return db_project
-    except Exception as e:
-        db.rollback()
-        from sqlalchemy.exc import IntegrityError
-        from fastapi import HTTPException
-        
-        # Check for unique constraint violation on 'code'
-        if isinstance(e, IntegrityError) and 'ix_projects_code' in str(e):
-             raise HTTPException(
-                 status_code=400, 
-                 detail=f"Project code '{project.code}' already exists. Please use a unique code."
-             )
-        raise e
+    db.add(db_project)
+    db.commit()
+    db.refresh(db_project)
+    return db_project
 
 
 def update_project(db: Session, project_id: int, project: ProjectUpdate) -> Optional[Project]:

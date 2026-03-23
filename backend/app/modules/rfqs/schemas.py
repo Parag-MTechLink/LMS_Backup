@@ -1,19 +1,13 @@
 from pydantic import BaseModel
 
-from typing import Optional
-
 class RFQCreate(BaseModel):
     customerId: int
-    customerName: Optional[str] = None
     product: str
     receivedDate: str
 
-class RFQOut(BaseModel):
+class RFQOut(RFQCreate):
     id: int
-    customerId: int
-    customerName: Optional[str] = None
-    product: str
-    receivedDate: str
+    customerName: str
     status: str
 
     class Config:

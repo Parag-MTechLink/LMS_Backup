@@ -25,7 +25,7 @@ function InventoryTransactions() {
     try {
       setLoading(true)
       const data = await inventoryTransactionsService.getAll()
-      setTransactions(Array.isArray(data) ? data : [])
+      setTransactions(data)
     } catch (error) {
       toast.error('Failed to load transactions')
     } finally {
