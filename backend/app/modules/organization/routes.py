@@ -16,7 +16,7 @@ router = APIRouter()
 def serialize_organization(org):
     """Helper function to serialize organization without nested relationships"""
     return {
-        "id": org.id,
+        "id": str(org.id) if org.id else None,
         "lab_name": org.lab_name,
         "lab_address": org.lab_address,
         "lab_country": org.lab_country,
@@ -25,9 +25,13 @@ def serialize_organization(org):
         "lab_city": org.lab_city,
         "lab_pin_code": org.lab_pin_code,
         "lab_logo_url": org.lab_logo_url,
+        "lab_proof_of_address": org.lab_proof_of_address,
+        "lab_proof_of_address_other": org.lab_proof_of_address_other,
+        "lab_document_id": org.lab_document_id,
+        "lab_address_proof_url": org.lab_address_proof_url,
         "status": org.status,
-        "created_at": org.created_at,
-        "updated_at": org.updated_at
+        "created_at": org.created_at.isoformat() if org.created_at else None,
+        "updated_at": org.updated_at.isoformat() if org.updated_at else None
     }
 
 

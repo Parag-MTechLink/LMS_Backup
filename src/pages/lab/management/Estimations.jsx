@@ -37,22 +37,31 @@ function Estimations() {
 
   const loadData = async () => {
     try {
-      const [estimationsData, rfqsData, testTypesData] = await Promise.all([
+      setLoading(true)
+      const results = await Promise.allSettled([
         estimationsService.getAll(),
         rfqsService.getAll(),
         estimationsService.getTestTypes(),
       ])
-      
+
+      const estimationsData = results[0].status === 'fulfilled' ? results[0].value : []
+      const rfqsData = results[1].status === 'fulfilled' ? results[1].value : []
+      const testTypesData = results[2].status === 'fulfilled' ? results[2].value : []
+
+      if (results[0].status === 'rejected') console.error('Failed to load estimations:', results[0].reason)
+      if (results[1].status === 'rejected') toast.error('Failed to load RFQs')
+      if (results[2].status === 'rejected') console.error('Failed to load test types:', results[2].reason)
+
       // Filter by RFQ if rfqId in URL
       const rfqId = searchParams.get('rfqId')
       let filteredEstimations = estimationsData
-      if (rfqId) {
+      if (rfqId && Array.isArray(estimationsData)) {
         filteredEstimations = estimationsData.filter(e => e.rfqId?.toString() === rfqId)
       }
       
-      setEstimations(filteredEstimations)
-      setRfqs(rfqsData)
-      setTestTypes(testTypesData)
+      setEstimations(Array.isArray(filteredEstimations) ? filteredEstimations : [])
+      setRfqs(Array.isArray(rfqsData) ? rfqsData : [])
+      setTestTypes(Array.isArray(testTypesData) ? testTypesData : [])
     } catch (error) {
       toast.error('Failed to load data')
     } finally {
@@ -585,6 +594,152 @@ function Estimations() {
                 </button>
               </div>
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Estimation Detail/Review Modal */}
+      {showDetailModal && selectedEstimation && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full border border-gray-200 my-8"
+          >
+            <div className="p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Estimation Details</h2>
+                  <p className="text-sm text-gray-500">{selectedEstimation.estimationId} v{selectedEstimation.version}</p>
+                </div>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Customer Info</h3>
+                    <p className="mt-1 text-lg font-medium text-gray-900">{selectedEstimation.rfqCustomerName}</p>
+                    <p className="text-sm text-gray-600">Product: {selectedEstimation.rfqProduct}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Status</h3>
+                    <span className={`inline-flex px-3 py-1 mt-1 text-xs font-semibold rounded-full bg-gradient-to-r ${getStatusColor(selectedEstimation.status)} text-white`}>
+                      {selectedEstimation.status}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-2">Cost Summary</h3>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span>Total Hours:</span>
+                        <span className="font-semibold">{selectedEstimation.totalHours?.toFixed(1)} hrs</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Margin:</span>
+                        <span className="font-semibold">{selectedEstimation.margin}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Discount:</span>
+                        <span className="font-semibold">{selectedEstimation.discount}%</span>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t border-gray-200 text-lg">
+                        <span className="font-bold">Total:</span>
+                        <span className="font-bold text-green-600">{formatCurrencyINR(selectedEstimation.totalCost)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wider">Test Items</h3>
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Test Type</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">DUTs</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Hours</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {(selectedEstimation.items || []).map((item, idx) => {
+                        const testType = testTypes.find(tt => tt.id === item.testTypeId);
+                        return (
+                          <tr key={idx}>
+                            <td className="px-4 py-3 text-sm text-gray-900">{testType?.name || 'Unknown'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-600">{item.numberOfDUT}</td>
+                            <td className="px-4 py-3 text-sm text-gray-600">{item.hours}</td>
+                            <td className="px-4 py-3 text-sm text-gray-600">{formatCurrencyINR(item.ratePerHour)}</td>
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                              {formatCurrencyINR(item.hours * item.ratePerHour * item.numberOfDUT)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {selectedEstimation.notes && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wider">Notes</h3>
+                  <div className="bg-gray-50 p-4 rounded-xl text-sm text-gray-600 border border-gray-200">
+                    {selectedEstimation.notes}
+                  </div>
+                </div>
+              )}
+
+              {/* Review Section (only if draft) */}
+              {selectedEstimation.status?.toLowerCase() === 'draft' && (
+                <div className="pt-6 border-t border-gray-200 flex gap-4">
+                  <button
+                    onClick={async () => {
+                      try {
+                        await estimationsService.review(selectedEstimation.id, { status: 'Accepted', comments: 'Approved via UI' });
+                        toast.success('Estimation Accepted');
+                        setShowDetailModal(false);
+                        loadData();
+                      } catch (err) {
+                        toast.error('Failed to accept estimation');
+                      }
+                    }}
+                    className="flex-1 px-6 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition shadow-lg"
+                  >
+                    Accept Estimation
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await estimationsService.review(selectedEstimation.id, { status: 'Rejected', comments: 'Rejected via UI' });
+                        toast.success('Estimation Rejected');
+                        setShowDetailModal(false);
+                        loadData();
+                      } catch (err) {
+                        toast.error('Failed to reject estimation');
+                      }
+                    }}
+                    className="flex-1 px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition shadow-lg"
+                  >
+                    Reject Estimation
+                  </button>
+                </div>
+              )}
+            </div>
           </motion.div>
         </div>
       )}

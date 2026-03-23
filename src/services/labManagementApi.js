@@ -633,6 +633,35 @@ export const instrumentsService = {
   },
 }
 
+// Files Service (General Uploads)
+export const filesService = {
+  uploadDocument: async (file, docType = 'general', organizationId = null) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (docType) formData.append('doc_type', docType)
+    if (organizationId) formData.append('organization_id', organizationId)
+    
+    const response = await apiService.client.post('/api/v1/files/upload/document', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+  uploadLogo: async (file, organizationId = null) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (organizationId) formData.append('organization_id', organizationId)
+    
+    const response = await apiService.client.post('/api/v1/files/upload/logo', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+}
+
 // Calibration Service
 export const calibrationsService = {
   getAll: async (instrumentId) => {

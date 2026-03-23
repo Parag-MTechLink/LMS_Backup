@@ -7,6 +7,7 @@ class RFQ(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     customerId = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    customerName = Column(String, nullable=True)
     product = Column(String, nullable=False)
     receivedDate = Column(String, nullable=False)
     status = Column(String, default="pending")

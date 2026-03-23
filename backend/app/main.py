@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 
 from sqlalchemy import text
-from sqlalchemy.exc import OperationalError as SQLAlchemyOperationalError
+from sqlalchemy.exc import OperationalError as SQLAlchemyOperationalError, IntegrityError
 
 from app.core.config import settings
 from app.core.database import Base, engine
@@ -147,6 +147,38 @@ def _standard_error_response(
     )
 
 
+@app.exception_handler(IntegrityError)
+async def integrity_exception_handler(request: Request, exc: IntegrityError) -> JSONResponse:
+    """Handle DB integrity errors (unique constraints, foreign keys)."""
+    error_msg = str(exc.orig) if hasattr(exc, "orig") else str(exc)
+    
+    # User-friendly messages for common constraints
+    details = []
+    if "unique constraint" in error_msg.lower():
+        status_code = 409
+        err = "Conflict: Duplicate record"
+        if "calibration_id" in error_msg.lower():
+            details = ["A calibration with this ID already exists. Please use a unique ID."]
+        elif "item_id" in error_msg.lower():
+            details = ["An item with this ID already exists."]
+        else:
+            details = ["A record with this unique value already exists."]
+    elif "foreign key" in error_msg.lower():
+        status_code = 400
+        err = "Referece Error"
+        details = ["The related record (e.g. Instrument or Test) was not found. Please verify IDs."]
+    else:
+        status_code = 400
+        err = "Database Integrity Error"
+        details = [error_msg]
+
+    return _standard_error_response(
+        status_code=status_code,
+        error=err,
+        details=details
+    )
+
+
 @app.exception_handler(SQLAlchemyOperationalError)
 async def db_connection_exception_handler(request: Request, exc: SQLAlchemyOperationalError) -> JSONResponse:
     """Return 503 when DB is unreachable (e.g. Neon timeout, network)."""
@@ -206,8 +238,6 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-XSS-Protection"] = "1; mode=block"
-    # Strict-Transport-Security (optional, but good for production)
-    # response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
 # CORS Middleware
