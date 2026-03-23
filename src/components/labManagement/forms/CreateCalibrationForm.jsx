@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
+<<<<<<< Updated upstream
 import { calibrationsService, documentsService } from '../../../services/labManagementApi'
+=======
+import { calibrationsService, filesService } from '../../../services/labManagementApi'
+>>>>>>> Stashed changes
 import toast from 'react-hot-toast'
 import Button from '../Button'
 import Input from '../Input'
@@ -86,6 +90,7 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
 
     try {
       setLoading(true)
+<<<<<<< Updated upstream
       let finalCertificateUrl = formData.certificateUrl
 
       // If certificateUrl is a File, upload it first
@@ -117,11 +122,32 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
         toast.success('Calibration updated successfully!')
       } else {
         await calibrationsService.create(submissionData)
+=======
+      
+      let certificateUrl = formData.certificateUrl
+      
+      // If certificateUrl is a File object, upload it first
+      if (formData.certificateUrl instanceof File) {
+        const uploadRes = await filesService.uploadDocument(formData.certificateUrl, 'calibration')
+        certificateUrl = uploadRes.file_url
+      }
+
+      const payload = {
+        ...formData,
+        certificateUrl: certificateUrl
+      }
+
+      if (calibration) {
+        await calibrationsService.update(calibration.id, payload)
+        toast.success('Calibration updated successfully!')
+      } else {
+        await calibrationsService.create(payload)
+>>>>>>> Stashed changes
         toast.success('Calibration created successfully!')
       }
       onSuccess()
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to save calibration')
+      toast.error(error.response?.data?.detail || error.response?.data?.message || 'Failed to save calibration')
     } finally {
       setLoading(false)
     }

@@ -47,6 +47,7 @@ def sync_rfq_to_list(db: Session, canonical: dict[str, Any], rfq_request: RFQReq
 
     rfq = RFQ(
         customerId=customer.id,
+        customerName=customer.company_name,
         product=product,
         receivedDate=received_date,
         status="pending",
