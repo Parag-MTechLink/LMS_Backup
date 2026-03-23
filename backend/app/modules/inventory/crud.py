@@ -12,7 +12,7 @@ from .schemas import (
     InstrumentCreate, InstrumentUpdate,
     ConsumableCreate, ConsumableUpdate,
     CalibrationCreate, CalibrationUpdate,
-    TransactionCreate
+    TransactionCreate, TransactionUpdate
 )
 
 
@@ -289,6 +289,8 @@ def get_transactions(
     skip: int = 0,
     limit: int = 100,
     transaction_type: Optional[str] = None,
+    item_id: Optional[int] = None,
+    item_type: Optional[str] = None,
     search: Optional[str] = None
 ) -> List[InventoryTransaction]:
     """Get all transactions with optional filtering"""
@@ -296,6 +298,10 @@ def get_transactions(
     
     if transaction_type:
         query = query.filter(InventoryTransaction.transaction_type == transaction_type)
+    if item_id:
+        query = query.filter(InventoryTransaction.item_id == item_id)
+    if item_type:
+        query = query.filter(InventoryTransaction.item_type == item_type)
     if search:
         search_filter = or_(
             InventoryTransaction.transaction_id.ilike(f"%{search}%"),
@@ -316,9 +322,72 @@ def get_transaction(db: Session, transaction_id: int) -> Optional[InventoryTrans
 
 
 def create_transaction(db: Session, transaction: TransactionCreate) -> InventoryTransaction:
-    """Create a new transaction"""
-    db_transaction = InventoryTransaction(**transaction.model_dump(by_alias=False))
+    """Create a new transaction with automatic item name/type lookup"""
+    item_name = transaction.item_name
+    item_type = transaction.item_type
+    
+    # Auto-lookup if name or type is missing
+    if not item_name or not item_type:
+        # Try finding in consumables first
+        consumable = db.query(Consumable).filter(Consumable.id == transaction.item_id).first()
+        if consumable:
+            item_name = item_name or consumable.item_name
+            item_type = item_type or "Consumable"
+        else:
+            # Try finding in instruments
+            instrument = db.query(Instrument).filter(Instrument.id == transaction.item_id).first()
+            if instrument:
+                item_name = item_name or instrument.name
+                item_type = item_type or "Instrument"
+    
+    db_transaction = InventoryTransaction(
+        **transaction.model_dump(exclude={"item_name", "item_type"}, by_alias=False),
+        item_name=item_name,
+        item_type=item_type
+    )
     db.add(db_transaction)
     db.commit()
     db.refresh(db_transaction)
     return db_transaction
+
+
+def update_transaction(db: Session, transaction_id: int, transaction: TransactionUpdate) -> Optional[InventoryTransaction]:
+    """Update a specific transaction and ensure metadata is synchronized"""
+    db_transaction = get_transaction(db, transaction_id)
+    if not db_transaction:
+        return None
+    
+    update_data = transaction.model_dump(exclude_unset=True, by_alias=False)
+    
+    # If item_id is changing, we should refresh item_name and item_type
+    if "item_id" in update_data and update_data["item_id"] != db_transaction.item_id:
+        new_item_id = update_data["item_id"]
+        # Try finding in consumables
+        consumable = db.query(Consumable).filter(Consumable.id == new_item_id).first()
+        if consumable:
+            update_data["item_name"] = consumable.item_name
+            update_data["item_type"] = "Consumable"
+        else:
+            # Try finding in instruments
+            instrument = db.query(Instrument).filter(Instrument.id == new_item_id).first()
+            if instrument:
+                update_data["item_name"] = instrument.name
+                update_data["item_type"] = "Instrument"
+                
+    for field, value in update_data.items():
+        setattr(db_transaction, field, value)
+    
+    db.commit()
+    db.refresh(db_transaction)
+    return db_transaction
+
+
+def delete_transaction(db: Session, transaction_id: int) -> bool:
+    """Soft delete a transaction"""
+    db_transaction = get_transaction(db, transaction_id)
+    if not db_transaction:
+        return False
+    
+    db_transaction.is_deleted = True
+    db.commit()
+    return True

@@ -1,8 +1,6 @@
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.dependencies.auth_dependency import require_permission
-from app.models.user_model import User
 from app.core.database import get_db
 from app.modules.certification.models import Certification
 from app.modules.certification.schemas import CertificationCreate, CertificationResponse
@@ -10,20 +8,15 @@ from app.modules.certification.schemas import CertificationCreate, Certification
 router = APIRouter(prefix="/certifications", tags=["Certifications"])
 
 @router.get("", response_model=list[CertificationResponse])
-def get_certifications(
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("certification:view"))
-):
+def get_certifications(db: Session = Depends(get_db)):
     return db.query(Certification).all()
+
+from fastapi import HTTPException
 
 from fastapi import HTTPException, status
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def create_certification(
-    data: CertificationCreate, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("certification:full"))
-):
+def create_certification(data: CertificationCreate, db: Session = Depends(get_db)):
     existing = db.query(Certification).filter(
         Certification.certificateNumber == data.certificateNumber
     ).first()
@@ -47,9 +40,5 @@ def create_certification(
 
 
 @router.get("/{certification_id}", response_model=CertificationResponse)
-def get_certification(
-    certification_id: int, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("certification:view"))
-):
+def get_certification(certification_id: int, db: Session = Depends(get_db)):
     return db.query(Certification).filter(Certification.id == certification_id).first()

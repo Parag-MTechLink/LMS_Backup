@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import { motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search, Play, Clock, User, ExternalLink } from 'lucide-react'
@@ -26,8 +25,6 @@ function TestExecutions() {
   const [selectedExecution, setSelectedExecution] = useState(null)
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { user } = useLabManagementAuth()
-  const canCreate = user?.role !== 'Quality Manager'
 
   const testPlanId = searchParams.get('testPlanId')
   //... (omitting middle part to keep it simple, I better use two separate replace calls if lines are far apart or just rewrite the component start)
@@ -119,14 +116,12 @@ function TestExecutions() {
           </h1>
           <p className="text-gray-600 mt-1">Track and manage test execution progress</p>
         </div>
-        {canCreate && (
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            icon={<Plus className="w-5 h-5" />}
-          >
-            New Execution
-          </Button>
-        )}
+        <Button
+          onClick={() => setShowCreateModal(true)}
+          icon={<Plus className="w-5 h-5" />}
+        >
+          New Execution
+        </Button>
       </motion.div>
 
       {/* Filters */}
@@ -261,7 +256,7 @@ function TestExecutions() {
                       >
                         View Details
                       </button>
-                      {canCreate && ['completed', 'passed', 'meet compliance', "doesn't meet compliance"].includes(
+                      {['completed', 'passed', 'meet compliance', "doesn't meet compliance"].includes(
                         execution.status?.toLowerCase()
                       ) && (
                           <button

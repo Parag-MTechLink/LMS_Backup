@@ -6,9 +6,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from typing import List, Optional
 
-from .models import Customer, Project, ProjectActivity
+from .models import Customer, Project
 from .schemas import CustomerCreate, CustomerUpdate, ProjectCreate, ProjectUpdate
-from app.models.user_model import User
 
 
 # Customer CRUD
@@ -107,44 +106,9 @@ def get_project(db: Session, project_id: int) -> Optional[Project]:
         and_(Project.id == project_id, Project.is_deleted == False)
     ).first()
 
-def get_project_with_details(db: Session, project_id: int) -> Optional[dict]:
-    """Get a specific project with Team Lead name"""
-    result = db.query(
-        Project,
-        User.full_name.label("team_lead_name")
-    ).outerjoin(User, Project.team_lead_id == User.id).filter(
-        and_(Project.id == project_id, Project.is_deleted == False)
-    ).first()
-    
-    if not result:
-        return None
-        
-    project, team_lead_name = result
-    # Convert Project model to dict and add team_lead_name
-    from .schemas import ProjectResponse
-    return {
-        "id": project.id,
-        "name": project.name,
-        "code": project.code,
-        "clientId": project.client_id,
-        "clientName": project.client_name,
-        "status": project.status,
-        "oem": project.oem,
-        "description": project.description,
-        "qualityManagerApproved": project.quality_manager_approved,
-        "projectManagerApproved": project.project_manager_approved,
-        "technicalManagerApproved": project.technical_manager_approved,
-        "paymentCompleted": project.payment_completed,
-        "teamLeadId": project.team_lead_id,
-        "teamLeadName": team_lead_name,
-        "createdAt": project.created_at,
-        "updatedAt": project.updated_at,
-        "isDeleted": project.is_deleted
-    }
 
-
-def create_project(db: Session, project: ProjectCreate, current_user: User = None) -> Project:
-    """Create a new project and log the initial activity"""
+def create_project(db: Session, project: ProjectCreate) -> Project:
+    """Create a new project"""
     # Get client name for denormalization
     client = get_customer(db, project.client_id)
     client_name = client.company_name if client else None
@@ -154,18 +118,6 @@ def create_project(db: Session, project: ProjectCreate, current_user: User = Non
     db.add(db_project)
     db.commit()
     db.refresh(db_project)
-
-    # Log initial activity
-    if current_user:
-        log_project_activity(
-            db, 
-            db_project.id, 
-            "Customer request recorded", 
-            f"Project {db_project.name} created", 
-            current_user
-        )
-        db.commit()
-    
     return db_project
 
 
@@ -200,31 +152,3 @@ def delete_project(db: Session, project_id: int) -> bool:
     db_project.is_deleted = True
     db.commit()
     return True
-
-
-# Project Activity Logging
-def log_project_activity(
-    db: Session,
-    project_id: int,
-    process_step: str,
-    action: str,
-    user: User
-) -> ProjectActivity:
-    """Log a workflow activity for a project"""
-    activity = ProjectActivity(
-        project_id=project_id,
-        process_step=process_step,
-        action=action,
-        user_name=user.full_name,
-        user_role=user.role
-    )
-    db.add(activity)
-    db.flush()
-    return activity
-
-
-def get_project_activities(db: Session, project_id: int) -> List[ProjectActivity]:
-    """Get all activities for a project ordered by timestamp"""
-    return db.query(ProjectActivity).filter(
-        ProjectActivity.project_id == project_id
-    ).order_by(ProjectActivity.timestamp.asc()).all()

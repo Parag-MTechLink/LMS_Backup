@@ -28,6 +28,9 @@ class ApiService {
         const token = localStorage.getItem('labManagementAccessToken') || localStorage.getItem('accessToken')
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`
+          if (config.url.includes('documents')) {
+            console.log('Document Upload with token:', token.substring(0, 10) + '...')
+          }
         }
         return config
       },
@@ -89,9 +92,21 @@ class ApiService {
 
   async get(url, config = {}) {
     const key = url + (config.params ? JSON.stringify(config.params) : '')
+    
+    // Check cache first (ignore if it's a "no-cache" request or specific TTL is 0)
+    const cachedData = getCached(key)
+    if (cachedData && !config.forceRefresh) {
+      return cachedData
+    }
+
     const inFlight = this._getPromises.get(key)
     if (inFlight) return inFlight
-    const promise = this.client.get(url, config).then((r) => r.data)
+    
+    const promise = this.client.get(url, config).then((r) => {
+      setCached(key, r.data)
+      return r.data
+    })
+    
     this._getPromises.set(key, promise)
     promise.finally(() => this._getPromises.delete(key))
     return promise
@@ -178,53 +193,6 @@ export const authService = {
     apiService.post('/api/v1/auth/change-password', { current_password: currentPassword, new_password: newPassword }),
 }
 
-// Notifications Service — workflow-driven in-app notifications
-export const notificationsService = {
-  /** Fetch unread notifications for the current user's role */
-  getMyNotifications: (unreadOnly = true) =>
-    apiService.get('/api/v1/notifications', { params: { unread_only: unreadOnly } }),
-
-  /** Get count of unread notifications */
-  getUnreadCount: () =>
-    apiService.get('/api/v1/notifications/count'),
-
-  /** Mark a specific notification as read */
-  markAsRead: (id) =>
-    apiService.patch(`/api/v1/notifications/${id}/read`),
-
-  /** Mark all notifications for this role as read */
-  markAllRead: () =>
-    apiService.patch('/api/v1/notifications/mark-all-read'),
-
-  /**
-   * Trigger a workflow notification for the next role.
-   * Call this after completing a workflow step.
-   *
-   * @param {string} recipientRole - The role to notify (e.g., "Project Manager")
-   * @param {string} title - Short title for the notification
-   * @param {string} message - Descriptive message
-   * @param {string|null} entityType - e.g., "rfq", "project", "test_result"
-   * @param {string|null} entityId - UUID of the entity
-   * @param {string|null} entityUrl - Frontend route to navigate to on click
-   */
-  triggerWorkflowNotification: ({
-    recipientRole,
-    title,
-    message,
-    entityType = null,
-    entityId = null,
-    entityUrl = null,
-  }) =>
-    apiService.post('/api/v1/notifications/trigger', {
-      recipient_role: recipientRole,
-      title,
-      message,
-      entity_type: entityType,
-      entity_id: entityId,
-      entity_url: entityUrl,
-    }),
-}
-
 // Lab recommendations (engine under /api/v1/labs; requires LAB_ENGINE_DATABASE_URL on backend)
 export const labsService = {
   health: () => apiService.get('/api/v1/labs/health'),
@@ -299,26 +267,6 @@ export const rfqsService = {
     clearCache('rfqs:')
     return await apiService.delete(`/api/v1/rfqs/${id}`)
   },
-  feasibilityCheck: (id, notes, file) => {
-    const formData = new FormData()
-    formData.append('notes', notes)
-    if (file) formData.append('file', file)
-    
-    return apiService.client.post(`/api/v1/rfqs/${id}/feasibility`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-  },
-  prepareQuotation: (id, notes, file) => {
-    const formData = new FormData()
-    formData.append('notes', notes)
-    if (file) formData.append('file', file)
-    
-    return apiService.client.post(`/api/v1/rfqs/${id}/quotation`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-  },
-  approve: (id) => apiService.post(`/api/v1/rfqs/${id}/approve`),
-  updateStatus: (id, status) => apiService.patch(`/api/v1/rfqs/${id}/status`, { status }),
 }
 
 // Estimations Service
@@ -369,18 +317,10 @@ export const projectsService = {
     }
   },
   getById: (id) => apiService.get(`/api/v1/projects/${id}`),
-  getActivities: (id) => apiService.get(`/api/v1/projects/${id}/activities`),
   create: async (data) => {
     clearCache('projects:')
     return await apiService.post('/api/v1/projects', data)
   },
-  approveQuality: (id) => apiService.post(`/api/v1/projects/${id}/approve/quality`),
-  approveProject: (id) => apiService.post(`/api/v1/projects/${id}/approve/project`),
-  approveTechnical: (id) => apiService.post(`/api/v1/projects/${id}/approve/technical`),
-  assignTL: (id, teamLeadId) => apiService.post(`/api/v1/projects/${id}/assign-tl?team_lead_id=${teamLeadId}`),
-  submitReport: (id) => apiService.post(`/api/v1/projects/${id}/submit-report`),
-  tlReview: (id) => apiService.post(`/api/v1/projects/${id}/tl-review`),
-  verifyPayment: (id) => apiService.post(`/api/v1/projects/${id}/payment-verify`),
   update: async (id, data) => {
     clearCache('projects:')
     return await apiService.put(`/api/v1/projects/${id}`, data)
@@ -584,15 +524,16 @@ export const documentsService = {
    * IMPORTANT: bypass apiService.post to avoid JSON header
    */
   create: async (formData) => {
-    const response = await apiService.client.post(
-      '/api/v1/documents',
-      formData,
-      {
-        headers: {
-          'Content-Type': undefined,
-        },
+    // Manually get token to ensure it's sent
+    const token = localStorage.getItem('labManagementAccessToken') || localStorage.getItem('accessToken')
+    
+    // Use the client directly with a trailing slash to avoid 307 redirects that can strip auth headers
+    const response = await apiService.client.post('/api/v1/documents/', formData, {
+      headers: {
+        'Content-Type': undefined,
+        'Authorization': `Bearer ${token}`
       }
-    )
+    })
     return response.data
   },
 
@@ -689,9 +630,9 @@ export const certificationsService = {
 
 // Instruments Service
 export const instrumentsService = {
-  getAll: async () => {
+  getAll: async (params) => {
     try {
-      return await apiService.get('/api/v1/instruments')
+      return await apiService.get('/api/v1/instruments', { params })
     } catch (error) {
       console.error('Error fetching instruments:', error)
       throw error
@@ -699,16 +640,20 @@ export const instrumentsService = {
   },
   getById: (id) => apiService.get(`/api/v1/instruments/${id}`),
   create: async (data) => {
-    clearCache('instruments:')
+    clearCache('instruments')
     return await apiService.post('/api/v1/instruments', data)
   },
   update: async (id, data) => {
-    clearCache('instruments:')
+    clearCache('instruments')
     return await apiService.put(`/api/v1/instruments/${id}`, data)
   },
   deactivate: async (id) => {
-    clearCache('instruments:')
+    clearCache('instruments')
     return await apiService.patch(`/api/v1/instruments/${id}/deactivate`, {})
+  },
+  delete: async (id) => {
+    clearCache('instruments')
+    return await apiService.delete(`/api/v1/instruments/${id}`)
   },
 }
 
@@ -727,84 +672,20 @@ export const calibrationsService = {
   },
   getById: (id) => apiService.get(`/api/v1/calibrations/${id}`),
   create: async (data) => {
-    clearCache('calibrations:')
+    clearCache('calibrations')
     return await apiService.post('/api/v1/calibrations', data)
   },
   update: async (id, data) => {
-    clearCache('calibrations:')
+    clearCache('calibrations')
     return await apiService.put(`/api/v1/calibrations/${id}`, data)
   },
   delete: async (id) => {
-    clearCache('calibrations:')
+    clearCache('calibrations')
     return await apiService.delete(`/api/v1/calibrations/${id}`)
   },
 }
 
-// Maintenance Service
-export const maintenanceService = {
-  getAll: async (itemId) => {
-    const cacheKey = itemId ? `transactions:item:${itemId}` : 'transactions:all'
-    const cached = getCached(cacheKey)
-    if (cached) return cached
 
-    await mockDelay()
-    const data = [
-      {
-        id: 1,
-        transactionId: 'TXN-001',
-        itemId: 1,
-        itemName: 'EMC Test Probes',
-        itemType: 'Consumable',
-        transactionType: 'Usage',
-        quantity: 5,
-        usedBy: 'John Doe',
-        purpose: 'EMC Testing - Project Alpha',
-        linkedTestId: 1,
-        linkedTestName: 'EMC Compliance Test',
-        date: '2024-01-20',
-        notes: 'Used for emission testing',
-        createdAt: '2024-01-20T10:00:00Z'
-      },
-      {
-        id: 2,
-        transactionId: 'TXN-002',
-        itemId: 1,
-        itemName: 'EMC Test Probes',
-        itemType: 'Consumable',
-        transactionType: 'Addition',
-        quantity: 30,
-        usedBy: 'Inventory Manager',
-        purpose: 'Stock Replenishment',
-        linkedTestId: null,
-        linkedTestName: null,
-        date: '2024-01-15',
-        notes: 'New stock received',
-        createdAt: '2024-01-15T10:00:00Z'
-      },
-    ]
-    const filtered = itemId
-      ? data.filter(txn => txn.itemId === parseInt(itemId))
-      : data
-    setCached(cacheKey, filtered)
-    return filtered
-  },
-  getById: (id) => apiService.get(`/api/inventory-transactions/${id}`),
-  create: (data) => {
-    clearCache('transactions:')
-    clearCache('consumables:')
-    return apiService.post('/api/inventory-transactions', data)
-  },
-  getByDateRange: async (startDate, endDate) => {
-    const cacheKey = `transactions:range:${startDate}:${endDate}`
-    const cached = getCached(cacheKey)
-    if (cached) return cached
-
-    await mockDelay()
-    const data = []
-    setCached(cacheKey, data)
-    return data
-  },
-}
 
 // Inventory Reports Service
 export const inventoryReportsService = {
@@ -938,33 +819,47 @@ export const consumablesService = {
   },
   getById: (id) => apiService.get(`/api/v1/consumables/${id}`),
   create: async (data) => {
-    clearCache('consumables:')
+    clearCache('consumables')
     return await apiService.post('/api/v1/consumables', data)
   },
   update: async (id, data) => {
-    clearCache('consumables:')
-    return await apiService.put('/api/v1/consumables/${id}', data)
+    clearCache('consumables')
+    return await apiService.put(`/api/v1/consumables/${id}`, data)
   },
   delete: async (id) => {
-    clearCache('consumables:')
-    return await apiService.delete('/api/v1/consumables/${id}')
+    clearCache('consumables')
+    return await apiService.delete(`/api/v1/consumables/${id}`)
   },
 }
 
 // Inventory Transactions Service
 export const inventoryTransactionsService = {
-  getAll: async () => {
+  getAll: async (params) => {
     try {
-      return await apiService.get('/api/v1/inventory-transactions')
+      return await apiService.get('/api/v1/inventory-transactions', { params })
     } catch (error) {
       console.error('Error fetching transactions:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get('/api/v1/inventory-transactions/${id}'),
+  getById: (id) => apiService.get(`/api/v1/inventory-transactions/${id}`),
   create: async (data) => {
-    clearCache('transactions:')
+    clearCache('inventory-transactions')
+    clearCache('consumables')
+    clearCache('instruments')
     return await apiService.post('/api/v1/inventory-transactions', data)
+  },
+  update: async (id, data) => {
+    clearCache('inventory-transactions')
+    clearCache('consumables')
+    clearCache('instruments')
+    return await apiService.put(`/api/v1/inventory-transactions/${id}`, data)
+  },
+  delete: async (id) => {
+    clearCache('inventory-transactions')
+    clearCache('consumables')
+    clearCache('instruments')
+    return await apiService.delete(`/api/v1/inventory-transactions/${id}`)
   },
 }
 

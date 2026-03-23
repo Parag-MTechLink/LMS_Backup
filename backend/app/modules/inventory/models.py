@@ -73,6 +73,7 @@ class Calibration(Base):
     calibration_frequency = Column(String(50), nullable=True)  # Monthly, Quarterly, Annually, etc.
     certified_by = Column(String(255), nullable=True)
     certificate_number = Column(String(255), nullable=True)
+    certificate_url = Column(String(500), nullable=True)
     status = Column(String(50), nullable=True)  # Calculated: Valid, Due Soon, Overdue
     notes = Column(Text, nullable=True)
     

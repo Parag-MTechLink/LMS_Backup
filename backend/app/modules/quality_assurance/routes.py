@@ -7,9 +7,6 @@ from typing import List, Optional
 from datetime import date
 from pydantic import BaseModel, Field
 
-from app.dependencies.auth_dependency import require_permission
-from app.models.user_model import User
-
 from app.core.database import get_db
 from . import crud, schemas, models
 
@@ -26,8 +23,7 @@ def get_sops(
     search: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("qa:view"))
+    db: Session = Depends(get_db)
 ):
     """Get all SOPs with optional filtering"""
     sops = crud.get_sops(db, skip=skip, limit=limit, search=search, category=category, status=status)
@@ -35,21 +31,13 @@ def get_sops(
 
 
 @router.post("/sops", response_model=schemas.SOPResponse, status_code=201)
-def create_sop(
-    sop: schemas.SOPCreate, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("qa:full"))
-):
+def create_sop(sop: schemas.SOPCreate, db: Session = Depends(get_db)):
     """Create a new SOP"""
     return crud.create_sop(db, sop)
 
 
 @router.get("/sops/{sop_id}", response_model=schemas.SOPResponse)
-def get_sop(
-    sop_id: int, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("qa:view"))
-):
+def get_sop(sop_id: int, db: Session = Depends(get_db)):
     """Get a single SOP by ID"""
     sop = crud.get_sop(db, sop_id)
     if not sop:
@@ -58,12 +46,7 @@ def get_sop(
 
 
 @router.put("/sops/{sop_id}", response_model=schemas.SOPResponse)
-def update_sop(
-    sop_id: int, 
-    sop: schemas.SOPUpdate, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("qa:full"))
-):
+def update_sop(sop_id: int, sop: schemas.SOPUpdate, db: Session = Depends(get_db)):
     """Update an existing SOP"""
     updated_sop = crud.update_sop(db, sop_id, sop)
     if not updated_sop:
@@ -89,8 +72,7 @@ def get_documents(
     search: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     document_type: Optional[str] = Query(None, alias="documentType"),
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("qa:view"))
+    db: Session = Depends(get_db)
 ):
     """Get all QC documents with optional filtering"""
     documents = crud.get_documents(
@@ -101,21 +83,13 @@ def get_documents(
 
 
 @router.post("/qc-documents", response_model=schemas.DocumentResponse, status_code=201)
-def create_document(
-    document: schemas.DocumentCreate, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("qa:full"))
-):
+def create_document(document: schemas.DocumentCreate, db: Session = Depends(get_db)):
     """Create a new QC document"""
     return crud.create_document(db, document)
 
 
 @router.get("/qc-documents/{document_id}", response_model=schemas.DocumentResponse)
-def get_document(
-    document_id: int, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("qa:view"))
-):
+def get_document(document_id: int, db: Session = Depends(get_db)):
     """Get a single QC document by ID"""
     document = crud.get_document(db, document_id)
     if not document:
@@ -205,11 +179,7 @@ def get_qc_checks(
 
 
 @router.post("/qc-checks", response_model=schemas.QCCheckResponse, status_code=201)
-def create_qc_check(
-    qc_check: schemas.QCCheckCreate, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("qa:full"))
-):
+def create_qc_check(qc_check: schemas.QCCheckCreate, db: Session = Depends(get_db)):
     """Create a new QC check"""
     qc = crud.create_qc_check(db, qc_check)
     
@@ -368,8 +338,7 @@ def get_nc_capas(
     search: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     severity: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("qa:view"))
+    db: Session = Depends(get_db)
 ):
     """Get all NC/CAPA records with optional filtering"""
     nc_capas = crud.get_nc_capas(
@@ -380,11 +349,7 @@ def get_nc_capas(
 
 
 @router.post("/nc-capa", response_model=schemas.NCCAPAResponse, status_code=201)
-def create_nc_capa(
-    nc_capa: schemas.NCCAPACreate, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("qa:full"))
-):
+def create_nc_capa(nc_capa: schemas.NCCAPACreate, db: Session = Depends(get_db)):
     """Create a new NC/CAPA"""
     return crud.create_nc_capa(db, nc_capa)
 
@@ -449,8 +414,7 @@ def get_audits(
     search: Optional[str] = Query(None),
     audit_type: Optional[str] = Query(None, alias="auditType"),
     status: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("qa:view"))
+    db: Session = Depends(get_db)
 ):
     """Get all audits with optional filtering"""
     audits = crud.get_audits(
@@ -461,11 +425,7 @@ def get_audits(
 
 
 @router.post("/audits", response_model=schemas.AuditResponse, status_code=201)
-def create_audit(
-    audit: schemas.AuditCreate, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("qa:full"))
-):
+def create_audit(audit: schemas.AuditCreate, db: Session = Depends(get_db)):
     """Create a new audit"""
     return crud.create_audit(db, audit)
 

@@ -11,6 +11,7 @@ class TRF(Base):
 
     projectId = Column(Integer, nullable=False)
     projectName = Column(String, nullable=False)
+    status = Column(String, default="Pending QA")
 
     # Status lifecycle: Draft → Submitted → Approved / Rejected
     status = Column(String, nullable=False, default="Draft", server_default="Draft")

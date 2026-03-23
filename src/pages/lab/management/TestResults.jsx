@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react'
-import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { Search, BarChart3, CheckCircle, XCircle, Clock, Eye, Download, Plus } from 'lucide-react'
-import { testResultsService } from '../../../services/labManagementApi'
+import { testResultsService, apiService, testPlansService, testExecutionsService, projectsService, customersService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Badge from '../../../components/labManagement/Badge'
 import Input from '../../../components/labManagement/Input'
 import Modal from '../../../components/labManagement/Modal'
-import SampleTestResultModal from '../../../components/labManagement/modals/SampleTestResultModal'
+import SampleTestResultModal, { prefetchExtendedDetails } from '../../../components/labManagement/modals/SampleTestResultModal'
 import UploadTestResultForm from '../../../components/labManagement/forms/UploadTestResultForm'
 import Button from '../../../components/labManagement/Button'
 
@@ -22,8 +21,6 @@ function TestResults() {
   const [showSampleModal, setShowSampleModal] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [selectedResult, setSelectedResult] = useState(null)
-  const { user } = useLabManagementAuth()
-  const canCreate = user?.role !== 'Quality Manager'
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -42,8 +39,61 @@ function TestResults() {
         // Load all results
         data = await testResultsService.getAll()
       }
+      
+      // Fetch names and relations to map to cards seamlessly
+      const [executions, plans, projsData, custsData] = await Promise.all([
+          testExecutionsService.getAll().catch(() => []),
+          testPlansService.getAll().catch(() => []),
+          projectsService.getAll().catch(() => []),
+          customersService.getAll().catch(() => [])
+      ]);
+      
+      const custsMap = {};
+      (Array.isArray(custsData) ? custsData : []).forEach(c => custsMap[c.id] = {
+          companyName: c.companyName || c.name || '-',
+          customerName: c.contactPerson || c.name || c.companyName || '-'
+      });
 
-      setResults(Array.isArray(data) ? data : [])
+      const projsMap = {};
+      (Array.isArray(projsData) ? projsData : []).forEach(p => projsMap[p.id] = {
+          clientId: p.clientId || p.client_id || p.organization_id || p.organizationId
+      });
+
+      const plansMap = {};
+      (Array.isArray(plans) ? plans : []).forEach(p => plansMap[p.id] = {
+          name: p.name,
+          projectId: p.projectId || p.project_id,
+          assignedEngineerName: p.assignedEngineerName || p.assigned_engineer_name || null
+      });
+      
+      const execsMap = {};
+      (Array.isArray(executions) ? executions : []).forEach(e => {
+          let execName = null;
+          if (e.notes) {
+              const m = e.notes.match(/^\[([^\]]+)\]/);
+              if (m) execName = m[1].trim();
+          }
+          const plan = plansMap[e.testPlanId] || {};
+          const proj = projsMap[plan.projectId] || {};
+          const cust = custsMap[proj.clientId] || {};
+          
+          execsMap[e.id] = {
+              testPlanName: plan.name || `Plan ${e.testPlanId}`,
+              executionName: execName || plan.name || `Plan ${e.testPlanId}`,
+              executionNumber: e.executionNumber || e.id,
+              companyName: cust.companyName || '-',
+              customerName: cust.customerName || '-',
+              assignedEngineerName: e.executedByName || plan.assignedEngineerName || '-',
+              testPlanId: e.testPlanId
+          };
+      });
+
+      const enrichedData = (Array.isArray(data) ? data : []).map(r => ({
+          ...r,
+          ...execsMap[r.testExecutionId]
+      }));
+
+      setResults(enrichedData)
     } catch (error) {
       console.error('Error loading test results:', error)
       toast.error('Failed to load test results')
@@ -63,13 +113,39 @@ function TestResults() {
     return colors[status] || 'default'
   }
 
-  const handleDownload = (result, e) => {
+  const handleDownload = async (result, e) => {
     e.stopPropagation()
-    toast.success(`Downloading report for Result #${result.id}...`)
-    // Mock download logic
-    setTimeout(() => {
-      toast.success('Download complete')
-    }, 1500)
+    if (result?.attachments && result.attachments.length > 0) {
+      try {
+        toast.loading(`Downloading report for Result #${result.id}...`, { id: `dl-${result.id}` })
+        const url = result.attachments[0]
+        const res = await apiService.client.get(url, { responseType: 'blob' })
+        const blobUrl = URL.createObjectURL(res.data)
+        const link = document.createElement('a')
+        link.href = blobUrl
+        
+        const contentDisposition = res.headers['content-disposition']
+        const urlExt = url.split('.').pop().split(/#|\?/)[0]
+        let filename = `Report_${result?.id || 'doc'}${urlExt && urlExt.length <= 4 ? '.' + urlExt : ''}`
+        
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename="?([^"]+)"?/)
+            if (match && match[1]) filename = match[1]
+        }
+        
+        link.setAttribute('download', filename)
+        document.body.appendChild(link)
+        link.click()
+        link.parentNode.removeChild(link)
+        URL.revokeObjectURL(blobUrl)
+        toast.success(`Download complete`, { id: `dl-${result.id}` })
+      } catch (error) {
+        console.error("Download failed", error)
+        toast.error('Failed to download report', { id: `dl-${result.id}` })
+      }
+    } else {
+      toast.error('No report file attached')
+    }
   }
 
   const executionId = new URLSearchParams(window.location.search).get('executionId')
@@ -80,6 +156,23 @@ function TestResults() {
     const matchesExecution = !executionId || result.testExecutionId?.toString() === executionId
     return matchesSearch && matchesStatus && matchesExecution
   })
+
+  useEffect(() => {
+    filteredResults.forEach(r => {
+      if (r.testExecutionId) {
+        prefetchExtendedDetails(r.testExecutionId, {
+          projectExe: r.assignedEngineerName || r.projectExe,
+          customerName: r.customerName,
+          companyName: r.companyName,
+          dutName: r.dutName,
+          testPlanId: r.testPlanId,
+          testPlanName: r.testPlanName,
+          executionName: r.executionName,
+          executionNumber: r.executionNumber
+        })
+      }
+    })
+  }, [filteredResults])
 
   if (loading) {
     return (
@@ -110,14 +203,12 @@ function TestResults() {
           <p className="text-gray-600 mt-1">View and analyze test results</p>
         </div>
 
-        {canCreate && (
-          <Button
-            onClick={() => setShowUploadModal(true)}
-            icon={<Plus className="w-5 h-5" />}
-          >
-            Upload Result
-          </Button>
-        )}
+        <Button
+          onClick={() => setShowUploadModal(true)}
+          icon={<Plus className="w-5 h-5" />}
+        >
+          Upload Result
+        </Button>
       </motion.div>
 
       {/* Filters */}
@@ -183,11 +274,16 @@ function TestResults() {
                   </Badge>
                 </div>
 
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Result #{result.id}
-                </h3>
+                <div className="mb-3 mt-1">
+                  <h3 className="text-base font-bold text-gray-900 leading-tight mb-1 truncate" title={result.testPlanName || 'Unknown Plan'}>
+                    {result.testPlanName || 'Unknown Plan'}
+                  </h3>
+                  <div className="text-sm font-medium text-gray-600 truncate" title={result.executionName ? `${result.executionName} #${result.executionNumber || result.testExecutionId}` : `Execution #${result.testExecutionId || '-'}`}>
+                    {result.executionName ? `${result.executionName} #${result.executionNumber || result.testExecutionId}` : `Execution #${result.testExecutionId || '-'}`}
+                  </div>
+                </div>
 
-                <div className="space-y-2 mb-4">
+                <div className="space-y-2 mb-4 mt-auto">
                   <div className="flex items-center text-sm text-gray-500">
                     <Clock className="w-4 h-4 mr-2" />
                     {new Date(result.testDate).toLocaleDateString()}
@@ -249,10 +345,15 @@ function TestResults() {
         onClose={() => setShowSampleModal(false)}
         title="Test Result Details"
         size="lg"
+        showCloseIcon={false}
       >
         <SampleTestResultModal
           isOpen={showSampleModal}
           onClose={() => setShowSampleModal(false)}
+          onUpdate={(updatedFields) => {
+             setSelectedResult(prev => ({...prev, ...updatedFields}))
+             setResults(prev => prev.map(r => r.id === selectedResult.id ? {...r, ...updatedFields} : r))
+          }}
           result={selectedResult}
         />
       </Modal>

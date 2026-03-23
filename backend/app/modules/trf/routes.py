@@ -1,9 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.dependencies.auth_dependency import require_permission
-from app.models.user_model import User
-
 from app.core.database import get_db
 from app.modules.trf.models import TRF
 from app.modules.trf.schemas import TRFCreate, TRFResponse, TRFStatusUpdate
@@ -14,6 +11,7 @@ router = APIRouter(
 )
 
 @router.post("", response_model=TRFResponse)
+<<<<<<< HEAD
 def create_trf(
     trf: TRFCreate,
     db: Session = Depends(get_db),
@@ -21,6 +19,11 @@ def create_trf(
 ):
     from app.modules.projects.models import Project  # avoid circular imports
 
+=======
+def create_trf(trf: TRFCreate, db: Session = Depends(get_db)):
+    from app.modules.projects.models import Project  # Import here to avoid circular imports?
+    
+>>>>>>> b18e4bd3a1ccd273b68bfd6c2f5920e21f7ef638
     if trf.trfNumber:
         existing = db.query(TRF).filter(TRF.trfNumber == trf.trfNumber).first()
         if existing:
@@ -50,19 +53,26 @@ def get_trfs(
     if project_id is not None:
         query = query.filter(TRF.projectId == project_id)
     return query.all()
+def get_trfs(db: Session = Depends(get_db)):
+    return db.query(TRF).all()
 
 
 @router.get("/{id}", response_model=TRFResponse)
+<<<<<<< HEAD
 def get_trf(
     id: int,
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("trf:view"))
 ):
+=======
+def get_trf(id: int, db: Session = Depends(get_db)):
+>>>>>>> b18e4bd3a1ccd273b68bfd6c2f5920e21f7ef638
     trf = db.query(TRF).filter(TRF.id == id).first()
     if not trf:
         raise HTTPException(status_code=404, detail="TRF not found")
     return trf
 
+<<<<<<< HEAD
 
 @router.patch("/{id}/status", response_model=TRFResponse)
 def update_trf_status(
@@ -122,3 +132,18 @@ def delete_trf(
     db.delete(trf)
     db.commit()
     return {"message": "TRF deleted"}
+=======
+@router.put("/{id}", response_model=TRFResponse)
+def update_trf(id: int, trf_data: dict, db: Session = Depends(get_db)):
+    trf = db.query(TRF).filter(TRF.id == id).first()
+    if not trf:
+        raise HTTPException(status_code=404, detail="TRF not found")
+        
+    for key, value in trf_data.items():
+        if hasattr(trf, key):
+            setattr(trf, key, value)
+            
+    db.commit()
+    db.refresh(trf)
+    return trf
+>>>>>>> b18e4bd3a1ccd273b68bfd6c2f5920e21f7ef638

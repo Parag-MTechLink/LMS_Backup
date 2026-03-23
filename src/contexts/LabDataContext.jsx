@@ -160,12 +160,12 @@ export const LabDataProvider = ({ children }) => {
     },
   ]))
 
-  // Team Leads state
-  const [teamLeads, setTeamLeads] = useState(() => loadFromStorage('techlink_team_leads', [
-    { id: 'VALOR01', name: 'John Smith', specialization: 'EMC Testing', status: 'Available', role: 'Team Lead' },
-    { id: 'VALOR02', name: 'Sarah Johnson', specialization: 'Safety Testing', status: 'Busy', role: 'Team Lead' },
-    { id: 'VALOR03', name: 'Mike Davis', specialization: 'Thermal Testing', status: 'Available', role: 'Team Lead' },
-    { id: 'VALOR04', name: 'Emily Chen', specialization: 'EMC Testing', status: 'Available', role: 'Team Lead' },
+  // Technicians state
+  const [technicians, setTechnicians] = useState(() => loadFromStorage('techlink_technicians', [
+    { id: 'VALOR01', name: 'John Smith', specialization: 'EMC Testing', status: 'Available' },
+    { id: 'VALOR02', name: 'Sarah Johnson', specialization: 'Safety Testing', status: 'Busy' },
+    { id: 'VALOR03', name: 'Mike Davis', specialization: 'Thermal Testing', status: 'Available' },
+    { id: 'VALOR04', name: 'Emily Chen', specialization: 'EMC Testing', status: 'Available' },
   ]))
 
   // Schedule state
@@ -233,14 +233,20 @@ export const LabDataProvider = ({ children }) => {
     return data;
   })
 
+  // Inventory state
+  const [inventoryInstruments, setInventoryInstruments] = useState([])
+  const [inventoryConsumables, setInventoryConsumables] = useState([])
+  const [inventoryCalibrations, setInventoryCalibrations] = useState([])
+  const [inventoryTransactions, setInventoryTransactions] = useState([])
+
   // Save to localStorage whenever state changes
   useEffect(() => {
     saveToStorage('techlink_lab_requests', labRequests)
   }, [labRequests])
 
   useEffect(() => {
-    saveToStorage('techlink_team_leads', teamLeads)
-  }, [teamLeads])
+    saveToStorage('techlink_technicians', technicians)
+  }, [technicians])
 
   useEffect(() => {
     saveToStorage('techlink_lab_schedule', schedule)
@@ -260,8 +266,8 @@ export const LabDataProvider = ({ children }) => {
   }, [])
 
   const assignRequest = useCallback((requestId, technicianId) => {
-    const lead = teamLeads.find(t => t.id === technicianId)
-    if (!lead) return
+    const technician = technicians.find(t => t.id === technicianId)
+    if (!technician) return
 
     updateRequest(requestId, {
       assignedTo: technicianId,
@@ -269,13 +275,13 @@ export const LabDataProvider = ({ children }) => {
       progress: 10,
     })
 
-    // Update lead status if needed
-    if (lead.status === 'Available') {
-      setTeamLeads(prev => prev.map(t =>
+    // Update technician status if needed
+    if (technician.status === 'Available') {
+      setTechnicians(prev => prev.map(t =>
         t.id === technicianId ? { ...t, status: 'Busy' } : t
       ))
     }
-  }, [teamLeads, updateRequest])
+  }, [technicians, updateRequest])
 
   const updateRequestStatus = useCallback((id, newStatus, additionalData = {}) => {
     const updates = { status: newStatus, ...additionalData }
@@ -351,25 +357,36 @@ export const LabDataProvider = ({ children }) => {
 
   const value = useMemo(() => ({
     labRequests,
-    teamLeads,
+    technicians,
     schedule,
     organizationData,
     scopeData,
+    inventoryData: {
+      instruments: inventoryInstruments,
+      consumables: inventoryConsumables,
+      calibrations: inventoryCalibrations,
+      transactions: inventoryTransactions,
+      setInstruments: setInventoryInstruments,
+      setConsumables: setInventoryConsumables,
+      setCalibrations: setInventoryCalibrations,
+      setTransactions: setInventoryTransactions
+    },
     setLabRequests,
-    setTeamLeads,
+    setTechnicians,
     setSchedule,
     updateRequest,
     assignRequest,
     updateRequestStatus,
     updateRequestProgress,
-    addScheduleItem,
-    updateScheduleItem,
-    deleteScheduleItem,
+    addSchedule_item: addScheduleItem,
+    updateSchedule_item: updateScheduleItem,
+    deleteSchedule_item: deleteScheduleItem,
     updateOrganizationData,
     updateScopeData,
     getStats,
   }), [
-    labRequests, teamLeads, schedule, organizationData, scopeData,
+    labRequests, technicians, schedule, organizationData, scopeData,
+    inventoryInstruments, inventoryConsumables, inventoryCalibrations, inventoryTransactions,
     updateRequest, assignRequest, updateRequestStatus, updateRequestProgress,
     addScheduleItem, updateScheduleItem, deleteScheduleItem,
     updateOrganizationData, updateScopeData, getStats,

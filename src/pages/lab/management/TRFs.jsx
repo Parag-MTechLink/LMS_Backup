@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import { motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
@@ -42,8 +41,6 @@ function TRFs() {
   const [actionLoading, setActionLoading] = useState(null) // trf id being actioned
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { user } = useLabManagementAuth()
-  const canCreate = user?.role !== 'Quality Manager'
 
   const projectId = searchParams.get('projectId')
 
@@ -157,11 +154,20 @@ function TRFs() {
             )}
           </p>
         </div>
+<<<<<<< HEAD
         {canCreate && (
           <Button onClick={() => setShowCreateModal(true)} icon={<Plus className="w-5 h-5" />}>
             New TRF
           </Button>
         )}
+=======
+        <Button
+          onClick={() => setShowCreateModal(true)}
+          icon={<Plus className="w-5 h-5" />}
+        >
+          New TRF
+        </Button>
+>>>>>>> b18e4bd3a1ccd273b68bfd6c2f5920e21f7ef638
       </motion.div>
 
       {/* ── Filters ── */}

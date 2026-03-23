@@ -9,7 +9,7 @@ import {
   AlertTriangle,
   FolderOpen,
   BarChart3,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react'
 import Card from '../../../components/labManagement/Card'
 import {
@@ -17,7 +17,8 @@ import {
   qcService,
   auditService,
   ncCapaService,
-  documentControlService
+  documentControlService,
+  trfsService
 } from '../../../services/labManagementApi'
 
 function QualityAssurance() {
@@ -27,7 +28,7 @@ function QualityAssurance() {
     qc: { total: 0, passing: 0, failing: 0 },
     audit: { total: 0, completed: 0, inProgress: 0 },
     ncCapa: { open: 0, inProgress: 0, closed: 0 },
-    documents: { total: 0, locked: 0, active: 0 },
+    documents: { total: 0, locked: 0, active: 0, pendingTrfs: 0 },
     reports: { compliance: 0, alerts: 0 }
   })
   const [loading, setLoading] = useState(true)
@@ -40,51 +41,46 @@ function QualityAssurance() {
     try {
       setLoading(true)
 
-      // Fetch all data in parallel
-      const [sops, qcChecks, audits, ncCapas, documents] = await Promise.all([
+      const [sops, qcChecks, audits, ncCapas, documents, trfs] = await Promise.all([
         sopService.getAll().catch(() => []),
         qcService.getAll().catch(() => []),
         auditService.getAll().catch(() => []),
         ncCapaService.getAll().catch(() => []),
-        documentControlService.getAll().catch(() => [])
+        documentControlService.getAll().catch(() => []),
+        trfsService.getAll().catch(() => [])
       ])
 
-      // Calculate SOP stats
       const sopStats = {
         total: sops.length,
         active: sops.filter(s => s.status === 'Active').length,
         underReview: sops.filter(s => s.status === 'Under Review').length
       }
 
-      // Calculate QC stats
       const qcStats = {
         total: qcChecks.length,
         passing: qcChecks.filter(q => q.status === 'Pass').length,
         failing: qcChecks.filter(q => q.status === 'Fail').length
       }
 
-      // Calculate Audit stats
       const auditStats = {
         total: audits.length,
         completed: audits.filter(a => a.status === 'Completed').length,
         inProgress: audits.filter(a => a.status === 'In Progress').length
       }
 
-      // Calculate NC/CAPA stats
       const ncCapaStats = {
         open: ncCapas.filter(n => n.status === 'Open').length,
         inProgress: ncCapas.filter(n => n.status === 'In Progress').length,
         closed: ncCapas.filter(n => n.status === 'Closed').length
       }
 
-      // Calculate Document stats
       const docStats = {
         total: documents.length,
         locked: documents.filter(d => d.locked).length,
-        active: documents.filter(d => d.status === 'Active').length
+        active: documents.filter(d => d.status === 'Active').length,
+        pendingTrfs: trfs.filter(t => ['Draft', 'Pending QA', 'Under Review', 'Pending Review'].includes(t.status)).length
       }
 
-      // Calculate compliance score (simple average for now)
       const complianceScore = qcStats.total > 0
         ? Math.round((qcStats.passing / qcStats.total) * 100)
         : 0
@@ -251,8 +247,14 @@ function QualityAssurance() {
                     )}
                     {section.id === 'documents' && (
                       <>
-                        <span className="text-gray-500">Total: <span className="font-semibold text-gray-900">{section.stats.total}</span></span>
-                        <span className="text-blue-600">Active: {section.stats.active}</span>
+                        <span className="text-gray-500">Docs: <span className="font-semibold text-gray-900">{section.stats.total}</span></span>
+                        {section.stats.pendingTrfs > 0 ? (
+                          <span className="text-yellow-600 font-medium bg-yellow-50 px-2 py-0.5 rounded text-xs border border-yellow-200 shadow-sm animate-pulse">
+                            Pending TRFs: {section.stats.pendingTrfs}
+                          </span>
+                        ) : (
+                          <span className="text-blue-600">Active TRFs: 0</span>
+                        )}
                       </>
                     )}
                     {section.id === 'reports' && (

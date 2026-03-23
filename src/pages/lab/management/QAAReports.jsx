@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { BarChart3, AlertCircle, CheckCircle, TrendingUp, Shield, FileText, ClipboardCheck } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { BarChart3, AlertCircle, CheckCircle, TrendingUp, Shield, FileText, ClipboardCheck, ArrowLeft } from 'lucide-react'
 import { qaReportsService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
@@ -61,6 +62,12 @@ function QAAReports() {
 
   return (
     <div className="space-y-6">
+      <div className="mb-2">
+        <Link to="/lab/management/qa" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back to QA Dashboard
+        </Link>
+      </div>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

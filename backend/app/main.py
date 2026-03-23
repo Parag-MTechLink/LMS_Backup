@@ -23,7 +23,7 @@ from app.core.database import Base, engine
 from app.core.migrations import run_all_migrations
 from app.core.logging_config import configure_logging
 from app.models import FAQKnowledgeBase, RFQRequest, User, AuditLog  # noqa: F401 - register models for create_all
-from app.models.notification_model import Notification  # noqa: F401 - register for create_all
+from app.modules.crm.models import CRMCustomer, CRMFieldMapping
 
 # Import Routers
 from app.modules.organization import routes as organization_routes
@@ -44,7 +44,7 @@ from app.modules.samples.routes import router as samples_router
 from app.modules.trf.routes import router as trfs_router
 from app.modules.reports.routes import router as reports_router
 from app.modules.document.routes import router as documents_router
-from app.routes.notifications import router as notifications_router
+from app.modules.crm.routes import router as crm_router
 
 
 @asynccontextmanager
@@ -133,12 +133,34 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_ALLOWED_ORIGINS = {
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    "http://localhost:3000",
+}
+
+
+def _cors_headers_for(request: Request) -> dict:
+    """Inject CORS headers for direct JSONResponse returns that bypass CORSMiddleware."""
+    origin = request.headers.get("origin", "")
+    if origin not in _ALLOWED_ORIGINS:
+        return {}
+    return {
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Credentials": "true",
+    }
+
+
 def _standard_error_response(
     status_code: int,
     error: str,
     details: List[str] | None = None,
+    request: Request | None = None,
 ) -> JSONResponse:
     """Return consistent error JSON for unhandled exceptions."""
+    headers = _cors_headers_for(request) if request else {}
     return JSONResponse(
         status_code=status_code,
         content={
@@ -146,6 +168,7 @@ def _standard_error_response(
             "error": error,
             "details": details or [],
         },
+        headers=headers,
     )
 
 
@@ -161,6 +184,7 @@ async def db_connection_exception_handler(request: Request, exc: SQLAlchemyOpera
         status_code=503,
         error="Database temporarily unavailable.",
         details=["Connection to the database timed out or failed. If using Neon, the project may be suspended—check the Neon dashboard and try again."],
+        request=request,
     )
 
 
@@ -175,7 +199,7 @@ async def http_exception_handler(request: Request, exc: FastAPIHTTPException) ->
     else:
         details = [str(detail)]
     error_msg = "Unauthorized" if exc.status_code == 401 else ("Forbidden" if exc.status_code == 403 else (detail if isinstance(detail, str) else "Error"))
-    return _standard_error_response(status_code=exc.status_code, error=error_msg, details=details)
+    return _standard_error_response(status_code=exc.status_code, error=error_msg, details=details, request=request)
 
 
 @app.exception_handler(Exception)
@@ -184,9 +208,6 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
     Catch unhandled exceptions; return standard error format.
     HTTPException is handled by FastAPI and returns detail as-is (contract preserved).
     """
-    import traceback
-    print("GLOBAL EXCEPTION CAUGHT:")
-    traceback.print_exc()
     logging.getLogger("app").exception(
         "Unhandled exception | path=%s | method=%s",
         request.url.path,
@@ -197,6 +218,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
         status_code=500,
         error="An unexpected error occurred.",
         details=[str(exc)] if settings.DEBUG else [],
+        request=request,
     )
 
 
@@ -288,7 +310,7 @@ app.include_router(samples_router, prefix="/api/v1", tags=["Samples"])
 app.include_router(trfs_router, prefix="/api/v1", tags=["TRFs"])
 app.include_router(reports_router, prefix="/api/v1", tags=["Reports"])
 app.include_router(documents_router, prefix="/api/v1", tags=["Documents (Extended)"])
-app.include_router(notifications_router, prefix="/api/v1", tags=["Notifications"])
+app.include_router(crm_router, prefix="/api/v1/crm", tags=["CRM Customers"])
 
 from app.modules.labs.routes import router as labs_router
 app.include_router(labs_router, prefix="/api/v1", tags=["Labs / Recommendations"])

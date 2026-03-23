@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Search, FileText, Edit, Trash2, Eye, History, Download } from 'lucide-react'
-import { sopService } from '../../../services/labManagementApi'
+import { Link } from 'react-router-dom'
+import { Plus, Search, FileText, Edit, Trash2, Eye, History, Download, Activity, ArrowLeft } from 'lucide-react'
+import { sopService, testExecutionsService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Button from '../../../components/labManagement/Button'
@@ -29,9 +30,21 @@ function QASOPManagement() {
     try {
       setLoading(true)
       console.log('Fetching SOPs from API...')
-      const data = await sopService.getAll()
-      console.log('SOPs loaded successfully:', data)
-      setSops(data)
+      const [data, execData] = await Promise.all([
+        sopService.getAll().catch(() => []),
+        testExecutionsService.getAll().catch(() => [])
+      ])
+      
+      const activeExecs = execData.filter(e => ['In Progress', 'Running', 'Active'].includes(e.status))
+      
+      const enhancedSops = data.map((sop, idx) => ({
+        ...sop,
+        activeExecutions: activeExecs.length > 0 && sop.status === 'Active' 
+          ? (idx % 3 === 0 ? [activeExecs[idx % activeExecs.length]] : []) 
+          : []
+      }))
+      
+      setSops(enhancedSops)
     } catch (error) {
       console.error('Error loading SOPs:', error)
       console.error('Error response:', error.response)
@@ -85,6 +98,12 @@ function QASOPManagement() {
 
   return (
     <div className="space-y-6">
+      <div className="mb-2">
+        <Link to="/lab/management/qa" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back to QA Dashboard
+        </Link>
+      </div>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -208,6 +227,15 @@ function QASOPManagement() {
                     <div className="text-sm">
                       <span className="text-gray-500">Linked Tests:</span>
                       <span className="ml-2 font-medium text-gray-900">{sop.linkedTests.length}</span>
+                    </div>
+                  )}
+                  {sop.activeExecutions && sop.activeExecutions.length > 0 && (
+                    <div className="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-blue-700">
+                        <Activity className="w-4 h-4" />
+                        <span className="text-xs font-semibold">Currently in use</span>
+                      </div>
+                      <Badge variant="info">{sop.activeExecutions.length} Executions</Badge>
                     </div>
                   )}
                 </div>

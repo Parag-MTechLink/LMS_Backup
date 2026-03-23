@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from app.core.database import get_db
-from app.dependencies.auth_dependency import require_roles, require_permission
+from app.dependencies.auth_dependency import require_roles
 from app.models.user_model import User
 from app.services.rbac_service import log_audit
 from . import crud, schemas
@@ -25,8 +25,7 @@ def list_test_plans(
     status: Optional[str] = Query(None),
     test_type: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("testplan:view"))
+    db: Session = Depends(get_db)
 ):
     """Get all test plans with optional filtering"""
     return crud.get_test_plans(db, skip=skip, limit=limit, project_id=project_id, 
@@ -34,11 +33,7 @@ def list_test_plans(
 
 
 @router.get("/test-plans/{test_plan_id}", response_model=schemas.TestPlanResponse, tags=["Test Plans"])
-def get_test_plan(
-    test_plan_id: int, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("testplan:view"))
-):
+def get_test_plan(test_plan_id: int, db: Session = Depends(get_db)):
     """Get a specific test plan"""
     test_plan = crud.get_test_plan(db, test_plan_id)
     if not test_plan:
@@ -47,22 +42,13 @@ def get_test_plan(
 
 
 @router.post("/test-plans", response_model=schemas.TestPlanResponse, status_code=201, tags=["Test Plans"])
-def create_test_plan(
-    test_plan: schemas.TestPlanCreate, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("testplan:full"))
-):
+def create_test_plan(test_plan: schemas.TestPlanCreate, db: Session = Depends(get_db)):
     """Create a new test plan"""
     return crud.create_test_plan(db, test_plan)
 
 
 @router.put("/test-plans/{test_plan_id}", response_model=schemas.TestPlanResponse, tags=["Test Plans"])
-def update_test_plan(
-    test_plan_id: int, 
-    test_plan: schemas.TestPlanUpdate, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("testplan:full"))
-):
+def update_test_plan(test_plan_id: int, test_plan: schemas.TestPlanUpdate, db: Session = Depends(get_db)):
     """Update a test plan"""
     updated_plan = crud.update_test_plan(db, test_plan_id, test_plan)
     if not updated_plan:
@@ -86,11 +72,7 @@ def delete_test_plan(
 
 
 @router.post("/test-plans/{test_plan_id}/approve", response_model=schemas.TestPlanResponse, tags=["Test Plans"])
-def approve_test_plan(
-    test_plan_id: int, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("testplan:full"))
-):
+def approve_test_plan(test_plan_id: int, db: Session = Depends(get_db)):
     """Approve a test plan"""
     approved_plan = crud.approve_test_plan(db, test_plan_id)
     if not approved_plan:
@@ -120,8 +102,7 @@ def list_test_executions(
     limit: int = Query(100, ge=1, le=1000),
     test_plan_id: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("testexecution:view"))
+    db: Session = Depends(get_db)
 ):
     """Get all test executions with optional filtering"""
     return crud.get_test_executions(db, skip=skip, limit=limit, 
@@ -129,11 +110,7 @@ def list_test_executions(
 
 
 @router.get("/test-executions/{execution_id}", response_model=schemas.TestExecutionResponse, tags=["Test Executions"])
-def get_test_execution(
-    execution_id: int, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("testexecution:view"))
-):
+def get_test_execution(execution_id: int, db: Session = Depends(get_db)):
     """Get a specific test execution"""
     execution = crud.get_test_execution(db, execution_id)
     if not execution:
@@ -142,11 +119,7 @@ def get_test_execution(
 
 
 @router.post("/test-executions", response_model=schemas.TestExecutionResponse, status_code=201, tags=["Test Executions"])
-def create_test_execution(
-    execution: schemas.TestExecutionCreate, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("testexecution:full"))
-):
+def create_test_execution(execution: schemas.TestExecutionCreate, db: Session = Depends(get_db)):
     """Create a new test execution"""
     # Verify test plan exists
     test_plan = crud.get_test_plan(db, execution.test_plan_id)
@@ -156,12 +129,7 @@ def create_test_execution(
 
 
 @router.put("/test-executions/{execution_id}", response_model=schemas.TestExecutionResponse, tags=["Test Executions"])
-def update_test_execution(
-    execution_id: int, 
-    execution: schemas.TestExecutionUpdate, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("testexecution:full"))
-):
+def update_test_execution(execution_id: int, execution: schemas.TestExecutionUpdate, db: Session = Depends(get_db)):
     """Update a test execution"""
     updated_execution = crud.update_test_execution(db, execution_id, execution)
     if not updated_execution:
@@ -215,8 +183,7 @@ def list_test_results(
     limit: int = Query(100, ge=1, le=1000),
     execution_id: Optional[int] = Query(None),
     pass_fail: Optional[bool] = Query(None),
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("testresult:view"))
+    db: Session = Depends(get_db)
 ):
     """Get all test results with optional filtering"""
     return crud.get_test_results(db, skip=skip, limit=limit, 
@@ -224,11 +191,7 @@ def list_test_results(
 
 
 @router.get("/test-results/{result_id}", response_model=schemas.TestResultResponse, tags=["Test Results"])
-def get_test_result(
-    result_id: int, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("testresult:view"))
-):
+def get_test_result(result_id: int, db: Session = Depends(get_db)):
     """Get a specific test result"""
     result = crud.get_test_result(db, result_id)
     if not result:
@@ -237,11 +200,7 @@ def get_test_result(
 
 
 @router.post("/test-results", response_model=schemas.TestResultResponse, status_code=201, tags=["Test Results"])
-def create_test_result(
-    result: schemas.TestResultCreate, 
-    db: Session = Depends(get_db),
-    _: User = Depends(require_permission("testresult:full"))
-):
+def create_test_result(result: schemas.TestResultCreate, db: Session = Depends(get_db)):
     """Create a new test result"""
     # Verify test execution exists
     execution = crud.get_test_execution(db, result.test_execution_id)

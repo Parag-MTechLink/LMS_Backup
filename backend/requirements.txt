@@ -46,4 +46,6 @@ openpyxl>=3.1.0
 numpy>=1.24.0
 openai>=1.0.0
 jsonschema>=4.19.0
-gunicorn>=21.2.0
+# Integration
+httpx>=0.26.0
+cryptography>=42.0.0

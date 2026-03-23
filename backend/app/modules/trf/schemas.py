@@ -7,11 +7,15 @@ class TRFCreate(BaseModel):
     trfNumber: Optional[str] = None
     projectId: int
     projectName: Optional[str] = None
+<<<<<<< HEAD
     status: Optional[str] = "Draft"
     test_type: Optional[str] = None
     description: Optional[str] = None
     sample_description: Optional[str] = None
     priority: Optional[str] = "Normal"
+=======
+    status: str = "Pending QA"
+>>>>>>> b18e4bd3a1ccd273b68bfd6c2f5920e21f7ef638
     notes: Optional[str] = None
 
 
