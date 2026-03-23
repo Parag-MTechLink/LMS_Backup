@@ -61,8 +61,6 @@ class TestPlan(Base):
     # Dates
     planned_start_date = Column(DateTime, nullable=True)
     planned_end_date = Column(DateTime, nullable=True)
-    actual_start_date = Column(DateTime, nullable=True)
-    actual_end_date = Column(DateTime, nullable=True)
     
     # Metadata
     created_by = Column(Integer, nullable=True)  # Foreign key to users

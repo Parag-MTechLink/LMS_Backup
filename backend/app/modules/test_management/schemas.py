@@ -50,8 +50,6 @@ class TestPlanBase(BaseModel):
     assigned_engineer_name: Optional[str] = Field(None, alias="assignedEngineerName")
     planned_start_date: Optional[datetime] = Field(None, alias="plannedStartDate")
     planned_end_date: Optional[datetime] = Field(None, alias="plannedEndDate")
-    actual_start_date: Optional[datetime] = Field(None, alias="actualStartDate")
-    actual_end_date: Optional[datetime] = Field(None, alias="actualEndDate")
 
     class Config:
         populate_by_name = True
@@ -68,14 +66,15 @@ class TestPlanUpdate(BaseModel):
     description: Optional[str] = None
     test_type: Optional[TestTypeEnum] = Field(None, alias="testType")
     status: Optional[TestPlanStatusEnum] = None
-    project_id: Optional[int] = None
-    project_name: Optional[str] = None
-    assigned_engineer_id: Optional[int] = None
-    assigned_engineer_name: Optional[str] = None
-    planned_start_date: Optional[datetime] = None
-    planned_end_date: Optional[datetime] = None
-    actual_start_date: Optional[datetime] = None
-    actual_end_date: Optional[datetime] = None
+    project_id: Optional[int] = Field(None, alias="projectId")
+    project_name: Optional[str] = Field(None, alias="projectName")
+    assigned_engineer_id: Optional[int] = Field(None, alias="assignedEngineerId")
+    assigned_engineer_name: Optional[str] = Field(None, alias="assignedEngineerName")
+    planned_start_date: Optional[datetime] = Field(None, alias="plannedStartDate")
+    planned_end_date: Optional[datetime] = Field(None, alias="plannedEndDate")
+
+    class Config:
+        populate_by_name = True
 
 
 class TestPlanResponse(BaseModel):
@@ -91,8 +90,6 @@ class TestPlanResponse(BaseModel):
     assigned_engineer_name: Optional[str] = Field(None, alias="assignedEngineerName")
     planned_start_date: Optional[datetime] = Field(None, alias="plannedStartDate")
     planned_end_date: Optional[datetime] = Field(None, alias="plannedEndDate")
-    actual_start_date: Optional[datetime] = Field(None, alias="actualStartDate")
-    actual_end_date: Optional[datetime] = Field(None, alias="actualEndDate")
     created_by: Optional[int] = Field(None, alias="createdBy")
     created_at: datetime = Field(..., alias="createdAt")
     updated_at: datetime = Field(..., alias="updatedAt")

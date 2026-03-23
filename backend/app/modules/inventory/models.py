@@ -71,6 +71,7 @@ class Calibration(Base):
     last_calibration_date = Column(Date, nullable=False)
     next_due_date = Column(Date, nullable=False)
     calibration_frequency = Column(String(50), nullable=True)  # Monthly, Quarterly, Annually, etc.
+    calibration_method = Column(String(100), nullable=True)  # ISO/IEC 17025, etc.
     certified_by = Column(String(255), nullable=True)
     certificate_number = Column(String(255), nullable=True)
     certificate_url = Column(String(500), nullable=True)
