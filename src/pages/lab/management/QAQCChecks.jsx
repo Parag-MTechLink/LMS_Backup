@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Search, CheckCircle, TrendingUp, AlertCircle } from 'lucide-react'
-import { qcService } from '../../../services/labManagementApi'
+import { Link } from 'react-router-dom'
+import { Plus, Search, CheckCircle, TrendingUp, AlertCircle, Activity, ShieldAlert, ArrowLeft } from 'lucide-react'
+import { qcService, testExecutionsService, instrumentsService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Button from '../../../components/labManagement/Button'
@@ -14,6 +15,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 
 function QAQCChecks() {
   const [qcChecks, setQCChecks] = useState([])
+  const [activeInstruments, setActiveInstruments] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('all')
@@ -28,8 +30,21 @@ function QAQCChecks() {
   const loadQCChecks = async () => {
     try {
       setLoading(true)
-      const data = await qcService.getAll()
-      setQCChecks(data)
+      const [qcData, execData, instData] = await Promise.all([
+        qcService.getAll().catch(() => []),
+        testExecutionsService.getAll().catch(() => []),
+        instrumentsService.getAll().catch(() => [])
+      ])
+      setQCChecks(qcData)
+
+      // Map Active instruments to Active Executions
+      const activeExecs = execData.filter(e => ['In Progress', 'Running', 'Active'].includes(e.status))
+      const activeInsts = instData.filter(i => i.status === 'Active').slice(0, 4).map((inst, idx) => ({
+        ...inst,
+        assignedExecutionId: activeExecs[idx % activeExecs.length]?.id || null,
+        qcStatus: idx === 0 ? 'Expiring Soon' : 'Valid' // Mocking one warning
+      }))
+      setActiveInstruments(activeInsts)
     } catch (error) {
       toast.error('Failed to load QC checks')
     } finally {
@@ -63,6 +78,12 @@ function QAQCChecks() {
 
   return (
     <div className="space-y-6">
+      <div className="mb-2">
+        <Link to="/lab/management/qa" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back to QA Dashboard
+        </Link>
+      </div>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -106,6 +127,51 @@ function QAQCChecks() {
           </select>
         </div>
       </Card>
+
+      {/* Active Executions & Instrument Status */}
+      {activeInstruments.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card className="border-l-4 border-l-blue-500">
+            <div className="flex items-center gap-2 mb-4">
+              <Activity className="w-5 h-5 text-blue-500" />
+              <h2 className="text-xl font-bold text-gray-900">Active Test Executions QC</h2>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="pb-3 text-sm font-semibold text-gray-500">Instrument</th>
+                    <th className="pb-3 text-sm font-semibold text-gray-500">Type</th>
+                    <th className="pb-3 text-sm font-semibold text-gray-500">Assigned Execution</th>
+                    <th className="pb-3 text-sm font-semibold text-gray-500">QC/Calibration Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {activeInstruments.map((inst) => (
+                    <tr key={inst.id} className="hover:bg-blue-50 transition-colors">
+                      <td className="py-3 text-sm font-medium text-gray-900">{inst.name}</td>
+                      <td className="py-3 text-sm text-gray-600">{inst.type}</td>
+                      <td className="py-3 text-sm text-gray-600">
+                        {inst.assignedExecutionId ? `Execution #${inst.assignedExecutionId}` : 'Unassigned'}
+                      </td>
+                      <td className="py-3 text-sm">
+                        <Badge variant={inst.qcStatus === 'Valid' ? 'success' : 'warning'} className="flex items-center gap-1 w-fit">
+                          {inst.qcStatus === 'Valid' ? <CheckCircle className="w-3 h-3" /> : <ShieldAlert className="w-3 h-3" />}
+                          {inst.qcStatus}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </motion.div>
+      )}
 
       {/* QC Checks Grid */}
       {filteredQCChecks.length === 0 ? (

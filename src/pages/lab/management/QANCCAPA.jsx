@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Search, AlertTriangle, CheckCircle, Clock, XCircle } from 'lucide-react'
-import { ncCapaService } from '../../../services/labManagementApi'
+import { Link } from 'react-router-dom'
+import { Plus, Search, AlertTriangle, CheckCircle, Clock, XCircle, AlertOctagon, ArrowLeft } from 'lucide-react'
+import { ncCapaService, testResultsService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Button from '../../../components/labManagement/Button'
@@ -12,6 +13,7 @@ import CreateNCCAPAForm from '../../../components/labManagement/forms/CreateNCCA
 
 function QANCCAPA() {
   const [ncCapas, setNCCapas] = useState([])
+  const [failedResults, setFailedResults] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('all')
@@ -26,8 +28,12 @@ function QANCCAPA() {
   const loadNCCapas = async () => {
     try {
       setLoading(true)
-      const data = await ncCapaService.getAll()
-      setNCCapas(data)
+      const [ncData, resultsData] = await Promise.all([
+        ncCapaService.getAll().catch(() => []),
+        testResultsService.getAll().catch(() => [])
+      ])
+      setNCCapas(ncData)
+      setFailedResults(resultsData.filter(r => r.status === 'Fail' || r.status === 'Failed'))
     } catch (error) {
       toast.error('Failed to load NC/CAPA records')
     } finally {
@@ -85,6 +91,12 @@ function QANCCAPA() {
 
   return (
     <div className="space-y-6">
+      <div className="mb-2">
+        <Link to="/lab/management/qa" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back to QA Dashboard
+        </Link>
+      </div>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -139,6 +151,65 @@ function QANCCAPA() {
           </select>
         </div>
       </Card>
+
+      {/* Pending Investigations (Failed Results) */}
+      {failedResults.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card className="border-l-4 border-l-red-500">
+            <div className="flex items-center gap-2 mb-4">
+              <AlertOctagon className="w-5 h-5 text-red-500" />
+              <h2 className="text-xl font-bold text-gray-900">Pending Investigations</h2>
+              <Badge variant="danger" className="ml-2">{failedResults.length} Action Needed</Badge>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="pb-3 text-sm font-semibold text-gray-500">Result ID</th>
+                    <th className="pb-3 text-sm font-semibold text-gray-500">Test Execution</th>
+                    <th className="pb-3 text-sm font-semibold text-gray-500">Date Failed</th>
+                    <th className="pb-3 text-sm font-semibold text-gray-500 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {failedResults.map((result) => (
+                    <tr key={result.id} className="hover:bg-red-50 transition-colors">
+                      <td className="py-3 text-sm font-medium text-gray-900">RES-{result.id}</td>
+                      <td className="py-3 text-sm text-gray-600">Execution #{result.execution_id}</td>
+                      <td className="py-3 text-sm text-gray-500">
+                        {new Date(result.updated_at || result.created_at || new Date()).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 text-sm text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedNC({
+                              description: `Failed test result RES-${result.id} from Execution #${result.execution_id}. Needs investigation.`,
+                              severity: 'High',
+                              impactedArea: 'Testing Lab',
+                              status: 'Open',
+                              rootCause: '',
+                              correctiveAction: ''
+                            })
+                            setShowCreateModal(true)
+                          }}
+                        >
+                          Raise CAPA
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </motion.div>
+      )}
 
       {/* NC/CAPA List */}
       {filteredNCCapas.length === 0 ? (
