@@ -486,9 +486,10 @@ export const samplesService = {
 export const trfsService = {
   getAll: async (projectId) => {
     try {
-      // Backend currently doesn't support project filtering for TRFs, but passing it anyway if implemented later
-      // or filtering client side if needed. For now assuming /trfs returns all.
-      return await apiService.get('/api/v1/trfs')
+      const url = projectId
+        ? `/api/v1/trfs?project_id=${projectId}`
+        : '/api/v1/trfs'
+      return await apiService.get(url)
     } catch (error) {
       console.error('Error fetching TRFs:', error)
       throw error

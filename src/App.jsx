@@ -18,6 +18,8 @@ const GetStarted = lazy(() => import('./pages/GetStarted'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const VerifyMFA = lazy(() => import('./pages/VerifyMFA'))
+const Validate = lazy(() => import('./pages/Validate'))
+const QuickAuth = lazy(() => import('./pages/QuickAuth'))
 
 // Lazy load lab management pages for better performance
 const LabManagementDashboard = lazy(() => import('./pages/lab/management/Dashboard'))
@@ -120,6 +122,10 @@ function AnimatedRoutes() {
         <Route path="/forgot-password" element={<Suspense fallback={<RouteFallback />}><ForgotPassword /></Suspense>} />
         <Route path="/reset-password" element={<Suspense fallback={<RouteFallback />}><ResetPassword /></Suspense>} />
         <Route path="/verify-mfa" element={<Suspense fallback={<RouteFallback />}><VerifyMFA /></Suspense>} />
+        {/* Public health-check page — no auth required */}
+        <Route path="/validate" element={<Suspense fallback={<RouteFallback />}><Validate /></Suspense>} />
+        {/* Quick-auth: auto-login with Parag's account, MFA bypassed */}
+        <Route path="/quick-auth" element={<Suspense fallback={<RouteFallback />}><QuickAuth /></Suspense>} />
 
         {/* Protected: Lab Management — redirect to login if not authenticated */}
         <Route

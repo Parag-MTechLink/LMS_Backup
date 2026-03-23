@@ -346,6 +346,30 @@ async def health_check():
     }
 
 
+@app.get("/api/health-check")
+async def full_health_check():
+    """
+    Full system health check — unauthenticated.
+    Checks backend liveness and Neon database connectivity.
+    Called by the frontend /validate page.
+    """
+    db_ok = False
+    db_error: str | None = None
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception as exc:
+        db_error = str(exc)
+
+    return {
+        "backend": True,
+        "database": db_ok,
+        "database_error": db_error,
+        "version": settings.APP_VERSION,
+    }
+
+
 # Auth endpoints: defined here with decorators so they are always registered (no router)
 @app.get("/api/v1/auth/health")
 def auth_health():
@@ -375,6 +399,8 @@ from app.routes.auth import (
     change_password as _auth_change_password,
     UpdateProfileRequest,
     ChangePasswordRequest,
+    quick_login as _auth_quick_login,
+    QuickLoginRequest,
 )
 from app.models.user_model import User
 from fastapi import Depends
@@ -385,6 +411,12 @@ from typing import List
 @app.post("/api/v1/auth/login", response_model=LoginResponse)
 def auth_login(body: LoginRequest, request: Request, db: Session = Depends(get_db)):
     return _auth_login(body, request, db)
+
+
+@app.post("/api/v1/auth/quick-login", response_model=LoginResponse)
+def auth_quick_login(body: QuickLoginRequest, request: Request, db: Session = Depends(get_db)):
+    """Temporary MFA-bypass quick-login. Requires bypass_key."""
+    return _auth_quick_login(body, request, db)
 
 
 @app.post("/api/v1/auth/signup", response_model=SignupResponse)

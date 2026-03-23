@@ -10,12 +10,26 @@ import {
   Clock,
   BarChart3,
   Users,
+  ExternalLink,
+  Shield,
+  CheckCircle2,
+  UserCheck,
+  ClipboardCheck,
+  CreditCard,
+  Send,
+  History,
+  MessageSquare,
+  AlertCircle,
+  MoreVertical,
+  Plus,
+  X
   ExternalLink
 } from 'lucide-react'
 import { projectsService } from '../../../services/labManagementApi'
 import { samplesService } from '../../../services/labManagementApi'
 import { trfsService } from '../../../services/labManagementApi'
 import { testPlansService } from '../../../services/labManagementApi'
+import CreateTRFForm from '../../../components/labManagement/forms/CreateTRFForm'
 import toast from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Badge from '../../../components/labManagement/Badge'
@@ -29,6 +43,11 @@ function ProjectDetail() {
   const [trfs, setTrfs] = useState([])
   const [testPlans, setTestPlans] = useState([])
   const [loading, setLoading] = useState(true)
+  const [teamLeads, setTeamLeads] = useState([])
+  const [selectedTL, setSelectedTL] = useState('')
+  const [activities, setActivities] = useState([])
+  const [showHistoryModal, setShowHistoryModal] = useState(false)
+  const [showAddTRFModal, setShowAddTRFModal] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -304,10 +323,25 @@ function ProjectDetail() {
 
         {activeTab === 'trfs' && (
           <div className="space-y-4">
+            {/* Header row with Add TRF button */}
+            {canCreate && (
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowAddTRFModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all shadow shadow-primary/20"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add TRF
+                </button>
+              </div>
+            )}
+
             {trfs.length === 0 ? (
               <Card>
                 <div className="text-center py-12">
                   <FileCheck className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 font-medium">No TRFs for this project yet</p>
+                  <p className="text-sm text-gray-400 mt-1">Use the "Add TRF" button above to attach a TRF to this project.</p>
                   <p className="text-gray-600">No TRFs for this project</p>
                   <button
                     onClick={() => navigate('/lab/management/trfs')}
@@ -352,6 +386,123 @@ function ProjectDetail() {
           </div>
         )}
       </div>
+      <Toaster position="top-right" />
+
+      {/* Add TRF Modal */}
+      {showAddTRFModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden"
+          >
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-primary/5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <FileCheck className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Add TRF</h3>
+                  <p className="text-sm text-gray-500">Attach a Test Report Form to this project</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAddTRFModal(false)}
+                className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="p-6">
+              <CreateTRFForm
+                projectId={parseInt(id)}
+                onSuccess={() => {
+                  setShowAddTRFModal(false)
+                  loadRelatedData()
+                }}
+                onCancel={() => setShowAddTRFModal(false)}
+              />
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Workflow History Modal */}
+      {showHistoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col shadow-2xl"
+          >
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-primary/5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <History className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Workflow Activity Log</h3>
+                  <p className="text-sm text-gray-500">Chronological history of this project</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowHistoryModal(false)}
+                className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 rotate-90" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {activities.length === 0 ? (
+                <div className="text-center py-12">
+                  <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No activity recorded yet</p>
+                </div>
+              ) : (
+                <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
+                  {activities.map((activity, idx) => (
+                    <div key={activity.id} className="relative flex items-start gap-6 group">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white border-2 border-primary/20 group-hover:border-primary transition-colors flex-shrink-0 z-10 shadow-sm">
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                      </div>
+                      <div className="flex-1 bg-gray-50 rounded-xl p-4 border border-transparent group-hover:border-primary/10 group-hover:bg-white transition-all">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-primary uppercase tracking-wider">
+                            {activity.processStep}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            {new Date(activity.timestamp).toLocaleString(undefined, {
+                              day: '2-digit', month: 'short', year: 'numeric',
+                              hour: '2-digit', minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-800 font-medium mb-2">{activity.action}</p>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <Users className="w-3 h-3" />
+                          <span>{activity.userName} – <span className="italic">{activity.userRole}</span></span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Card({ children, className = '', hover = false, onClick }) {
+  return (
+    <div 
+      onClick={onClick}
+      className={`bg-white rounded-xl p-6 shadow-sm border border-gray-200 transition-all ${hover ? 'hover:shadow-md hover:border-primary/30' : ''} ${className}`}
+    >
+      {children}
     </div>
   )
 }

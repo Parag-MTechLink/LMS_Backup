@@ -33,6 +33,15 @@ def create_trf(trf: TRFCreate, db: Session = Depends(get_db)):
     return new_trf
 
 @router.get("", response_model=list[TRFResponse])
+def get_trfs(
+    project_id: int | None = None,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("trf:view"))
+):
+    query = db.query(TRF)
+    if project_id is not None:
+        query = query.filter(TRF.projectId == project_id)
+    return query.all()
 def get_trfs(db: Session = Depends(get_db)):
     return db.query(TRF).all()
 
