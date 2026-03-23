@@ -104,7 +104,7 @@ export default function OrganizationDetails() {
   const navigate = useNavigate()
   const { organizationData, updateOrganizationData } = useLabData()
   const [currentStep, setCurrentStep] = useState(1)
-  const [organizationId, setOrganizationId] = useState(organizationData?.id || null)
+  const [organizationId, setOrganizationId] = useState(null)  // Always start fresh
   const [loading, setLoading] = useState(false)
   const [checklist, setChecklist] = useState(null)  // Backend checklist data
   const [errors, setErrors] = useState({})
@@ -219,47 +219,6 @@ export default function OrganizationDetails() {
     qualityProcedures: []
   })
 
-  // Fetch existing organization data on mount
-  useEffect(() => {
-    const loadInitialData = async () => {
-      if (organizationId) {
-        try {
-          setLoading(true)
-          const data = await organizationService.getOrganization(organizationId)
-          
-          // Map backend data to frontend formData
-          // This is a bit complex as we need to inverse the mapper
-          // For now, let's at least ensure basic fields are there
-          const mappedData = {
-            ...formData,
-            labName: data.lab_name || '',
-            labAddress: data.lab_address || '',
-            labCountry: data.lab_country || 'India',
-            labState: data.lab_state || '',
-            labDistrict: data.lab_district || '',
-            labCity: data.lab_city || '',
-            labPinCode: data.lab_pin_code || '',
-            labLogo: data.lab_logo_url || null,
-            labProofOfAddress: data.lab_proof_of_address || 'Select',
-            labProofOfAddressOther: data.lab_proof_of_address_other || '',
-            labDocumentId: data.lab_document_id || '',
-            labAddressProofDocument: data.lab_address_proof_url || null,
-          }
-          
-          setFormData(mappedData)
-          updateOrganizationData(data)
-        } catch (error) {
-          console.error('Failed to load organization data:', error)
-          toast.error('Failed to load existing data')
-        } finally {
-          setLoading(false)
-        }
-      }
-    }
-    
-    loadInitialData()
-  }, []) // Run once on mount
-
   // Fetch checklist when navigating to step 11
   const fetchChecklist = async () => {
     if (!organizationId) return
@@ -278,19 +237,11 @@ export default function OrganizationDetails() {
     if (currentStep === 11 && organizationId) {
       fetchChecklist()
     }
-  }, [currentStep, organizationId])
+  }, [currentStep, organizationId])  // Only re-run when these change
 
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-  }
-
-  const getFileName = (file) => {
-    if (!file) return 'Choose file...'
-    if (typeof file === 'string') {
-      return file.split('/').pop()
-    }
-    return file.name
   }
 
   const handleFileUpload = async (field, file) => {
@@ -712,18 +663,17 @@ export default function OrganizationDetails() {
         const newErrors = {}
         if (!formData.gpsLatitude?.trim()) newErrors.gpsLatitude = 'Please enter latitude'
         if (!formData.gpsLongitude?.trim()) newErrors.gpsLongitude = 'Please enter longitude'
-        if (!formData.layoutLabPremises) newErrors.layoutLabPremises = 'Please upload lab layout'
-        if (!formData.organizationChart) newErrors.organizationChart = 'Please upload organization chart'
         
         formData.accreditationDocuments.forEach((doc, index) => {
           if (doc.type === 'Select') newErrors[`accreditationDocuments_${index}_type`] = 'Required'
           if (!doc.certificateNo?.trim()) newErrors[`accreditationDocuments_${index}_certificateNo`] = 'Required'
           if (doc.type === 'Other' && !doc.typeOther?.trim()) newErrors[`accreditationDocuments_${index}_typeOther`] = 'Required'
+          if (!doc.validityDate) newErrors[`accreditationDocuments_${index}_validityDate`] = 'Required'
         })
 
         setErrors(newErrors)
         if (Object.keys(newErrors).length > 0) {
-          toast.error('Please upload required documents and enter GPS coordinates')
+          toast.error('Please upload layout, organization chart and enter GPS coordinates')
           return false
         }
         break
@@ -799,8 +749,7 @@ export default function OrganizationDetails() {
       setLoading(true)
 
       // Create organization if it doesn't exist (Step 1)
-      let currentOrgId = organizationId;
-      if (!currentOrgId && currentStep === 1) {
+      if (!organizationId && currentStep === 1) {
         const newOrg = await organizationService.createOrganization({
           lab_name: formData.labName,
           lab_address: formData.labAddress,
@@ -810,21 +759,13 @@ export default function OrganizationDetails() {
           lab_pin_code: formData.labPinCode,
         })
 
-        currentOrgId = newOrg.id;
-        setOrganizationId(currentOrgId)
-        // updateOrganizationData will be called after saveOrganizationStep
-      }
-
-      if (currentOrgId) {
-        // Update existing organization or save the rest of Step 1 after creation
-        const updatedOrg = await saveOrganizationStep(currentOrgId, currentStep, formData)
-        
-        // Ensure we take the ID from the result if it was just created
-        const finalId = currentOrgId;
-        
-        // Map backend response back to context to ensure normalization consistency
-        updateOrganizationData({ ...formData, id: finalId })
-        toast.success(currentOrgId === organizationId ? 'Organization details saved successfully!' : 'Organization created and details saved!')
+        setOrganizationId(newOrg.id)
+        toast.success('Organization created successfully!')
+      } else if (organizationId) {
+        // Update existing organization
+        await saveOrganizationStep(organizationId, currentStep, formData)
+        updateOrganizationData(formData)
+        toast.success('Organization details saved successfully!')
       } else {
         toast.error('Please complete Step 1 first')
         return
@@ -970,7 +911,7 @@ export default function OrganizationDetails() {
                       <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
                         <Upload className="w-5 h-5 text-gray-400 mr-2" />
                         <span className="text-sm text-gray-600">
-                          {getFileName(formData.labLogo)}
+                          {formData.labLogo ? formData.labLogo.name : 'Choose file...'}
                         </span>
                         <input
                           type="file"
@@ -1129,7 +1070,7 @@ export default function OrganizationDetails() {
                       <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 hover:border-primary rounded-xl cursor-pointer transition-colors">
                         <Upload className="w-5 h-5 text-gray-400 mr-2" />
                         <span className="text-sm text-gray-600">
-                          {getFileName(formData.labAddressProofDocument)}
+                          {formData.labAddressProofDocument ? formData.labAddressProofDocument.name : 'Choose file...'}
                         </span>
                         <input
                           type="file"
@@ -1407,7 +1348,7 @@ export default function OrganizationDetails() {
                         <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
                           <Upload className="w-5 h-5 text-gray-400 mr-2" />
                           <span className="text-sm text-gray-600">
-                            {getFileName(formData.topManagementDocument)}
+                            {formData.topManagementDocument ? formData.topManagementDocument.name : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -1607,7 +1548,7 @@ export default function OrganizationDetails() {
                         <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.cancelledCheque ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                           <Upload className={`w-5 h-5 mr-2 ${errors.cancelledCheque ? 'text-red-400' : 'text-gray-400'}`} />
                           <span className={`text-sm ${errors.cancelledCheque ? 'text-red-500' : 'text-gray-600'}`}>
-                            {getFileName(formData.cancelledCheque)}
+                            {formData.cancelledCheque ? formData.cancelledCheque.name : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -1835,7 +1776,7 @@ export default function OrganizationDetails() {
                         <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.legalIdentityDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                           <Upload className={`w-5 h-5 mr-2 ${errors.legalIdentityDocument ? 'text-red-400' : 'text-gray-400'}`} />
                           <span className={`text-sm ${errors.legalIdentityDocument ? 'text-red-500' : 'text-gray-600'}`}>
-                            {getFileName(formData.legalIdentityDocument)}
+                            {formData.legalIdentityDocument ? formData.legalIdentityDocument.name : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -1947,7 +1888,7 @@ export default function OrganizationDetails() {
                               <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
                                 <Upload className="w-5 h-5 text-gray-400 mr-2" />
                                 <span className="text-sm text-gray-600 truncate max-w-[200px]">
-                                  {getFileName(doc.file)}
+                                  {doc.file ? (typeof doc.file === 'string' ? doc.file.split('/').pop() : doc.file.name) : 'Choose file...'}
                                 </span>
                                 <input
                                   type="file"
@@ -2034,7 +1975,7 @@ export default function OrganizationDetails() {
                         <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.impartialityDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                           <Upload className={`w-5 h-5 mr-2 ${errors.impartialityDocument ? 'text-red-400' : 'text-gray-400'}`} />
                           <span className={`text-sm ${errors.impartialityDocument ? 'text-red-500' : 'text-gray-600'}`}>
-                            {getFileName(formData.impartialityDocument)}
+                            {formData.impartialityDocument ? formData.impartialityDocument.name : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -2072,7 +2013,7 @@ export default function OrganizationDetails() {
                         <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.termsConditionsDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                           <Upload className={`w-5 h-5 mr-2 ${errors.termsConditionsDocument ? 'text-red-400' : 'text-gray-400'}`} />
                           <span className={`text-sm ${errors.termsConditionsDocument ? 'text-red-500' : 'text-gray-600'}`}>
-                            {getFileName(formData.termsConditionsDocument)}
+                            {formData.termsConditionsDocument ? formData.termsConditionsDocument.name : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -2110,7 +2051,7 @@ export default function OrganizationDetails() {
                         <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.codeOfEthicsDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                           <Upload className={`w-5 h-5 mr-2 ${errors.codeOfEthicsDocument ? 'text-red-400' : 'text-gray-400'}`} />
                           <span className={`text-sm ${errors.codeOfEthicsDocument ? 'text-red-500' : 'text-gray-600'}`}>
-                            {getFileName(formData.codeOfEthicsDocument)}
+                            {formData.codeOfEthicsDocument ? formData.codeOfEthicsDocument.name : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -2148,7 +2089,7 @@ export default function OrganizationDetails() {
                         <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.testingChargesPolicyDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                           <Upload className={`w-5 h-5 mr-2 ${errors.testingChargesPolicyDocument ? 'text-red-400' : 'text-gray-400'}`} />
                           <span className={`text-sm ${errors.testingChargesPolicyDocument ? 'text-red-500' : 'text-gray-600'}`}>
-                            {getFileName(formData.testingChargesPolicyDocument)}
+                            {formData.testingChargesPolicyDocument ? formData.testingChargesPolicyDocument.name : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -2349,7 +2290,7 @@ export default function OrganizationDetails() {
                                   <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
                                     <Upload className="w-5 h-5 text-gray-400 mr-2" />
                                     <span className="text-sm text-gray-600 truncate max-w-[200px]">
-                                      {getFileName(doc.certificateFile)}
+                                      {doc.certificateFile ? (typeof doc.certificateFile === 'string' ? doc.certificateFile.split('/').pop() : doc.certificateFile.name) : 'Choose file...'}
                                     </span>
                                     <input
                                       type="file"
@@ -2408,7 +2349,7 @@ export default function OrganizationDetails() {
                                   <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
                                     <Upload className="w-5 h-5 text-gray-400 mr-2" />
                                     <span className="text-sm text-gray-600">
-                                      {getFileName(doc.scopeFile)}
+                                      {doc.scopeFile ? (typeof doc.scopeFile === 'string' ? doc.scopeFile.split('/').pop() : doc.scopeFile.name) : 'Choose file...'}
                                     </span>
                                     <input
                                       type="file"
@@ -2505,7 +2446,7 @@ export default function OrganizationDetails() {
                         <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
                           <Upload className="w-5 h-5 text-gray-400 mr-2" />
                           <span className="text-sm text-gray-600">
-                            {getFileName(formData.otherDetailsDocument)}
+                            {formData.otherDetailsDocument ? formData.otherDetailsDocument.name : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -2552,7 +2493,7 @@ export default function OrganizationDetails() {
                           <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.layoutLabPremises ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                             <Upload className={`w-5 h-5 mr-2 ${errors.layoutLabPremises ? 'text-red-400' : 'text-gray-400'}`} />
                             <span className={`text-sm ${errors.layoutLabPremises ? 'text-red-500' : 'text-gray-600'}`}>
-                              {getFileName(formData.layoutLabPremises)}
+                              {formData.layoutLabPremises ? formData.layoutLabPremises.name : 'Choose file...'}
                             </span>
                             <input
                               type="file"
@@ -2591,7 +2532,7 @@ export default function OrganizationDetails() {
                           <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.organizationChart ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                             <Upload className={`w-5 h-5 mr-2 ${errors.organizationChart ? 'text-red-400' : 'text-gray-400'}`} />
                             <span className={`text-sm ${errors.organizationChart ? 'text-red-500' : 'text-gray-600'}`}>
-                              {getFileName(formData.organizationChart)}
+                              {formData.organizationChart ? formData.organizationChart.name : 'Choose file...'}
                             </span>
                             <input
                               type="file"
@@ -2736,7 +2677,7 @@ export default function OrganizationDetails() {
                         <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.qualityManualDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                           <Upload className={`w-5 h-5 mr-2 ${errors.qualityManualDocument ? 'text-red-400' : 'text-gray-400'}`} />
                           <span className={`text-sm ${errors.qualityManualDocument ? 'text-red-500' : 'text-gray-600'}`}>
-                            {getFileName(formData.qualityManualDocument)}
+                            {formData.qualityManualDocument ? (typeof formData.qualityManualDocument === 'string' ? formData.qualityManualDocument.split('/').pop() : formData.qualityManualDocument.name) : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -3042,7 +2983,7 @@ export default function OrganizationDetails() {
                                 <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
                                   <Upload className="w-5 h-5 text-gray-400 mr-2" />
                                   <span className="text-sm text-gray-600">
-                                    {getFileName(procedure.file)}
+                                    {procedure.file ? (typeof procedure.file === 'string' ? procedure.file.split('/').pop() : procedure.file.name) : 'Choose file...'}
                                   </span>
                                   <input
                                     type="file"
@@ -3236,19 +3177,23 @@ export default function OrganizationDetails() {
               </Button>
 
               <div className="flex gap-3">
-                {currentStep < steps.length && (
-                  <Button
-                    onClick={handleSave}
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    Save & Next
-                  </Button>
-                )}
+                <Button
+                  variant="outline"
+                  onClick={handleSave}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Save & Next
+                </Button>
 
-                {currentStep === steps.length && (
+                {currentStep < steps.length ? (
+                  <Button onClick={handleNext}>
+                    Next
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                ) : (
                   <Button onClick={handleSubmit}>
                     <Check className="w-4 h-4 mr-2" />
-                    Submit Application
+                    Submit
                   </Button>
                 )}
               </div>

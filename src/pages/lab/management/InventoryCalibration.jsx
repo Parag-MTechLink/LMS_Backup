@@ -35,13 +35,8 @@ function InventoryCalibration() {
         calibrationsService.getAll(),
         instrumentsService.getAll()
       ])
-<<<<<<< Updated upstream
       setCalibrations(calibs)
       setInstruments(insts)
-=======
-      setCalibrations(Array.isArray(calData) ? calData : [])
-      setInstruments(Array.isArray(instData) ? instData : [])
->>>>>>> Stashed changes
     } catch (error) {
       toast.error('Failed to load data')
     } finally {

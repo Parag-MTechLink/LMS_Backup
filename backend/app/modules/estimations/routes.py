@@ -50,15 +50,6 @@ def get_estimations(db: Session = Depends(get_db)):
 
     return response
 
-# 🔹 GET TEST TYPES (Hardcoded for now)
-@router.get("/test-types", response_model=List[TestTypeOut])
-def get_test_types():
-    return [
-        {"id": 1, "name": "EMC Testing", "hsnCode": "9030", "defaultRate": 5000},
-        {"id": 2, "name": "RF Testing", "hsnCode": "9030", "defaultRate": 6000},
-        {"id": 3, "name": "Safety Testing", "hsnCode": "9030", "defaultRate": 4500},
-    ]
-
 # 🔹 GET ESTIMATION BY ID
 @router.get("/{id}", response_model=EstimationOut)
 def get_estimation(id: int, db: Session = Depends(get_db)):
@@ -85,6 +76,15 @@ def get_estimation(id: int, db: Session = Depends(get_db)):
         "rfqCustomerName": customer.company_name if customer else "",
         "rfqProduct": rfq.product if rfq else "",
     }
+
+# 🔹 GET TEST TYPES (Hardcoded for now)
+@router.get("/test-types", response_model=List[TestTypeOut])
+def get_test_types():
+    return [
+        {"id": 1, "name": "EMC Testing", "hsnCode": "9030", "defaultRate": 5000},
+        {"id": 2, "name": "RF Testing", "hsnCode": "9030", "defaultRate": 6000},
+        {"id": 3, "name": "Safety Testing", "hsnCode": "9030", "defaultRate": 4500},
+    ]
 
 # 🔹 CREATE ESTIMATION
 @router.post("")
