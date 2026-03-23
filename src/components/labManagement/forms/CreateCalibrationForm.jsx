@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { calibrationsService, filesService } from '../../../services/labManagementApi'
+import { calibrationsService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Button from '../Button'
 import Input from '../Input'
@@ -86,30 +86,16 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
 
     try {
       setLoading(true)
-      
-      let certificateUrl = formData.certificateUrl
-      
-      // If certificateUrl is a File object, upload it first
-      if (formData.certificateUrl instanceof File) {
-        const uploadRes = await filesService.uploadDocument(formData.certificateUrl, 'calibration')
-        certificateUrl = uploadRes.file_url
-      }
-
-      const payload = {
-        ...formData,
-        certificateUrl: certificateUrl
-      }
-
       if (calibration) {
-        await calibrationsService.update(calibration.id, payload)
+        await calibrationsService.update(calibration.id, formData)
         toast.success('Calibration updated successfully!')
       } else {
-        await calibrationsService.create(payload)
+        await calibrationsService.create(formData)
         toast.success('Calibration created successfully!')
       }
       onSuccess()
     } catch (error) {
-      toast.error(error.response?.data?.detail || error.response?.data?.message || 'Failed to save calibration')
+      toast.error(error.response?.data?.message || 'Failed to save calibration')
     } finally {
       setLoading(false)
     }

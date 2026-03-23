@@ -5,7 +5,7 @@ CRUD operations for Inventory Management
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from typing import List, Optional
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta
 
 from .models import Instrument, Consumable, Calibration, InventoryTransaction
 from .schemas import (
@@ -88,26 +88,14 @@ def create_instrument(db: Session, instrument: InstrumentCreate) -> Instrument:
 
 
 def update_instrument(db: Session, instrument_id: int, instrument: InstrumentUpdate) -> Optional[Instrument]:
-    """Update an instrument and sync denormalized names"""
+    """Update an instrument"""
     db_instrument = get_instrument(db, instrument_id)
     if not db_instrument:
         return None
     
-    old_name = db_instrument.name
     update_data = instrument.model_dump(exclude_unset=True, by_alias=False)
-    
     for field, value in update_data.items():
         setattr(db_instrument, field, value)
-    
-    # Sync denormalized name if it changed
-    new_name = db_instrument.name
-    if old_name != new_name:
-        # Update calibrations
-        db.query(Calibration).filter(Calibration.instrument_id == instrument_id).update({"instrument_name": new_name})
-        # Update transactions
-        db.query(InventoryTransaction).filter(
-            and_(InventoryTransaction.item_id == instrument_id, InventoryTransaction.item_type == "Instrument")
-        ).update({"item_name": new_name})
     
     db.commit()
     db.refresh(db_instrument)
@@ -178,24 +166,14 @@ def create_consumable(db: Session, consumable: ConsumableCreate) -> Consumable:
 
 
 def update_consumable(db: Session, consumable_id: int, consumable: ConsumableUpdate) -> Optional[Consumable]:
-    """Update a consumable and sync denormalized names"""
+    """Update a consumable"""
     db_consumable = get_consumable(db, consumable_id)
     if not db_consumable:
         return None
     
-    old_name = db_consumable.item_name
     update_data = consumable.model_dump(exclude_unset=True, by_alias=False)
-    
     for field, value in update_data.items():
         setattr(db_consumable, field, value)
-    
-    # Sync denormalized name if it changed
-    new_name = db_consumable.item_name
-    if old_name != new_name:
-        # Update transactions
-        db.query(InventoryTransaction).filter(
-            and_(InventoryTransaction.item_id == consumable_id, InventoryTransaction.item_type == "Consumable")
-        ).update({"item_name": new_name})
     
     db_consumable.status = calculate_consumable_status(db_consumable)
     db.commit()
@@ -265,7 +243,6 @@ def create_calibration(db: Session, calibration: CalibrationCreate) -> Calibrati
     calibration_data = calibration.model_dump(by_alias=False)
     db_calibration = Calibration(**calibration_data, instrument_name=instrument_name)
     db_calibration.status = calculate_calibration_status(db_calibration)
-    
     db.add(db_calibration)
     db.commit()
     db.refresh(db_calibration)
@@ -339,50 +316,8 @@ def get_transaction(db: Session, transaction_id: int) -> Optional[InventoryTrans
 
 
 def create_transaction(db: Session, transaction: TransactionCreate) -> InventoryTransaction:
-    """Create a new transaction and update stock if applicable"""
-    transaction_data = transaction.model_dump(by_alias=False)
-    
-    # 1. Denormalize item_name and item_type if not provided
-    item_id = transaction_data.get('item_id')
-    item_name = transaction_data.get('item_name')
-    item_type = transaction_data.get('item_type') or "Consumable"
-    
-    if item_id and not item_name:
-        if item_type == "Consumable":
-            item = get_consumable(db, item_id)
-            if item:
-                item_name = item.item_name
-        else:
-            item = get_instrument(db, item_id)
-            if item:
-                item_name = item.name
-    
-    # Update transaction_data with denormalized names
-    transaction_data['item_name'] = item_name
-    transaction_data['item_type'] = item_type
-
-    # 2. Denormalize linked_test_name if linked_test_id provided
-    linked_test_id = transaction_data.get('linked_test_id')
-    if linked_test_id:
-        from app.modules.test_management.crud import get_test_plan
-        test_plan = get_test_plan(db, linked_test_id)
-        if test_plan:
-            transaction_data['linked_test_name'] = test_plan.name
-    
-    # 3. Update stock if it's a Consumable
-    if item_id and item_type == "Consumable":
-        consumable = get_consumable(db, item_id)
-        if consumable:
-            if transaction_data.get('transaction_type') in ['Usage', 'Wastage']:
-                consumable.quantity_available -= transaction_data.get('quantity', 0)
-                if consumable.quantity_available < 0:
-                    consumable.quantity_available = 0
-            elif transaction_data.get('transaction_type') == 'Addition':
-                consumable.quantity_available += transaction_data.get('quantity', 0)
-            
-            consumable.status = calculate_consumable_status(consumable)
-    
-    db_transaction = InventoryTransaction(**transaction_data)
+    """Create a new transaction"""
+    db_transaction = InventoryTransaction(**transaction.model_dump(by_alias=False))
     db.add(db_transaction)
     db.commit()
     db.refresh(db_transaction)

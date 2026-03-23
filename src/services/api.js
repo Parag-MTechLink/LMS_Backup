@@ -17,7 +17,7 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('labManagementAccessToken');
+        const token = localStorage.getItem('authToken');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -55,7 +55,7 @@ api.interceptors.response.use(
             });
         }
         if (error.response?.status === 401) {
-            localStorage.removeItem('labManagementAccessToken');
+            localStorage.removeItem('authToken');
         }
         return Promise.reject(new Error(message));
     }
