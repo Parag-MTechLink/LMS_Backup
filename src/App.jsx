@@ -42,6 +42,7 @@ const LabManagementAudits = lazy(() => import('./pages/lab/management/Audits'))
 const LabManagementNCRs = lazy(() => import('./pages/lab/management/NCRs'))
 const LabManagementCertifications = lazy(() => import('./pages/lab/management/Certifications'))
 const ProjectDetail = lazy(() => import('./pages/lab/management/ProjectDetail'))
+const TRFDetail = lazy(() => import('./pages/lab/management/TRFDetail'))
 const PlaceholderPage = lazy(() => import('./pages/lab/management/PlaceholderPage'))
 const LabManagementCalendar = lazy(() => import('./pages/lab/management/Calendar'))
 const LabManagementRecommendations = lazy(() => import('./pages/lab/management/LabRecommendations'))
@@ -156,7 +157,7 @@ function AnimatedRoutes() {
           <Route path="samples" element={<Suspense fallback={<RouteFallback />}><LabManagementSamples /></Suspense>} />
           <Route path="samples/:id" element={<Suspense fallback={<RouteFallback />}><LabManagementSampleDetails /></Suspense>} />
           <Route path="trfs" element={<Suspense fallback={<RouteFallback />}><LabManagementTRFs /></Suspense>} />
-          <Route path="trfs/:id" element={<Suspense fallback={<RouteFallback />}><PlaceholderPage title="TRF Details" description="Detailed TRF information" /></Suspense>} />
+          <Route path="trfs/:id" element={<Suspense fallback={<RouteFallback />}><TRFDetail /></Suspense>} />
           <Route path="documents" element={<Suspense fallback={<RouteFallback />}><LabManagementDocuments /></Suspense>} />
           <Route path="documents/:id" element={<Suspense fallback={<RouteFallback />}><PlaceholderPage title="Document Details" description="Detailed document information" /></Suspense>} />
           <Route path="reports" element={<Suspense fallback={<RouteFallback />}><LabManagementReports /></Suspense>} />

@@ -502,6 +502,9 @@ export const trfsService = {
   update: async (id, data) => {
     return await apiService.put(`/api/v1/trfs/${id}`, data)
   },
+  updateStatus: async (id, status, approvedBy) => {
+    return await apiService.patch(`/api/v1/trfs/${id}/status`, { status, approved_by: approvedBy || null })
+  },
   delete: async (id) => {
     return await apiService.delete(`/api/v1/trfs/${id}`)
   },
