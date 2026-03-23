@@ -5,12 +5,29 @@ import toast from 'react-hot-toast'
 import Button from '../Button'
 import Input from '../Input'
 
+const TEST_TYPES = [
+  'EMC Testing',
+  'RF Testing',
+  'Safety Testing',
+  'Environmental Testing',
+  'Electrical Testing',
+  'Chemical Testing',
+  'Mechanical Testing',
+  'Other',
+]
+
+const PRIORITIES = ['Low', 'Normal', 'High', 'Urgent']
+
 export default function CreateTRFForm({ projectId, onSuccess, onCancel }) {
   const [formData, setFormData] = useState({
     projectId: projectId || 0,
     trfNumber: '',
-    templateData: {},
-    notes: ''
+    test_type: '',
+    description: '',
+    sample_description: '',
+    priority: 'Normal',
+    notes: '',
+    status: 'Draft',
   })
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(false)
@@ -34,11 +51,17 @@ export default function CreateTRFForm({ projectId, onSuccess, onCancel }) {
     }
   }
 
+  const set = (field) => (e) => setFormData((prev) => ({ ...prev, [field]: e.target.value }))
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     if (!formData.projectId) {
       toast.error('Please select a project')
+      return
+    }
+    if (!formData.test_type) {
+      toast.error('Please select a test type')
       return
     }
 
@@ -60,10 +83,12 @@ export default function CreateTRFForm({ projectId, onSuccess, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <p className="text-sm text-red-500 mb-4">Please fill all the mandatory details in the form (*)</p>
+      <p className="text-sm text-red-500 mb-2">Fields marked * are required</p>
+
+      {/* Project selector (only if not pre-filled) */}
       {!projectId && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Project <span className="text-red-500">*</span>
           </label>
           {loadingProjects ? (
@@ -76,9 +101,9 @@ export default function CreateTRFForm({ projectId, onSuccess, onCancel }) {
               required
             >
               <option value={0}>Select a project</option>
-              {projects.map(project => (
+              {projects.map((project) => (
                 <option key={project.id} value={project.id}>
-                  {project.name} - {project.code}
+                  {project.name} — {project.code}
                 </option>
               ))}
             </select>
@@ -86,40 +111,87 @@ export default function CreateTRFForm({ projectId, onSuccess, onCancel }) {
         </div>
       )}
 
+      {/* TRF Number */}
       <Input
         label="TRF Number"
         value={formData.trfNumber}
-        onChange={(e) => setFormData({ ...formData, trfNumber: e.target.value })}
-        placeholder="e.g., TRF-001 (auto-generated if empty)"
+        onChange={set('trfNumber')}
+        placeholder="e.g. TRF-001 (auto-generated if empty)"
       />
 
+      {/* Test Type */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Notes
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Test Type <span className="text-red-500">*</span>
         </label>
+        <select
+          value={formData.test_type}
+          onChange={set('test_type')}
+          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+          required
+        >
+          <option value="">Select test type...</option>
+          {TEST_TYPES.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Priority */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+        <select
+          value={formData.priority}
+          onChange={set('priority')}
+          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          {PRIORITIES.map((p) => (
+            <option key={p} value={p}>{p}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Description */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
         <textarea
-          value={formData.notes}
-          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-          placeholder="Additional notes about the TRF"
-          rows={4}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+          value={formData.description}
+          onChange={set('description')}
+          placeholder="What is being tested? State the purpose/scope of this TRF."
+          rows={3}
+          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
         />
       </div>
 
-      <div className="flex gap-3 pt-4">
-        <Button
-          type="button"
-          onClick={onCancel}
-          variant="outline"
-          className="flex-1"
-        >
+      {/* Sample Description */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Sample Description</label>
+        <textarea
+          value={formData.sample_description}
+          onChange={set('sample_description')}
+          placeholder="Describe the sample(s): model, version, quantity, condition..."
+          rows={3}
+          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+        />
+      </div>
+
+      {/* Notes */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+        <textarea
+          value={formData.notes}
+          onChange={set('notes')}
+          placeholder="Any additional remarks..."
+          rows={2}
+          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+        />
+      </div>
+
+      <div className="flex gap-3 pt-2">
+        <Button type="button" onClick={onCancel} variant="outline" className="flex-1">
           Cancel
         </Button>
-        <Button
-          type="submit"
-          isLoading={loading}
-          className="flex-1"
-        >
+        <Button type="submit" isLoading={loading} className="flex-1">
           Create TRF
         </Button>
       </div>
