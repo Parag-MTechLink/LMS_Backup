@@ -5,7 +5,7 @@ CRUD operations for Inventory Management
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from typing import List, Optional
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta
 
 from .models import Instrument, Consumable, Calibration, InventoryTransaction
 from .schemas import (
@@ -88,26 +88,14 @@ def create_instrument(db: Session, instrument: InstrumentCreate) -> Instrument:
 
 
 def update_instrument(db: Session, instrument_id: int, instrument: InstrumentUpdate) -> Optional[Instrument]:
-    """Update an instrument and sync denormalized names"""
+    """Update an instrument"""
     db_instrument = get_instrument(db, instrument_id)
     if not db_instrument:
         return None
     
-    old_name = db_instrument.name
     update_data = instrument.model_dump(exclude_unset=True, by_alias=False)
-    
     for field, value in update_data.items():
         setattr(db_instrument, field, value)
-    
-    # Sync denormalized name if it changed
-    new_name = db_instrument.name
-    if old_name != new_name:
-        # Update calibrations
-        db.query(Calibration).filter(Calibration.instrument_id == instrument_id).update({"instrument_name": new_name})
-        # Update transactions
-        db.query(InventoryTransaction).filter(
-            and_(InventoryTransaction.item_id == instrument_id, InventoryTransaction.item_type == "Instrument")
-        ).update({"item_name": new_name})
     
     db.commit()
     db.refresh(db_instrument)
@@ -178,24 +166,14 @@ def create_consumable(db: Session, consumable: ConsumableCreate) -> Consumable:
 
 
 def update_consumable(db: Session, consumable_id: int, consumable: ConsumableUpdate) -> Optional[Consumable]:
-    """Update a consumable and sync denormalized names"""
+    """Update a consumable"""
     db_consumable = get_consumable(db, consumable_id)
     if not db_consumable:
         return None
     
-    old_name = db_consumable.item_name
     update_data = consumable.model_dump(exclude_unset=True, by_alias=False)
-    
     for field, value in update_data.items():
         setattr(db_consumable, field, value)
-    
-    # Sync denormalized name if it changed
-    new_name = db_consumable.item_name
-    if old_name != new_name:
-        # Update transactions
-        db.query(InventoryTransaction).filter(
-            and_(InventoryTransaction.item_id == consumable_id, InventoryTransaction.item_type == "Consumable")
-        ).update({"item_name": new_name})
     
     db_consumable.status = calculate_consumable_status(db_consumable)
     db.commit()
@@ -265,7 +243,6 @@ def create_calibration(db: Session, calibration: CalibrationCreate) -> Calibrati
     calibration_data = calibration.model_dump(by_alias=False)
     db_calibration = Calibration(**calibration_data, instrument_name=instrument_name)
     db_calibration.status = calculate_calibration_status(db_calibration)
-    
     db.add(db_calibration)
     db.commit()
     db.refresh(db_calibration)
@@ -345,8 +322,29 @@ def get_transaction(db: Session, transaction_id: int) -> Optional[InventoryTrans
 
 
 def create_transaction(db: Session, transaction: TransactionCreate) -> InventoryTransaction:
-    """Create a new transaction"""
-    db_transaction = InventoryTransaction(**transaction.model_dump(by_alias=False))
+    """Create a new transaction with automatic item name/type lookup"""
+    item_name = transaction.item_name
+    item_type = transaction.item_type
+    
+    # Auto-lookup if name or type is missing
+    if not item_name or not item_type:
+        # Try finding in consumables first
+        consumable = db.query(Consumable).filter(Consumable.id == transaction.item_id).first()
+        if consumable:
+            item_name = item_name or consumable.item_name
+            item_type = item_type or "Consumable"
+        else:
+            # Try finding in instruments
+            instrument = db.query(Instrument).filter(Instrument.id == transaction.item_id).first()
+            if instrument:
+                item_name = item_name or instrument.name
+                item_type = item_type or "Instrument"
+    
+    db_transaction = InventoryTransaction(
+        **transaction.model_dump(exclude={"item_name", "item_type"}, by_alias=False),
+        item_name=item_name,
+        item_type=item_type
+    )
     db.add(db_transaction)
     db.commit()
     db.refresh(db_transaction)

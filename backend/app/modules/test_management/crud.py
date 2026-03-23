@@ -63,29 +63,15 @@ def create_test_plan(db: Session, test_plan: TestPlanCreate, created_by: Optiona
             project = get_project(db, test_plan.project_id)
             if project:
                 project_name = project.name
-        except Exception:
-            pass
-            
-    # Get engineer name if assigned_engineer_id is provided but name is not
-    assigned_engineer_name = test_plan.assigned_engineer_name
-    if test_plan.assigned_engineer_id and not assigned_engineer_name:
-        try:
-            from app.models.user_model import User
-            # Convert integer ID to string (UUID) if possible, or just look up if their IDs were converted
-            # For now, we assume the user might be sending the wrong ID type if they are using the UUID users table
-            # But let's check if the ID is a string/UUID first
-            user = db.query(User).filter(User.id == test_plan.assigned_engineer_id).first()
-            if user:
-                assigned_engineer_name = user.full_name
-        except Exception:
+        except ImportError:
+            # Projects module not available, use provided project_name
             pass
     
-    # Exclude special fields from dict to avoid duplicate assignment issues
-    test_plan_data = test_plan.dict(exclude={'project_name', 'assigned_engineer_name'})
+    # Exclude project_name from dict to avoid duplicate
+    test_plan_data = test_plan.dict(exclude={'project_name'})
     db_test_plan = TestPlan(
         **test_plan_data,
         project_name=project_name,
-        assigned_engineer_name=assigned_engineer_name,
         created_by=created_by,
         status="Draft"
     )
@@ -102,30 +88,8 @@ def update_test_plan(db: Session, test_plan_id: int, test_plan: TestPlanUpdate) 
         return None
     
     update_data = test_plan.dict(exclude_unset=True)
-    
-    # Special handling for project_name lookup on ID change
-    if 'project_id' in update_data and not update_data.get('project_name'):
-        try:
-            from app.modules.projects.crud import get_project
-            project = get_project(db, update_data['project_id'])
-            if project:
-                update_data['project_name'] = project.name
-        except Exception:
-            pass
-            
-    # Special handling for assigned_engineer_name lookup on ID change
-    if 'assigned_engineer_id' in update_data and not update_data.get('assigned_engineer_name'):
-        try:
-            from app.models.user_model import User
-            user = db.query(User).filter(User.id == update_data['assigned_engineer_id']).first()
-            if user:
-                update_data['assigned_engineer_name'] = user.full_name
-        except Exception:
-            pass
-            
     for field, value in update_data.items():
-        if hasattr(db_test_plan, field):
-            setattr(db_test_plan, field, value)
+        setattr(db_test_plan, field, value)
     
     db.commit()
     db.refresh(db_test_plan)

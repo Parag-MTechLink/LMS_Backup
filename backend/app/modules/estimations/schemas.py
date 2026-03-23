@@ -20,17 +20,17 @@ class EstimationCreate(BaseModel):
     tests: List[EstimationTestItemCreate]
     margin: float
     discount: float
-    notes: Optional[str] = None
+    notes: str | None = None
 
 class EstimationOut(BaseModel):
     id: int
     rfqId: int
     estimationId: str
     version: int
-    totalCost: Optional[float] = 0.0
-    totalHours: Optional[float] = 0.0
-    margin: Optional[float] = 0.0
-    discount: Optional[float] = 0.0
+    totalCost: float
+    totalHours: float
+    margin: float
+    discount: float
     notes: Optional[str] = None
     status: str
     items: List[EstimationTestItemOut] = []

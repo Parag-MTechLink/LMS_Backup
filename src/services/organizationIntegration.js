@@ -112,7 +112,7 @@ export const organizationMapper = {
             compliance_documents: formData.complianceDocuments.map((doc) => ({
                 document_type: doc.type,
                 document_type_other: doc.typeOther,
-                document_id: doc.documentId,
+                document_id: doc.id,
                 file_url: doc.file,
             })),
         };
@@ -148,8 +148,8 @@ export const organizationMapper = {
     mapAccreditation(formData) {
         return {
             accreditation_documents: formData.accreditationDocuments.map((doc) => ({
-                certification_type: doc.type,
-                certification_type_other: doc.typeOther,
+                certification_type: doc.certificationType,
+                certification_type_other: doc.certificationTypeOther,
                 certificate_no: doc.certificateNo,
                 certificate_file_url: doc.certificateFile,
                 scope_file_url: doc.scopeFile,
