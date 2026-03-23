@@ -20,13 +20,16 @@ import {
   History,
   MessageSquare,
   AlertCircle,
-  MoreVertical
+  MoreVertical,
+  Plus,
+  X
 } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 import { projectsService, authService, notificationsService } from '../../../services/labManagementApi'
 import { samplesService } from '../../../services/labManagementApi'
 import { trfsService } from '../../../services/labManagementApi'
 import { testPlansService } from '../../../services/labManagementApi'
+import CreateTRFForm from '../../../components/labManagement/forms/CreateTRFForm'
 import Badge from '../../../components/labManagement/Badge'
 import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 
@@ -45,6 +48,7 @@ function ProjectDetail() {
   const [selectedTL, setSelectedTL] = useState('')
   const [activities, setActivities] = useState([])
   const [showHistoryModal, setShowHistoryModal] = useState(false)
+  const [showAddTRFModal, setShowAddTRFModal] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -601,19 +605,25 @@ function ProjectDetail() {
 
         {activeTab === 'trfs' && (
           <div className="space-y-4">
+            {/* Header row with Add TRF button */}
+            {canCreate && (
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowAddTRFModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all shadow shadow-primary/20"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add TRF
+                </button>
+              </div>
+            )}
+
             {trfs.length === 0 ? (
               <Card>
                 <div className="text-center py-12">
                   <FileCheck className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No TRFs for this project</p>
-                  {canCreate && (
-                    <button
-                      onClick={() => navigate('/lab/management/trfs')}
-                      className="mt-4 text-primary hover:underline"
-                    >
-                      Create TRF
-                    </button>
-                  )}
+                  <p className="text-gray-600 font-medium">No TRFs for this project yet</p>
+                  <p className="text-sm text-gray-400 mt-1">Use the "Add TRF" button above to attach a TRF to this project.</p>
                 </div>
               </Card>
             ) : (
@@ -652,6 +662,45 @@ function ProjectDetail() {
         )}
       </div>
       <Toaster position="top-right" />
+
+      {/* Add TRF Modal */}
+      {showAddTRFModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden"
+          >
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-primary/5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <FileCheck className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Add TRF</h3>
+                  <p className="text-sm text-gray-500">Attach a Test Report Form to this project</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAddTRFModal(false)}
+                className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="p-6">
+              <CreateTRFForm
+                projectId={parseInt(id)}
+                onSuccess={() => {
+                  setShowAddTRFModal(false)
+                  loadRelatedData()
+                }}
+                onCancel={() => setShowAddTRFModal(false)}
+              />
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Workflow History Modal */}
       {showHistoryModal && (

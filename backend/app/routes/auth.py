@@ -227,6 +227,75 @@ def login(
             "industry": user.industry,
             "account_type": user.account_type,
         },
+    ) 
+
+
+# ---------------------------------------------------------------------------
+# Quick Auth — MFA bypass for temporary dev/demo access
+# ---------------------------------------------------------------------------
+
+class QuickLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+    bypass_key: str
+
+
+@router.post("/quick-login", response_model=LoginResponse)
+def quick_login(body: QuickLoginRequest, request: Request, db: Session = Depends(get_db)):
+    """
+    Temporary dev/demo endpoint: authenticate with credentials and bypass MFA.
+    Requires a valid bypass_key that matches QUICK_AUTH_BYPASS_KEY in .env.
+    Remove or disable this endpoint in production.
+    """
+    import os
+    expected_key = os.environ.get("QUICK_AUTH_BYPASS_KEY", "mtl-quick-access-2026")
+    if body.bypass_key != expected_key:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid bypass key.",
+        )
+
+    try:
+        user = authenticate_user(db, body.email, body.password)
+    except SQLAlchemyError as e:
+        logger.warning("Database error during quick-login: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database temporarily unavailable.",
+        ) from e
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password.",
+        )
+
+    token = create_access_token(user_id=str(user.id), role=user.role, email=user.email)
+
+    client_host = request.client.host if request.client else None
+    log_audit(db, user.id, "auth.quick_login", "user", str(user.id), {"email": user.email, "note": "MFA bypassed via quick-login"}, client_host)
+    db.commit()
+
+    return LoginResponse(
+        access_token=token,
+        token_type="bearer",
+        user={
+            "id": str(user.id),
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role,
+            "is_main": user.is_main,
+            "gender": user.gender,
+            "country": user.country,
+            "language": user.language,
+            "address": user.address,
+            "company_name": user.company_name,
+            "phone_no": user.phone_no,
+            "designation": user.designation,
+            "industry": user.industry,
+            "account_type": user.account_type,
+        },
+        message="Quick login successful. MFA bypassed.",
     )
 
 
