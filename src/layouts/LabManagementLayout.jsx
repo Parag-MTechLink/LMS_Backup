@@ -1,3 +1,4 @@
+import { Suspense, useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { NavLink, Outlet, useNavigate, Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -31,7 +32,6 @@ import {
   Calendar,
   TrendingUp,
 } from 'lucide-react'
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useLabManagementAuth } from '../contexts/LabManagementAuthContext'
 import logo from '../assets/techlink-logo.svg'
 import LiveClock from '../components/labManagement/LiveClock'
@@ -44,6 +44,7 @@ import {
   trfsService,
   calibrationsService
 } from '../services/labManagementApi'
+import RouteSkeleton from '../components/RouteSkeleton'
 
 
 const allNavItems = [
@@ -555,16 +556,17 @@ function LabManagementLayout() {
 
         {/* Content */}
         <main className="min-h-screen p-4 sm:p-6 lg:p-8">
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="popLayout">
             <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               className="max-w-7xl mx-auto"
             >
-              <Outlet />
+              <Suspense fallback={<RouteSkeleton />}>
+                <Outlet />
+              </Suspense>
             </motion.div>
           </AnimatePresence>
         </main>

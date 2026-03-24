@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { Plus, Search, Wrench, Edit, Trash2, Eye, AlertCircle } from 'lucide-react'
-import { instrumentsService } from '../../../services/labManagementApi'
+import { Plus, Search, Wrench, Edit, Trash2, Eye, AlertCircle, ArrowLeft } from 'lucide-react'
+import { inventoryTransactionsService, instrumentsService } from '../../../services/labManagementApi'
+import { useLabData } from '../../../contexts/LabDataContext'
 import toast from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Button from '../../../components/labManagement/Button'
@@ -13,9 +14,10 @@ import CreateInstrumentForm from '../../../components/labManagement/forms/Create
 
 function InventoryInstruments() {
   const [searchParams] = useSearchParams()
-  const [instruments, setInstruments] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
+  const { inventoryData } = useLabData()
+  const { instruments, setInstruments } = inventoryData
+  const [loading, setLoading] = useState(instruments.length === 0)
+  const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [selectedDepartment, setSelectedDepartment] = useState('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -24,7 +26,7 @@ function InventoryInstruments() {
 
   useEffect(() => {
     loadInstruments()
-  }, [])
+  }, [searchTerm, selectedStatus, selectedDepartment])
 
   // Support deep-linking from notifications
   useEffect(() => {
@@ -34,8 +36,17 @@ function InventoryInstruments() {
 
   const loadInstruments = async () => {
     try {
-      setLoading(true)
-      const data = await instrumentsService.getAll()
+      // Only show full-page loader if we don't have ANY data yet
+      if (instruments.length === 0) {
+        setLoading(true)
+      }
+      
+      const params = {}
+      if (searchTerm) params.search = searchTerm
+      if (selectedStatus !== 'all') params.status = selectedStatus
+      if (selectedDepartment !== 'all') params.department = selectedDepartment
+      
+      const data = await instrumentsService.getAll(params)
       setInstruments(data)
     } catch (error) {
       toast.error('Failed to load instruments')
@@ -66,21 +77,24 @@ function InventoryInstruments() {
     }
   }
 
-  const departments = [...new Set(instruments.map(i => i.assignedDepartment).filter(Boolean))]
+  const handlePermanentDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to PERMANENTLY delete this instrument? This action cannot be undone.')) {
+      return
+    }
+    try {
+      await instrumentsService.delete(id)
+      toast.success('Instrument deleted successfully')
+      loadInstruments()
+    } catch (error) {
+      toast.error('Failed to delete instrument. Note: Admin role required.')
+    }
+  }
 
-  const filteredInstruments = instruments.filter(instrument => {
-    const matchesSearch = 
-      instrument.instrumentId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      instrument.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      instrument.manufacturer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      instrument.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      instrument.serialNumber?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = selectedStatus === 'all' || instrument.status === selectedStatus
-    const matchesDepartment = selectedDepartment === 'all' || instrument.assignedDepartment === selectedDepartment
-    return matchesSearch && matchesStatus && matchesDepartment
-  })
+  const departments = ['Microbiology', 'Chemistry', 'Stability', 'Quality Control', 'EMC', 'RF']
 
-  if (loading) {
+  const filteredInstruments = instruments
+
+  if (loading && instruments.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -99,14 +113,23 @@ function InventoryInstruments() {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-              <Wrench className="w-6 h-6 text-white" />
-            </div>
-            Instruments Management
-          </h1>
-          <p className="text-gray-600 mt-1">Manage lab instruments, maintenance, and warranty tracking</p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/lab/management/inventory')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Back to Inventory Dashboard"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+                <Wrench className="w-6 h-6 text-white" />
+              </div>
+              Instruments Management
+            </h1>
+            <p className="text-gray-600 mt-1">Manage lab instruments, maintenance, and warranty tracking</p>
+          </div>
         </div>
         <Button
           onClick={() => setShowCreateModal(true)}
@@ -236,11 +259,21 @@ function InventoryInstruments() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeactivate(instrument.id)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-orange-600 hover:text-orange-700"
+                        title="Deactivate"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <AlertCircle className="w-4 h-4" />
                       </Button>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePermanentDelete(instrument.id)}
+                      className="text-red-600 hover:text-red-700"
+                      title="Permanent Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
               </Card>

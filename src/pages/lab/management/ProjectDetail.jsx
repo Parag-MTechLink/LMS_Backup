@@ -23,12 +23,14 @@ import { projectsService } from '../../../services/labManagementApi'
 import { samplesService } from '../../../services/labManagementApi'
 import { trfsService } from '../../../services/labManagementApi'
 import { testPlansService } from '../../../services/labManagementApi'
-import toast from 'react-hot-toast'
+import CreateTRFForm from '../../../components/labManagement/forms/CreateTRFForm'
+import toast, { Toaster } from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Badge from '../../../components/labManagement/Badge'
 
-
 function ProjectDetail() {
+  const { user } = useLabManagementAuth()
+  const canCreate = user?.role !== 'Quality Manager'
   const { id } = useParams()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
@@ -415,10 +417,25 @@ function ProjectDetail() {
 
         {activeTab === 'trfs' && (
           <div className="space-y-4">
+            {/* Header row with Add TRF button */}
+            {canCreate && (
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowAddTRFModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all shadow shadow-primary/20"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add TRF
+                </button>
+              </div>
+            )}
+
             {trfs.length === 0 ? (
               <Card>
                 <div className="text-center py-12">
                   <FileCheck className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 font-medium">No TRFs for this project yet</p>
+                  <p className="text-sm text-gray-400 mt-1">Use the "Add TRF" button above to attach a TRF to this project.</p>
                   <p className="text-gray-600">No TRFs for this project</p>
                   <button
                     onClick={() => navigate('/lab/management/trfs')}

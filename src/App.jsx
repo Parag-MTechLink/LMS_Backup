@@ -18,6 +18,8 @@ const GetStarted = lazy(() => import('./pages/GetStarted'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const VerifyMFA = lazy(() => import('./pages/VerifyMFA'))
+const Validate = lazy(() => import('./pages/Validate'))
+const QuickAuth = lazy(() => import('./pages/QuickAuth'))
 
 // Lazy load lab management pages for better performance
 const LabManagementDashboard = lazy(() => import('./pages/lab/management/Dashboard'))
@@ -40,6 +42,7 @@ const LabManagementAudits = lazy(() => import('./pages/lab/management/Audits'))
 const LabManagementNCRs = lazy(() => import('./pages/lab/management/NCRs'))
 const LabManagementCertifications = lazy(() => import('./pages/lab/management/Certifications'))
 const ProjectDetail = lazy(() => import('./pages/lab/management/ProjectDetail'))
+const TRFDetail = lazy(() => import('./pages/lab/management/TRFDetail'))
 const PlaceholderPage = lazy(() => import('./pages/lab/management/PlaceholderPage'))
 const LabManagementCalendar = lazy(() => import('./pages/lab/management/Calendar'))
 const LabManagementRecommendations = lazy(() => import('./pages/lab/management/LabRecommendations'))
@@ -59,6 +62,9 @@ const QAAReports = lazy(() => import('./pages/lab/management/QAAReports'))
 const Payment = lazy(() => import('./pages/lab/management/Payment'))
 const UserManagement = lazy(() => import('./pages/lab/management/UserManagement'))
 const LabManagementProfile = lazy(() => import('./pages/lab/management/Profile'))
+const InstrumentDetail = lazy(() => import('./pages/lab/management/InstrumentDetail'))
+const CalibrationDetail = lazy(() => import('./pages/lab/management/CalibrationDetail'))
+const ConsumableDetail = lazy(() => import('./pages/lab/management/ConsumableDetail'))
 
 // Non-blocking skeleton for lazy routes (faster perceived load)
 const RouteFallback = () => <RouteSkeleton />
@@ -117,6 +123,10 @@ function AnimatedRoutes() {
         <Route path="/forgot-password" element={<Suspense fallback={<RouteFallback />}><ForgotPassword /></Suspense>} />
         <Route path="/reset-password" element={<Suspense fallback={<RouteFallback />}><ResetPassword /></Suspense>} />
         <Route path="/verify-mfa" element={<Suspense fallback={<RouteFallback />}><VerifyMFA /></Suspense>} />
+        {/* Public health-check page — no auth required */}
+        <Route path="/validate" element={<Suspense fallback={<RouteFallback />}><Validate /></Suspense>} />
+        {/* Quick-auth: auto-login with Parag's account, MFA bypassed */}
+        <Route path="/quick-auth" element={<Suspense fallback={<RouteFallback />}><QuickAuth /></Suspense>} />
 
         {/* Protected: Lab Management — redirect to login if not authenticated */}
         <Route
@@ -147,7 +157,7 @@ function AnimatedRoutes() {
           <Route path="samples" element={<Suspense fallback={<RouteFallback />}><LabManagementSamples /></Suspense>} />
           <Route path="samples/:id" element={<Suspense fallback={<RouteFallback />}><LabManagementSampleDetails /></Suspense>} />
           <Route path="trfs" element={<Suspense fallback={<RouteFallback />}><LabManagementTRFs /></Suspense>} />
-          <Route path="trfs/:id" element={<Suspense fallback={<RouteFallback />}><PlaceholderPage title="TRF Details" description="Detailed TRF information" /></Suspense>} />
+          <Route path="trfs/:id" element={<Suspense fallback={<RouteFallback />}><TRFDetail /></Suspense>} />
           <Route path="documents" element={<Suspense fallback={<RouteFallback />}><LabManagementDocuments /></Suspense>} />
           <Route path="documents/:id" element={<Suspense fallback={<RouteFallback />}><PlaceholderPage title="Document Details" description="Detailed document information" /></Suspense>} />
           <Route path="reports" element={<Suspense fallback={<RouteFallback />}><LabManagementReports /></Suspense>} />
@@ -160,12 +170,15 @@ function AnimatedRoutes() {
           <Route path="users" element={<Suspense fallback={<RouteFallback />}><UserManagement /></Suspense>} />
 
           {/* Inventory Management */}
-          <Route path="inventory" element={<Suspense fallback={<RouteFallback />}><Inventory /></Suspense>} />
-          <Route path="inventory/instruments" element={<Suspense fallback={<RouteFallback />}><InventoryInstruments /></Suspense>} />
-          <Route path="inventory/calibration" element={<Suspense fallback={<RouteFallback />}><InventoryCalibration /></Suspense>} />
-          <Route path="inventory/consumables" element={<Suspense fallback={<RouteFallback />}><InventoryConsumables /></Suspense>} />
-          <Route path="inventory/transactions" element={<Suspense fallback={<RouteFallback />}><InventoryTransactions /></Suspense>} />
-          <Route path="inventory/reports" element={<Suspense fallback={<RouteFallback />}><InventoryReports /></Suspense>} />
+          <Route path="inventory" element={<Inventory />} />
+          <Route path="inventory/instruments" element={<InventoryInstruments />} />
+          <Route path="inventory/instruments/:id" element={<InstrumentDetail />} />
+          <Route path="inventory/calibration" element={<InventoryCalibration />} />
+          <Route path="inventory/calibration/:id" element={<CalibrationDetail />} />
+          <Route path="inventory/consumables/:id" element={<ConsumableDetail />} />
+          <Route path="inventory/consumables" element={<InventoryConsumables />} />
+          <Route path="inventory/transactions" element={<InventoryTransactions />} />
+          <Route path="inventory/reports" element={<InventoryReports />} />
           <Route path="qa" element={<Suspense fallback={<RouteFallback />}><QualityAssurance /></Suspense>} />
           <Route path="qa/sop" element={<Suspense fallback={<RouteFallback />}><QASOPManagement /></Suspense>} />
           <Route path="qa/qc" element={<Suspense fallback={<RouteFallback />}><QAQCChecks /></Suspense>} />

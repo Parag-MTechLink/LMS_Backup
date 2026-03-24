@@ -54,6 +54,7 @@ class CustomerResponse(BaseModel):
     created_at: datetime = Field(..., alias="createdAt")
     updated_at: datetime = Field(..., alias="updatedAt")
     is_deleted: bool = Field(..., alias="isDeleted")
+    crm_customer_id: Optional[int] = Field(None, alias="crmCustomerId")
 
     class Config:
         from_attributes = True

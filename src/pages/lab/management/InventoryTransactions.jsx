@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Search, ShoppingCart, ArrowDown, ArrowUp, X } from 'lucide-react'
-import { inventoryTransactionsService, consumablesService } from '../../../services/labManagementApi'
+import { Plus, Search, ShoppingCart, ArrowDown, ArrowUp, X, ArrowLeft, Eye, Edit, Trash2 } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { inventoryTransactionsService } from '../../../services/labManagementApi'
+import { useLabData } from '../../../contexts/LabDataContext'
 import toast from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Button from '../../../components/labManagement/Button'
@@ -11,19 +13,44 @@ import Modal from '../../../components/labManagement/Modal'
 import CreateTransactionForm from '../../../components/labManagement/forms/CreateTransactionForm'
 
 function InventoryTransactions() {
-  const [transactions, setTransactions] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
+  const navigate = useNavigate()
+  const location = useLocation()
+  const queryParams = new URLSearchParams(location.search)
+  const initialSearch = queryParams.get('search') || ''
+  const initialCategory = queryParams.get('type') || 'all'
+  const initialItemId = queryParams.get('itemId') || ''
+
+  const { inventoryData } = useLabData()
+  const { transactions, setTransactions } = inventoryData
+  const [loading, setLoading] = useState(transactions.length === 0)
+  const [searchTerm, setSearchTerm] = useState(initialSearch)
   const [selectedType, setSelectedType] = useState('all')
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory)
+  const [selectedItemId, setSelectedItemId] = useState(initialItemId)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedTransaction, setSelectedTransaction] = useState(null)
 
   useEffect(() => {
     loadTransactions()
   }, [])
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const q = params.get('search')
+    const type = params.get('type')
+    const iid = params.get('itemId')
+    
+    if (q !== null) setSearchTerm(q)
+    if (type !== null) setSelectedCategory(type)
+    if (iid !== null) setSelectedItemId(iid)
+    
+  }, [location.search])
+
   const loadTransactions = async () => {
     try {
-      setLoading(true)
+      if (transactions.length === 0) {
+        setLoading(true)
+      }
       const data = await inventoryTransactionsService.getAll()
       setTransactions(data)
     } catch (error) {
@@ -59,17 +86,34 @@ function InventoryTransactions() {
     }
   }
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this transaction? This will not automatically revert stock changes; you should adjust stock manually if needed.')) return
+    try {
+      await inventoryTransactionsService.delete(id)
+      toast.success('Transaction deleted successfully')
+      loadTransactions()
+    } catch (error) {
+      toast.error('Failed to delete transaction')
+    }
+  }
+
   const filteredTransactions = transactions.filter(txn => {
+    // If we have an itemId from the URL, filter specifically by that
+    if (selectedItemId && selectedCategory !== 'all') {
+      return txn.itemId == selectedItemId && txn.itemType === selectedCategory
+    }
+
     const matchesSearch = 
       txn.transactionId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       txn.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       txn.usedBy?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       txn.purpose?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesType = selectedType === 'all' || txn.transactionType === selectedType
-    return matchesSearch && matchesType
+    const matchesCategory = selectedCategory === 'all' || txn.itemType === selectedCategory
+    return matchesSearch && matchesType && matchesCategory
   })
 
-  if (loading) {
+  if (loading && transactions.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -88,14 +132,23 @@ function InventoryTransactions() {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg">
-              <ShoppingCart className="w-6 h-6 text-white" />
-            </div>
-            Inventory Transactions
-          </h1>
-          <p className="text-gray-600 mt-1">Log stock usage, additions, and wastage with audit trail</p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/lab/management/inventory')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Back to Inventory Dashboard"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg">
+                <ShoppingCart className="w-6 h-6 text-white" />
+              </div>
+              Inventory Transactions
+            </h1>
+            <p className="text-gray-600 mt-1">Log stock usage, additions, and wastage with audit trail</p>
+          </div>
         </div>
         <Button
           onClick={() => setShowCreateModal(true)}
@@ -107,23 +160,67 @@ function InventoryTransactions() {
 
       {/* Filters */}
       <Card>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input
-            placeholder="Search transactions..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            icon={<Search className="w-5 h-5" />}
-          />
-          <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="all">All Types</option>
-            <option value="Usage">Usage</option>
-            <option value="Addition">Addition</option>
-            <option value="Wastage">Wastage</option>
-          </select>
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-gray-100">
+            <span className="text-sm font-medium text-gray-500 mr-2">Category:</span>
+            {[
+              { id: 'all', label: 'All Items' },
+              { id: 'Instrument', label: 'Instruments' },
+              { id: 'Consumable', label: 'Accessories & Consumables' }
+            ].map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => {
+                  setSelectedCategory(cat.id)
+                  setSelectedItemId('') // Clear specific item filter on category change
+                }}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  selectedCategory === cat.id
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+          {selectedItemId && selectedCategory !== 'all' && (
+            <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-blue-800">
+                  Showing logs for: <span className="font-bold">{filteredTransactions[0]?.itemName}</span> 
+                  <span className="text-xs ml-1 text-blue-600">({selectedCategory})</span>
+                </p>
+              </div>
+              <button 
+                onClick={() => setSelectedItemId('')}
+                className="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1"
+              >
+                <X className="w-3 h-3" /> Clear Item Filter
+              </button>
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              placeholder="Search by ID, Item Name, User or Purpose..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              icon={<Search className="w-5 h-5" />}
+            />
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-500 whitespace-nowrap">Txn Type:</span>
+              <select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="all">All Types</option>
+                <option value="Usage">Usage</option>
+                <option value="Addition">Addition</option>
+                <option value="Wastage">Wastage</option>
+              </select>
+            </div>
+          </div>
         </div>
       </Card>
 
@@ -156,13 +253,47 @@ function InventoryTransactions() {
                         <Icon className="w-6 h-6" />
                       </div>
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {transaction.itemName}
-                          </h3>
-                          <Badge variant={transaction.transactionType === 'Usage' ? 'danger' : transaction.transactionType === 'Addition' ? 'success' : 'warning'}>
-                            {transaction.transactionType}
-                          </Badge>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            <h3 
+                              className="text-lg font-bold text-gray-900 hover:text-primary hover:underline cursor-pointer transition-colors"
+                              onClick={() => {
+                                const path = transaction.itemType === 'Instrument' 
+                                  ? `/lab/management/inventory/instruments/${transaction.itemId}`
+                                  : `/lab/management/inventory/consumables/${transaction.itemId}`
+                                navigate(path)
+                              }}
+                            >
+                              {transaction.itemName || `Unknown ${transaction.itemType || 'Item'} (${transaction.itemId})`}
+                            </h3>
+                            <div className="flex gap-1.5">
+                              <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-bold">
+                                {transaction.itemType === 'Instrument' ? 'Instrument' : 'Acc & Cons'}
+                              </Badge>
+                              <Badge variant={transaction.transactionType === 'Usage' ? 'danger' : transaction.transactionType === 'Addition' ? 'success' : 'warning'}>
+                                {transaction.transactionType}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                setSelectedTransaction(transaction)
+                                setShowCreateModal(true)
+                              }}
+                              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-primary"
+                              title="Edit Transaction"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(transaction.id)}
+                              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-red-600"
+                              title="Delete Transaction"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
@@ -221,16 +352,24 @@ function InventoryTransactions() {
       {/* Create Modal */}
       <Modal
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        title="Create New Transaction"
+        onClose={() => {
+          setShowCreateModal(false)
+          setSelectedTransaction(null)
+        }}
+        title={selectedTransaction ? 'Edit Transaction' : 'Create New Transaction'}
         size="lg"
       >
         <CreateTransactionForm
+          transaction={selectedTransaction}
           onSuccess={() => {
             setShowCreateModal(false)
+            setSelectedTransaction(null)
             loadTransactions()
           }}
-          onCancel={() => setShowCreateModal(false)}
+          onCancel={() => {
+            setShowCreateModal(false)
+            setSelectedTransaction(null)
+          }}
         />
       </Modal>
     </div>

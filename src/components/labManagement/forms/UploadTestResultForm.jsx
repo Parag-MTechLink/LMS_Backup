@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { documentsService, testResultsService, testExecutionsService } from '../../../services/labManagementApi'
+import { documentsService, testResultsService, testExecutionsService, testPlansService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Button from '../Button'
 import { Upload, CheckCircle, AlertCircle } from 'lucide-react'
@@ -12,9 +12,12 @@ function UploadTestResultForm({ onSuccess, onCancel }) {
 
     // Form Fields
     const [testExecutionId, setTestExecutionId] = useState('')
+    const [executionStatus, setExecutionStatus] = useState('')
     const [testParameter, setTestParameter] = useState('Test Report')
-    const [passFail, setPassFail] = useState('true')
+    const [passFail, setPassFail] = useState('')
     const [remarks, setRemarks] = useState('')
+    const [testType, setTestType] = useState('')
+    const [projectExecutedBy, setProjectExecutedBy] = useState('')
 
     useEffect(() => {
         loadExecutions()
@@ -23,9 +26,37 @@ function UploadTestResultForm({ onSuccess, onCancel }) {
     const loadExecutions = async () => {
         try {
             setLoadingExecutions(true)
-            const data = await testExecutionsService.getAll()
-            // Filter for active/recent executions if needed, for now show all
-            setExecutions(Array.isArray(data) ? data : [])
+            const [executionsData, resultsData, plansData] = await Promise.all([
+                testExecutionsService.getAll(),
+                testResultsService.getAll().catch(() => []),
+                testPlansService.getAll().catch(() => [])
+            ])
+            
+            let usedExecutionIds = new Set()
+            if (Array.isArray(resultsData)) {
+                usedExecutionIds = new Set(resultsData.map(r => r.testExecutionId))
+            }
+            
+            let availableExecutions = []
+            let plansMap = {}
+            if (Array.isArray(plansData)) {
+                plansData.forEach(p => plansMap[p.id] = p.name)
+            }
+
+            if (Array.isArray(executionsData)) {
+                availableExecutions = executionsData.filter(exec => !usedExecutionIds.has(exec.id)).map(exec => {
+                    const planName = plansMap[exec.testPlanId] || `Plan ${exec.testPlanId}`
+                    let execName = null;
+                    if (exec.notes) {
+                        const m = exec.notes.match(/^\[([^\]]+)\]/);
+                        if (m) execName = m[1].trim();
+                    }
+                    exec.computedName = execName ? `${planName} - ${execName} #${exec.executionNumber || exec.id}` : `${planName} #${exec.executionNumber || exec.id}`
+                    return exec
+                })
+            }
+            
+            setExecutions(availableExecutions)
         } catch (error) {
             console.error('Error loading executions:', error)
             toast.error('Failed to load test executions')
@@ -81,17 +112,34 @@ function UploadTestResultForm({ onSuccess, onCancel }) {
             const attachmentUrl = `/api/v1/documents/${doc.id}/download`
 
             // Step 2: Create Test Result linked to Execution
+            const generateULR = () => {
+                const date = new Date()
+                const year = date.getFullYear().toString().slice(-2)
+                const month = (date.getMonth() + 1).toString().padStart(2, '0')
+                const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+                return `ULR/MTL/${year}${month}/${random}`
+            }
+
             const resultData = {
                 testExecutionId: parseInt(testExecutionId),
                 testParameter: testParameter,
                 passFail: passFail === 'true',
                 attachments: [attachmentUrl], // Store as list of strings
                 remarks: remarks || `Uploaded via portal. Document ID: ${doc.id}`,
-                testType: 'Manual Upload', // Default or derive from execution
+                testType: testType || undefined,
+                actualValue: projectExecutedBy || undefined,
+                expectedValue: generateULR(),
                 testDate: new Date().toISOString()
             }
 
             await testResultsService.create(resultData)
+
+            if (executionStatus) {
+                const exec = executions.find(e => e.id.toString() === testExecutionId);
+                if (exec && exec.status !== executionStatus) {
+                    await testExecutionsService.update(exec.id, { status: executionStatus });
+                }
+            }
 
             toast.success('Test result uploaded successfully')
             onSuccess()
@@ -117,14 +165,24 @@ function UploadTestResultForm({ onSuccess, onCancel }) {
                 ) : (
                     <select
                         value={testExecutionId}
-                        onChange={(e) => setTestExecutionId(e.target.value)}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            setTestExecutionId(val);
+                            if (val) {
+                                const exec = executions.find(x => x.id.toString() === val);
+                                if (exec) setExecutionStatus(exec.status || 'Pending');
+                            } else {
+                                setExecutionStatus('');
+                                setPassFail('');
+                            }
+                        }}
                         className="w-full border rounded-lg px-3 py-2 bg-white"
                         required
                     >
                         <option value="">Select Test Execution</option>
                         {executions.map(exec => (
                             <option key={exec.id} value={exec.id}>
-                                #{exec.id} - {exec.testPlanId ? `Plan ${exec.testPlanId}` : 'No Plan'} ({exec.status})
+                                #{exec.id} - {exec.computedName} ({exec.status})
                             </option>
                         ))}
                     </select>
@@ -132,6 +190,29 @@ function UploadTestResultForm({ onSuccess, onCancel }) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Execution Status */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">
+                        Execution Status
+                    </label>
+                    <select
+                        value={executionStatus}
+                        onChange={(e) => setExecutionStatus(e.target.value)}
+                        className="w-full border rounded-lg px-3 py-2 bg-white disabled:bg-gray-50 disabled:text-gray-500"
+                        disabled={!testExecutionId || loadingExecutions}
+                    >
+                        {!testExecutionId ? (
+                            <option value="" disabled>Select Execution first</option>
+                        ) : !executionStatus ? (
+                            <option value="" disabled>Select Status</option>
+                        ) : null}
+                        <option value="Pending">Pending</option>
+                        <option value="InProgress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Failed">Failed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
                 {/* Test Parameter */}
                 <div>
                     <label className="block text-sm font-medium mb-1">
@@ -147,35 +228,71 @@ function UploadTestResultForm({ onSuccess, onCancel }) {
                     />
                 </div>
 
-                {/* Status */}
+                {/* Result Pass/Fail */}
                 <div>
                     <label className="block text-sm font-medium mb-1">
-                        Status <span className="text-red-500">*</span>
+                        Result Status <span className="text-red-500">*</span>
                     </label>
                     <select
                         value={passFail}
                         onChange={(e) => setPassFail(e.target.value)}
-                        className="w-full border rounded-lg px-3 py-2 bg-white"
+                        className="w-full border rounded-lg px-3 py-2 bg-white disabled:bg-gray-50 disabled:text-gray-500"
                         required
+                        disabled={!testExecutionId}
                     >
+                        {!testExecutionId ? (
+                            <option value="" disabled>Select Execution first</option>
+                        ) : !passFail ? (
+                            <option value="" disabled>Select Result Status</option>
+                        ) : null}
                         <option value="true">Pass</option>
                         <option value="false">Fail</option>
                     </select>
                 </div>
             </div>
 
-            {/* Remarks */}
-            <div>
-                <label className="block text-sm font-medium mb-1">
-                    Remarks
-                </label>
-                <textarea
-                    rows={2}
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
-                    className="w-full border rounded-lg px-3 py-2"
-                    placeholder="Optional remarks..."
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Standard / Reference */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">
+                        Standard / Reference
+                    </label>
+                    <input
+                        type="text"
+                        value={testType}
+                        onChange={(e) => setTestType(e.target.value)}
+                        className="w-full border rounded-lg px-3 py-2"
+                        placeholder="e.g. ISO 17025"
+                    />
+                </div>
+
+                {/* Test Executed By */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">
+                        Test Executed By
+                    </label>
+                    <input
+                        type="text"
+                        value={projectExecutedBy}
+                        onChange={(e) => setProjectExecutedBy(e.target.value)}
+                        className="w-full border rounded-lg px-3 py-2"
+                        placeholder="Enter Analyst/Engineer Name"
+                    />
+                </div>
+
+                {/* Remarks */}
+                <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-1">
+                        Remarks
+                    </label>
+                    <textarea
+                        rows={1}
+                        value={remarks}
+                        onChange={(e) => setRemarks(e.target.value)}
+                        className="w-full border rounded-lg px-3 py-2"
+                        placeholder="Optional remarks..."
+                    />
+                </div>
             </div>
 
             {/* File Upload */}
