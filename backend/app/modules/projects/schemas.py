@@ -3,8 +3,9 @@ Pydantic schemas for Projects and Customers
 """
 
 from pydantic import BaseModel, Field, EmailStr
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
+from uuid import UUID
 
 
 # Customer Schemas
@@ -67,6 +68,12 @@ class ProjectBase(BaseModel):
     code: Optional[str] = None
     client_id: int = Field(..., alias="clientId")
     status: str = "pending"
+    priority: str = "Medium"
+    start_date: Optional[datetime] = Field(None, alias="startDate")
+    end_date: Optional[datetime] = Field(None, alias="endDate")
+    progress: int = 0
+    manager_id: Optional[UUID] = Field(None, alias="managerId")
+    manager_name: Optional[str] = Field(None, alias="managerName")
     oem: Optional[str] = None
     description: Optional[str] = None
 
@@ -82,6 +89,11 @@ class ProjectUpdate(BaseModel):
     code: Optional[str] = None
     client_id: Optional[int] = Field(None, alias="clientId")
     status: Optional[str] = None
+    priority: Optional[str] = None
+    start_date: Optional[datetime] = Field(None, alias="startDate")
+    end_date: Optional[datetime] = Field(None, alias="endDate")
+    progress: Optional[int] = None
+    manager_id: Optional[UUID] = Field(None, alias="managerId")
     oem: Optional[str] = None
     description: Optional[str] = None
 
@@ -94,6 +106,12 @@ class ProjectResponse(BaseModel):
     client_id: int = Field(..., alias="clientId")
     client_name: Optional[str] = Field(None, alias="clientName")
     status: str
+    priority: str
+    start_date: Optional[datetime] = Field(None, alias="startDate")
+    end_date: Optional[datetime] = Field(None, alias="endDate")
+    progress: int
+    manager_id: Optional[UUID] = Field(None, alias="managerId")
+    manager_name: Optional[str] = Field(None, alias="managerName")
     oem: Optional[str] = None
     description: Optional[str] = None
     created_at: datetime = Field(..., alias="createdAt")

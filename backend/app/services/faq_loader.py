@@ -146,7 +146,16 @@ async def run_faq_startup() -> None:
             db.commit()
             logger.info("Backfilled embeddings for %d FAQ entries.", updated)
     except Exception as e:
-        logger.exception("FAQ startup error: %s", e)
-        db.rollback()
+        # Check if it's an OpenAI authentication or API error to provide a cleaner message
+        error_str = str(e)
+        if "401" in error_str or "AuthenticationError" in error_str:
+            logger.error("FAQ startup error: Invalid or expired OPENAI_API_KEY in .env. FAQ embeddings will not be generated. Please update your API key.")
+            db.rollback()
+        elif "quota" in error_str.lower() or "429" in error_str:
+            logger.error("FAQ startup error: OpenAI API quota exceeded or rate limited. FAQ embeddings will not be generated.")
+            db.rollback()
+        else:
+            logger.exception("FAQ startup error: %s", e)
+            db.rollback()
     finally:
         db.close()

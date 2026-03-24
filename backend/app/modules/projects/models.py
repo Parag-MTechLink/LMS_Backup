@@ -42,6 +42,12 @@ class Project(Base):
     client_id = Column(Integer, ForeignKey("customers.id", ondelete="CASCADE"), nullable=False, index=True)
     client_name = Column(String(255), nullable=True)  # Denormalized for performance
     status = Column(String(50), nullable=False, default="pending")
+    priority = Column(String(50), nullable=False, default="Medium")
+    start_date = Column(DateTime, nullable=True)
+    end_date = Column(DateTime, nullable=True)
+    progress = Column(Integer, default=0)
+    manager_id = Column(ForeignKey("users.id"), nullable=True, index=True)
+    manager_name = Column(String(255), nullable=True)
     oem = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
     
@@ -52,3 +58,4 @@ class Project(Base):
     
     # Relationships
     client = relationship("Customer", back_populates="projects")
+    manager = relationship("User", foreign_keys=[manager_id])

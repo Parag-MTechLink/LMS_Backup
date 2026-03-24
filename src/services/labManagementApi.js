@@ -317,6 +317,7 @@ export const projectsService = {
     }
   },
   getById: (id) => apiService.get(`/api/v1/projects/${id}`),
+  getActivity: (id) => apiService.get(`/api/v1/projects/${id}/activity`),
   create: async (data) => {
     clearCache('projects:')
     return await apiService.post('/api/v1/projects', data)
