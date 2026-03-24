@@ -13,7 +13,8 @@ import {
   ExternalLink,
   Edit2,
   AlertCircle,
-  History
+  History,
+  Plus
 } from 'lucide-react'
 import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
 import Modal from '../../../components/labManagement/Modal'
@@ -25,6 +26,7 @@ import { testPlansService } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Badge from '../../../components/labManagement/Badge'
+
 
 function ProjectDetail() {
   const { id } = useParams()
@@ -38,7 +40,7 @@ function ProjectDetail() {
   const [activity, setActivity] = useState([])
   const [loadingActivity, setLoadingActivity] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const { user } = useLabManagementAuth()
+  const [showAddTRFModal, setShowAddTRFModal] = useState(false)
   const isAdmin = user?.role === 'Admin'
 
   useEffect(() => {
@@ -575,6 +577,23 @@ function ProjectDetail() {
             loadProject()
           }}
           onCancel={() => setShowEditModal(false)}
+        />
+      </Modal>
+
+      {/* Add TRF Modal */}
+      <Modal
+        isOpen={showAddTRFModal}
+        onClose={() => setShowAddTRFModal(false)}
+        title="Add TRF to Project"
+        size="lg"
+      >
+        <CreateTRFForm
+          projectId={parseInt(id)}
+          onSuccess={() => {
+            setShowAddTRFModal(false)
+            loadRelatedData()
+          }}
+          onCancel={() => setShowAddTRFModal(false)}
         />
       </Modal>
     </div>
