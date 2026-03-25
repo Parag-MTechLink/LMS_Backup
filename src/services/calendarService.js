@@ -81,42 +81,42 @@ const calendarApi = {
    * Create a new calendar event
    */
   async createEvent(eventData) {
-    return apiService.post('/api/v1/calendar/events', eventData)
+    return apiService.post('/calendar/events', eventData)
   },
 
   /**
    * Get calendar events with filtering
    */
   async getEvents(params = {}) {
-    return apiService.get('/api/v1/calendar/events', { params })
+    return apiService.get('/calendar/events', { params })
   },
 
   /**
    * Get a specific event by ID
    */
   async getEvent(eventId) {
-    return apiService.get(`/api/v1/calendar/events/${eventId}`)
+    return apiService.get(`/calendar/events/${eventId}`)
   },
 
   /**
    * Update an event
    */
   async updateEvent(eventId, eventData) {
-    return apiService.put(`/api/v1/calendar/events/${eventId}`, eventData)
+    return apiService.put(`/calendar/events/${eventId}`, eventData)
   },
 
   /**
    * Delete an event
    */
   async deleteEvent(eventId) {
-    return apiService.delete(`/api/v1/calendar/events/${eventId}`)
+    return apiService.delete(`/calendar/events/${eventId}`)
   },
 
   /**
    * Search events
    */
   async searchEvents(query, limit = 50) {
-    return apiService.get(`/api/v1/calendar/events/search/${encodeURIComponent(query)}`, {
+    return apiService.get(`/calendar/events/search/${encodeURIComponent(query)}`, {
       params: { limit }
     })
   }

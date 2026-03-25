@@ -203,7 +203,7 @@ function AppContent() {
 
   // Chatbot configuration (use same backend as rest of app unless overridden)
   const chatbotConfig = {
-    apiUrl: import.meta.env.VITE_CHATBOT_API_URL || `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/api/v1/chat`,
+    apiUrl: import.meta.env.VITE_CHATBOT_API_URL || `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001'}/api/v1/chat`,
     theme: 'light',
     position: 'bottom-right',
     enabled: import.meta.env.VITE_CHATBOT_ENABLED !== 'false',

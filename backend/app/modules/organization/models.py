@@ -31,7 +31,7 @@ class Organization(Base):
     lab_address = Column(Text, nullable=False)
     lab_country = Column(String(100), default="India")
     lab_state = Column(String(100), nullable=False)
-    lab_district = Column(String(100), nullable=False)
+    lab_district = Column(String(100), nullable=True)
     lab_city = Column(String(100), nullable=False)
     lab_pin_code = Column(String(10), nullable=False)
     lab_logo_url = Column(String(500))

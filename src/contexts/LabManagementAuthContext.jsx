@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { authService, clearCache } from '../services/labManagementApi'
 
-const STORAGE_TOKEN = 'labManagementAccessToken'
+const STORAGE_TOKEN = 'authToken'
 const STORAGE_USER = 'labManagementUser'
 
 const AuthContext = createContext(undefined)

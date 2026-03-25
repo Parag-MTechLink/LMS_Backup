@@ -1,4 +1,5 @@
 import axios from 'axios'
+import api from './api'
 
 // Validate environment variable
 const API_URL = import.meta.env.VITE_API_URL
@@ -15,68 +16,7 @@ const API_BASE_URL = API_URL || (import.meta.env.DEV ? DEV_DEFAULT_BACKEND : '')
 
 class ApiService {
   constructor() {
-    this.client = axios.create({
-      baseURL: API_BASE_URL,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      timeout: 30000, // 30 seconds timeout
-    })
-
-    this.client.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem('labManagementAccessToken') || localStorage.getItem('accessToken')
-        if (token && config.headers) {
-          config.headers.Authorization = `Bearer ${token}`
-          if (config.url.includes('documents')) {
-            console.log('Document Upload with token:', token.substring(0, 10) + '...')
-          }
-        }
-        return config
-      },
-      (error) => Promise.reject(error)
-    )
-
-    this.client.interceptors.response.use(
-      (response) => response,
-      async (error) => {
-        const originalRequest = error.config
-
-        if (error.response?.status === 401 && !originalRequest._retry) {
-          originalRequest._retry = true
-
-          try {
-            const refreshToken = localStorage.getItem('labManagementRefreshToken') || localStorage.getItem('refreshToken')
-            if (refreshToken) {
-              const response = await axios.post(`${API_BASE_URL}/api/auth/refresh`, {
-                refreshToken,
-              })
-
-              localStorage.setItem('labManagementAccessToken', response.data.accessToken)
-              localStorage.setItem('labManagementRefreshToken', response.data.refreshToken)
-
-              if (originalRequest.headers) {
-                originalRequest.headers.Authorization = `Bearer ${response.data.accessToken}`
-              }
-
-              return this.client(originalRequest)
-            }
-          } catch (refreshError) {
-            localStorage.removeItem('labManagementAccessToken')
-            localStorage.removeItem('labManagementRefreshToken')
-            localStorage.removeItem('labManagementUser')
-            window.location.href = '/login'
-            return Promise.reject(refreshError)
-          }
-        } else if (error.response?.status === 401) {
-          localStorage.removeItem('labManagementAccessToken')
-          localStorage.removeItem('labManagementUser')
-          window.location.href = '/login'
-        }
-
-        return Promise.reject(error)
-      }
-    )
+    this.client = api
   }
 
   setToken(token) {
@@ -102,9 +42,10 @@ class ApiService {
     const inFlight = this._getPromises.get(key)
     if (inFlight) return inFlight
     
-    const promise = this.client.get(url, config).then((r) => {
-      setCached(key, r.data)
-      return r.data
+    // api.js already unwraps response.data, so data is returned directly
+    const promise = this.client.get(url, config).then((data) => {
+      setCached(key, data)
+      return data
     })
     
     this._getPromises.set(key, promise)
@@ -113,23 +54,19 @@ class ApiService {
   }
 
   async post(url, data, config = {}) {
-    const response = await this.client.post(url, data, config)
-    return response.data
+    return await this.client.post(url, data, config)
   }
 
   async put(url, data, config = {}) {
-    const response = await this.client.put(url, data, config)
-    return response.data
+    return await this.client.put(url, data, config)
   }
 
   async delete(url) {
-    const response = await this.client.delete(url)
-    return response.data
+    return await this.client.delete(url)
   }
 
   async patch(url, data, config = {}) {
-    const response = await this.client.patch(url, data, config)
-    return response.data
+    return await this.client.patch(url, data, config)
   }
 }
 
@@ -171,134 +108,154 @@ const clearCache = (pattern) => {
 // Auth Service (JWT). me() cached to avoid refetch on every nav; clear with clearCache('auth:')
 export const authService = {
   login: (email, password) =>
-    apiService.post('/api/v1/auth/login', { email, password }),
+    apiService.post('/auth/login', { email, password }),
   signup: (data) =>
-    apiService.post('/api/v1/auth/signup', data),
+    apiService.post('/auth/signup', data),
   me: async () => {
     const cached = getCached('auth:me', CACHE_TTL_USER)
     if (cached) return cached
-    const data = await apiService.get('/api/v1/auth/me')
+    const data = await apiService.get('/auth/me')
     setCached('auth:me', data)
     return data
   },
-  getAllUsers: () => apiService.get('/api/v1/auth/users'),
-  deleteUser: (userId) => apiService.delete(`/api/v1/auth/users/${userId}`),
+  getAllUsers: () => apiService.get('/auth/users'),
+  deleteUser: (userId) => apiService.delete(`/auth/users/${userId}`),
   verifyMfa: (email, code) =>
-    apiService.post('/api/v1/auth/verify-mfa', { email, code }),
+    apiService.post('/auth/verify-mfa', { email, code }),
   updateProfile: (data) => {
     clearCache('auth:me')
-    return apiService.put('/api/v1/auth/profile', data)
+    return apiService.put('/auth/profile', data)
   },
   changePassword: (currentPassword, newPassword) =>
-    apiService.post('/api/v1/auth/change-password', { current_password: currentPassword, new_password: newPassword }),
+    apiService.post('/auth/change-password', { current_password: currentPassword, new_password: newPassword }),
 }
 
-// Lab recommendations (engine under /api/v1/labs; requires LAB_ENGINE_DATABASE_URL on backend)
+// Lab recommendations (engine under /labs; requires LAB_ENGINE_DATABASE_URL on backend)
 export const labsService = {
-  health: () => apiService.get('/api/v1/labs/health'),
-  getDomains: () => apiService.get('/api/v1/labs/domains'),
-  getLocations: () => apiService.get('/api/v1/labs/locations'),
-  getStatistics: () => apiService.get('/api/v1/labs/statistics'),
-  searchLabsByName: (params) => apiService.get('/api/v1/labs/by-name', { params }),
-  getRecommendations: (body) => apiService.post('/api/v1/labs/recommend', body),
-  searchLabs: (params) => apiService.get('/api/v1/labs/search', { params }),
-  getLabDetails: (labId) => apiService.get(`/api/v1/labs/${labId}`),
-  searchTests: (params) => apiService.get('/api/v1/labs/tests/search', { params }),
-  searchStandards: (params) => apiService.get('/api/v1/labs/standards/search', { params }),
+  health: () => apiService.get('/labs/health'),
+  getDomains: () => apiService.get('/labs/domains'),
+  getLocations: () => apiService.get('/labs/locations'),
+  getStatistics: () => apiService.get('/labs/statistics'),
+  searchLabsByName: (params) => apiService.get('/labs/by-name', { params }),
+  getRecommendations: (body) => apiService.post('/labs/recommend', body),
+  searchLabs: (params) => apiService.get('/labs/search', { params }),
+  getLabDetails: (labId) => apiService.get(`/labs/${labId}`),
+  searchTests: (params) => apiService.get('/labs/tests/search', { params }),
+  searchStandards: (params) => apiService.get('/labs/standards/search', { params }),
 }
 
 // Customers Service
 export const customersService = {
   getAll: async () => {
     try {
-      return await apiService.get('/api/v1/customers')
+      return await apiService.get('/customers')
     } catch (error) {
       console.error('Error fetching customers:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/customers/${id}`),
+  getById: (id) => apiService.get(`/customers/${id}`),
   create: async (data) => {
     clearCache('customers:')
-    return await apiService.post('/api/v1/customers', data)
+    return await apiService.post('/customers', data)
   },
   update: async (id, data) => {
     clearCache('customers:')
-    return await apiService.put(`/api/v1/customers/${id}`, data)
+    return await apiService.put(`/customers/${id}`, data)
   },
   delete: async (id) => {
     clearCache('customers:')
-    return await apiService.delete(`/api/v1/customers/${id}`)
+    return await apiService.delete(`/customers/${id}`)
   },
 }
 
-// RFQs Service
+// RFQ Service
 export const rfqsService = {
-  getAll: async () => {
+  getAll: () => apiService.get('/rfqs'),
+  getById: (id) => apiService.get(`/rfqs/${id}`),
+  create: (data) => apiService.post('/rfqs', data),
+  delete: (id) => apiService.delete(`/rfqs/${id}`),
+  updateStatus: (id, status) => apiService.patch(`/rfqs/${id}/status`, { status }),
+  upload: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return await apiService.post('/rfqs/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
+  downloadTemplate: async () => {
     try {
-      return await apiService.get('/api/v1/rfqs')
+      const res = await apiService.client.get('/rfqs/template', { responseType: 'blob' })
+      const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'Job_Request_Form_Template.docx'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('Error fetching RFQs:', error)
+      console.error('Failed to download RFQ template:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/rfqs/${id}`),
-  create: async (data) => {
-    clearCache('rfqs:')
-    return await apiService.post('/api/v1/rfqs', data)
-  },
-  /** Upload RFQ from Excel (.xlsx). Returns { status, missing_fields? } or { status, message, request_id?, rfq_id? }. */
-  uploadExcel: async (file) => {
-    const formData = new FormData()
-    formData.append('file', file)
-    return await apiService.post('/api/v1/rfq/upload', formData)
-  },
-  /** Download RFQ Excel template (triggers file download in browser). */
-  downloadTemplate: async () => {
-    const res = await apiService.client.get('/api/v1/rfq/template', { responseType: 'blob' })
-    const url = URL.createObjectURL(res.data)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'rfq_upload_template.xlsx'
-    a.click()
-    URL.revokeObjectURL(url)
-  },
-  delete: async (id) => {
-    clearCache('rfqs:')
-    return await apiService.delete(`/api/v1/rfqs/${id}`)
+  downloadUploadedFile: async (id, filename = 'uploaded_rfq.docx') => {
+    try {
+      const res = await apiService.client.get(`/rfqs/${id}/download`, { responseType: 'blob' })
+      const blob = new Blob([res], { type: 'application/octet-stream' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Failed to download uploaded file:', error)
+      throw error
+    }
   },
 }
 
 // Estimations Service
 export const estimationsService = {
-  getAll: async () => {
-    try {
-      return await apiService.get('/api/v1/estimations')
-    } catch (error) {
-      console.error('Error fetching estimations:', error)
-      throw error
-    }
-  },
-  getById: (id) => apiService.get(`/api/v1/estimations/${id}`),
-  create: async (data) => {
-    clearCache('estimations:')
-    return await apiService.post('/api/v1/estimations', data)
+  getAll: () => apiService.get('/estimations'),
+  getById: (id) => apiService.get(`/estimations/${id}`),
+  create: (data) => apiService.post('/estimations', data),
+  getTestTypes: () => apiService.get('/estimations/test-types'),
+  getTestTypesHierarchy: () => apiService.get('/estimations/test-types/hierarchy'),
+  uploadRateChart: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return await apiService.post('/estimations/rate-chart/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
   },
   review: async (id, data) => {
-    clearCache('estimations:')
-    return await apiService.post(`/api/v1/estimations/${id}/review`, data)
+    return await apiService.post(`/estimations/${id}/review`, data)
   },
-  getTestTypes: async () => {
+  delete: (id) => apiService.delete(`/estimations/${id}`),
+  downloadRateChartTemplate: async () => {
     try {
-      return await apiService.get('/api/v1/estimations/test-types')
+      const res = await apiService.client.get('/uploads/Standard_Rate_Chart.pdf', { responseType: 'blob' })
+      const blob = new Blob([res], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'Standard_Rate_Chart.pdf'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('Error fetching test types:', error)
-      // Fallback for demo if API fails
-      return [
-        { id: 1, name: 'EMC Testing', hsnCode: '9030', defaultRate: 5000 },
-        { id: 2, name: 'RF Testing', hsnCode: '9030', defaultRate: 6000 },
-        { id: 3, name: 'Safety Testing', hsnCode: '9030', defaultRate: 4500 },
-      ]
+      console.error('Failed to download rate chart template:', error)
+      throw error
     }
   },
 }
@@ -308,27 +265,27 @@ export const projectsService = {
   getAll: async (clientId) => {
     try {
       const url = clientId
-        ? `/api/v1/projects?client_id=${clientId}`
-        : '/api/v1/projects'
+        ? `/projects?client_id=${clientId}`
+        : '/projects'
       return await apiService.get(url)
     } catch (error) {
       console.error('Error fetching projects:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/projects/${id}`),
-  getActivity: (id) => apiService.get(`/api/v1/projects/${id}/activity`),
+  getById: (id) => apiService.get(`/projects/${id}`),
+  getActivity: (id) => apiService.get(`/projects/${id}/activity`),
   create: async (data) => {
     clearCache('projects:')
-    return await apiService.post('/api/v1/projects', data)
+    return await apiService.post('/projects', data)
   },
   update: async (id, data) => {
     clearCache('projects:')
-    return await apiService.put(`/api/v1/projects/${id}`, data)
+    return await apiService.put(`/projects/${id}`, data)
   },
   delete: async (id) => {
     clearCache('projects:')
-    return await apiService.delete(`/api/v1/projects/${id}`)
+    return await apiService.delete(`/projects/${id}`)
   },
 }
 
@@ -369,26 +326,26 @@ export const testPlansService = {
   getAll: async (projectId) => {
     try {
       const url = projectId
-        ? `/api/v1/test-plans?project_id=${projectId}`
-        : '/api/v1/test-plans'
+        ? `/test-plans?project_id=${projectId}`
+        : '/test-plans'
       return await apiService.get(url)
     } catch (error) {
       console.error('Error fetching test plans:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/test-plans/${id}`),
+  getById: (id) => apiService.get(`/test-plans/${id}`),
   create: async (data) => {
     clearCache('testPlans:')
-    return await apiService.post('/api/v1/test-plans', data)
+    return await apiService.post('/test-plans', data)
   },
   update: async (id, data) => {
     clearCache('testPlans:')
-    return await apiService.put(`/api/v1/test-plans/${id}`, data)
+    return await apiService.put(`/test-plans/${id}`, data)
   },
   delete: async (id) => {
     clearCache('testPlans:')
-    return await apiService.delete(`/api/v1/test-plans/${id}`)
+    return await apiService.delete(`/test-plans/${id}`)
   },
 }
 
@@ -396,7 +353,7 @@ export const testPlansService = {
 export const testExecutionsService = {
   getAll: async () => {
     try {
-      return await apiService.get('/api/v1/test-executions')
+      return await apiService.get('/test-executions')
     } catch (error) {
       console.error('Error fetching test executions:', error)
       throw error
@@ -404,28 +361,28 @@ export const testExecutionsService = {
   },
   getByTestPlan: async (testPlanId) => {
     try {
-      return await apiService.get(`/api/v1/test-executions?test_plan_id=${testPlanId}`)
+      return await apiService.get(`/test-executions?test_plan_id=${testPlanId}`)
     } catch (error) {
       console.error('Error fetching test executions:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/test-executions/${id}`),
+  getById: (id) => apiService.get(`/test-executions/${id}`),
   create: async (data) => {
     clearCache('testExecutions:')
-    return await apiService.post('/api/v1/test-executions', data)
+    return await apiService.post('/test-executions', data)
   },
   update: async (id, data) => {
     clearCache('testExecutions:')
-    return await apiService.put(`/api/v1/test-executions/${id}`, data)
+    return await apiService.put(`/test-executions/${id}`, data)
   },
   start: async (id) => {
     clearCache('testExecutions:')
-    return await apiService.post(`/api/v1/test-executions/${id}/start`, {})
+    return await apiService.post(`/test-executions/${id}/start`, {})
   },
   complete: async (id) => {
     clearCache('testExecutions:')
-    return await apiService.post(`/api/v1/test-executions/${id}/complete`, {})
+    return await apiService.post(`/test-executions/${id}/complete`, {})
   },
 }
 
@@ -433,7 +390,7 @@ export const testExecutionsService = {
 export const testResultsService = {
   getAll: async () => {
     try {
-      return await apiService.get('/api/v1/test-results')
+      return await apiService.get('/test-results')
     } catch (error) {
       console.error('Error fetching test results:', error)
       throw error
@@ -441,20 +398,20 @@ export const testResultsService = {
   },
   getByExecution: async (executionId) => {
     try {
-      return await apiService.get(`/api/v1/test-results?execution_id=${executionId}`)
+      return await apiService.get(`/test-results?execution_id=${executionId}`)
     } catch (error) {
       console.error('Error fetching test results:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/test-results/${id}`),
+  getById: (id) => apiService.get(`/test-results/${id}`),
   create: async (data) => {
     clearCache('testResults:')
-    return await apiService.post('/api/v1/test-results', data)
+    return await apiService.post('/test-results', data)
   },
   update: async (id, data) => {
     clearCache('testResults:')
-    return await apiService.put(`/api/v1/test-results/${id}`, data)
+    return await apiService.put(`/test-results/${id}`, data)
   },
 }
 
@@ -463,23 +420,23 @@ export const samplesService = {
   getAll: async (projectId) => {
     try {
       const url = projectId
-        ? `/api/v1/samples?projectId=${projectId}`
-        : '/api/v1/samples'
+        ? `/samples?projectId=${projectId}`
+        : '/samples'
       return await apiService.get(url)
     } catch (error) {
       console.error('Error fetching samples:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/samples/${id}`),
+  getById: (id) => apiService.get(`/samples/${id}`),
   create: async (data) => {
-    return await apiService.post('/api/v1/samples', data)
+    return await apiService.post('/samples', data)
   },
   update: async (id, data) => {
-    return await apiService.put(`/api/v1/samples/${id}`, data)
+    return await apiService.put(`/samples/${id}`, data)
   },
   delete: async (id) => {
-    return await apiService.delete(`/api/v1/samples/${id}`)
+    return await apiService.delete(`/samples/${id}`)
   },
 }
 
@@ -488,26 +445,26 @@ export const trfsService = {
   getAll: async (projectId) => {
     try {
       const url = projectId
-        ? `/api/v1/trfs?project_id=${projectId}`
-        : '/api/v1/trfs'
+        ? `/trfs?project_id=${projectId}`
+        : '/trfs'
       return await apiService.get(url)
     } catch (error) {
       console.error('Error fetching TRFs:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/trfs/${id}`),
+  getById: (id) => apiService.get(`/trfs/${id}`),
   create: async (data) => {
-    return await apiService.post('/api/v1/trfs', data)
+    return await apiService.post('/trfs', data)
   },
   update: async (id, data) => {
-    return await apiService.put(`/api/v1/trfs/${id}`, data)
+    return await apiService.put(`/trfs/${id}`, data)
   },
   updateStatus: async (id, status, approvedBy) => {
-    return await apiService.patch(`/api/v1/trfs/${id}/status`, { status, approved_by: approvedBy || null })
+    return await apiService.patch(`/trfs/${id}/status`, { status, approved_by: approvedBy || null })
   },
   delete: async (id) => {
-    return await apiService.delete(`/api/v1/trfs/${id}`)
+    return await apiService.delete(`/trfs/${id}`)
   },
 }
 
@@ -517,7 +474,7 @@ export const documentsService = {
    * Get all documents
    */
   getAll: async () => {
-    return apiService.get('/api/v1/documents')
+    return apiService.get('/documents')
   },
 
   /**
@@ -525,17 +482,13 @@ export const documentsService = {
    * IMPORTANT: bypass apiService.post to avoid JSON header
    */
   create: async (formData) => {
-    // Manually get token to ensure it's sent
-    const token = localStorage.getItem('labManagementAccessToken') || localStorage.getItem('accessToken')
-    
-    // Use the client directly with a trailing slash to avoid 307 redirects that can strip auth headers
-    const response = await apiService.client.post('/api/v1/documents/', formData, {
+    // apiService.client.post via unified api.js will auto-inject token
+    const response = await apiService.client.post('/documents/', formData, {
       headers: {
-        'Content-Type': undefined,
-        'Authorization': `Bearer ${token}`
+        'Content-Type': undefined
       }
     })
-    return response.data
+    return response
   },
 
   /**
@@ -544,19 +497,19 @@ export const documentsService = {
    */
   download: async (id) => {
     const response = await apiService.client.get(
-      `/api/v1/documents/${id}/download`,
+      `/documents/${id}/download`,
       {
         responseType: 'blob',
       }
     )
-    return response.data
+    return response
   },
 
   /**
    * Delete document (future-ready)
    */
   delete: async (id) => {
-    return apiService.delete(`/api/v1/documents/${id}`)
+    return apiService.delete(`/documents/${id}`)
   },
 }
 
@@ -566,7 +519,7 @@ export const reportsService = {
    * Get all reports
    */
   getAll: async () => {
-    return apiService.get('/api/v1/reports')
+    return apiService.get('/reports')
   },
 
   /**
@@ -574,7 +527,7 @@ export const reportsService = {
    */
   create: async (formData) => {
     const response = await apiService.client.post(
-      '/api/v1/reports',
+      '/reports',
       formData,
       {
         headers: {
@@ -582,7 +535,7 @@ export const reportsService = {
         },
       }
     )
-    return response.data
+    return response
   },
 
   /**
@@ -590,41 +543,41 @@ export const reportsService = {
    */
   download: async (id) => {
     const response = await apiService.client.get(
-      `/api/v1/reports/${id}/download`,
+      `/reports/${id}/download`,
       {
         responseType: 'blob',
       }
     )
-    return response.data
+    return response
   },
 
   /**
    * Delete report
    */
   delete: async (id) => {
-    return apiService.delete(`/api/v1/reports/${id}`)
+    return apiService.delete(`/reports/${id}`)
   },
 }
 
 // Audits Service
 export const auditsService = {
-  getAll: () => apiService.get('/api/v1/audits-section'),
-  getById: (id) => apiService.get(`/api/v1/audits-section/${id}`),
-  create: (data) => apiService.post('/api/v1/audits-section', data),
+  getAll: () => apiService.get('/audits-section'),
+  getById: (id) => apiService.get(`/audits-section/${id}`),
+  create: (data) => apiService.post('/audits-section', data),
 }
 
 // NCRs Service
 export const ncrsService = {
-  getAll: () => apiService.get('/api/v1/ncrs'),
-  getById: (id) => apiService.get(`/api/v1/ncrs/${id}`),
-  create: (data) => apiService.post('/api/v1/ncrs', data),
+  getAll: () => apiService.get('/ncrs'),
+  getById: (id) => apiService.get(`/ncrs/${id}`),
+  create: (data) => apiService.post('/ncrs', data),
 }
 
 // Certifications Service
 export const certificationsService = {
-  getAll: () => apiService.get('/api/v1/certifications'),
-  getById: (id) => apiService.get(`/api/v1/certifications/${id}`),
-  create: (data) => apiService.post('/api/v1/certifications', data),
+  getAll: () => apiService.get('/certifications'),
+  getById: (id) => apiService.get(`/certifications/${id}`),
+  create: (data) => apiService.post('/certifications', data),
 }
 
 // Inventory Management Services
@@ -633,28 +586,28 @@ export const certificationsService = {
 export const instrumentsService = {
   getAll: async (params) => {
     try {
-      return await apiService.get('/api/v1/instruments', { params })
+      return await apiService.get('/instruments', { params })
     } catch (error) {
       console.error('Error fetching instruments:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/instruments/${id}`),
+  getById: (id) => apiService.get(`/instruments/${id}`),
   create: async (data) => {
     clearCache('instruments')
-    return await apiService.post('/api/v1/instruments', data)
+    return await apiService.post('/instruments', data)
   },
   update: async (id, data) => {
     clearCache('instruments')
-    return await apiService.put(`/api/v1/instruments/${id}`, data)
+    return await apiService.put(`/instruments/${id}`, data)
   },
   deactivate: async (id) => {
     clearCache('instruments')
-    return await apiService.patch(`/api/v1/instruments/${id}/deactivate`, {})
+    return await apiService.patch(`/instruments/${id}/deactivate`, {})
   },
   delete: async (id) => {
     clearCache('instruments')
-    return await apiService.delete(`/api/v1/instruments/${id}`)
+    return await apiService.delete(`/instruments/${id}`)
   },
 }
 
@@ -663,26 +616,26 @@ export const calibrationsService = {
   getAll: async (instrumentId) => {
     try {
       const url = instrumentId
-        ? `/api/v1/calibrations?instrument_id=${instrumentId}`
-        : '/api/v1/calibrations'
+        ? `/calibrations?instrument_id=${instrumentId}`
+        : '/calibrations'
       return await apiService.get(url)
     } catch (error) {
       console.error('Error fetching calibrations:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/calibrations/${id}`),
+  getById: (id) => apiService.get(`/calibrations/${id}`),
   create: async (data) => {
     clearCache('calibrations')
-    return await apiService.post('/api/v1/calibrations', data)
+    return await apiService.post('/calibrations', data)
   },
   update: async (id, data) => {
     clearCache('calibrations')
-    return await apiService.put(`/api/v1/calibrations/${id}`, data)
+    return await apiService.put(`/calibrations/${id}`, data)
   },
   delete: async (id) => {
     clearCache('calibrations')
-    return await apiService.delete(`/api/v1/calibrations/${id}`)
+    return await apiService.delete(`/calibrations/${id}`)
   },
 }
 
@@ -743,21 +696,21 @@ export const inventoryReportsService = {
 export const sopService = {
   getAll: async () => {
     try {
-      return await apiService.get('/api/v1/sops')
+      return await apiService.get('/sops')
     } catch (error) {
       console.error('Error fetching SOPs:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/sops/${id}`),
+  getById: (id) => apiService.get(`/sops/${id}`),
   create: async (data) => {
-    return await apiService.post('/api/v1/sops', data)
+    return await apiService.post('/sops', data)
   },
   update: async (id, data) => {
-    return await apiService.put(`/api/v1/sops/${id}`, data)
+    return await apiService.put(`/sops/${id}`, data)
   },
   delete: async (id) => {
-    return await apiService.delete(`/api/v1/sops/${id}`)
+    return await apiService.delete(`/sops/${id}`)
   },
 }
 
@@ -765,24 +718,24 @@ export const sopService = {
 export const qcService = {
   getAll: async () => {
     try {
-      return await apiService.get('/api/v1/qc-checks')
+      return await apiService.get('/qc-checks')
     } catch (error) {
       console.error('Error fetching QC checks:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/qc-checks/${id}`),
+  getById: (id) => apiService.get(`/qc-checks/${id}`),
   create: async (data) => {
-    return await apiService.post('/api/v1/qc-checks', data)
+    return await apiService.post('/qc-checks', data)
   },
   update: async (id, data) => {
-    return await apiService.put(`/api/v1/qc-checks/${id}`, data)
+    return await apiService.put(`/qc-checks/${id}`, data)
   },
   recordResult: async (id, result) => {
-    return await apiService.post(`/api/v1/qc-checks/${id}/record-result`, result)
+    return await apiService.post(`/qc-checks/${id}/record-result`, result)
   },
   delete: async (id) => {
-    return await apiService.delete(`/api/v1/qc-checks/${id}`)
+    return await apiService.delete(`/qc-checks/${id}`)
   },
 }
 
@@ -790,21 +743,21 @@ export const qcService = {
 export const auditService = {
   getAll: async () => {
     try {
-      return await apiService.get('/api/v1/audits')
+      return await apiService.get('/audits')
     } catch (error) {
       console.error('Error fetching audits:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/audits/${id}`),
+  getById: (id) => apiService.get(`/audits/${id}`),
   create: async (data) => {
-    return await apiService.post('/api/v1/audits', data)
+    return await apiService.post('/audits', data)
   },
   update: async (id, data) => {
-    return await apiService.put(`/api/v1/audits/${id}`, data)
+    return await apiService.put(`/audits/${id}`, data)
   },
   delete: async (id) => {
-    return await apiService.delete(`/api/v1/audits/${id}`)
+    return await apiService.delete(`/audits/${id}`)
   },
 }
 
@@ -812,24 +765,24 @@ export const auditService = {
 export const consumablesService = {
   getAll: async () => {
     try {
-      return await apiService.get('/api/v1/consumables')
+      return await apiService.get('/consumables')
     } catch (error) {
       console.error('Error fetching consumables:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/consumables/${id}`),
+  getById: (id) => apiService.get(`/consumables/${id}`),
   create: async (data) => {
     clearCache('consumables')
-    return await apiService.post('/api/v1/consumables', data)
+    return await apiService.post('/consumables', data)
   },
   update: async (id, data) => {
     clearCache('consumables')
-    return await apiService.put(`/api/v1/consumables/${id}`, data)
+    return await apiService.put(`/consumables/${id}`, data)
   },
   delete: async (id) => {
     clearCache('consumables')
-    return await apiService.delete(`/api/v1/consumables/${id}`)
+    return await apiService.delete(`/consumables/${id}`)
   },
 }
 
@@ -837,30 +790,30 @@ export const consumablesService = {
 export const inventoryTransactionsService = {
   getAll: async (params) => {
     try {
-      return await apiService.get('/api/v1/inventory-transactions', { params })
+      return await apiService.get('/inventory-transactions', { params })
     } catch (error) {
       console.error('Error fetching transactions:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/inventory-transactions/${id}`),
+  getById: (id) => apiService.get(`/inventory-transactions/${id}`),
   create: async (data) => {
     clearCache('inventory-transactions')
     clearCache('consumables')
     clearCache('instruments')
-    return await apiService.post('/api/v1/inventory-transactions', data)
+    return await apiService.post('/inventory-transactions', data)
   },
   update: async (id, data) => {
     clearCache('inventory-transactions')
     clearCache('consumables')
     clearCache('instruments')
-    return await apiService.put(`/api/v1/inventory-transactions/${id}`, data)
+    return await apiService.put(`/inventory-transactions/${id}`, data)
   },
   delete: async (id) => {
     clearCache('inventory-transactions')
     clearCache('consumables')
     clearCache('instruments')
-    return await apiService.delete(`/api/v1/inventory-transactions/${id}`)
+    return await apiService.delete(`/inventory-transactions/${id}`)
   },
 }
 
@@ -868,24 +821,24 @@ export const inventoryTransactionsService = {
 export const ncCapaService = {
   getAll: async () => {
     try {
-      return await apiService.get('/api/v1/nc-capa')
+      return await apiService.get('/nc-capa')
     } catch (error) {
       console.error('Error fetching NC/CAPA:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/nc-capa/${id}`),
+  getById: (id) => apiService.get(`/nc-capa/${id}`),
   create: async (data) => {
-    return await apiService.post('/api/v1/nc-capa', data)
+    return await apiService.post('/nc-capa', data)
   },
   update: async (id, data) => {
-    return await apiService.put(`/api/v1/nc-capa/${id}`, data)
+    return await apiService.put(`/nc-capa/${id}`, data)
   },
   close: async (id, closureData) => {
-    return await apiService.patch(`/api/v1/nc-capa/${id}/close`, closureData)
+    return await apiService.patch(`/nc-capa/${id}/close`, closureData)
   },
   delete: async (id) => {
-    return await apiService.delete(`/api/v1/nc-capa/${id}`)
+    return await apiService.delete(`/nc-capa/${id}`)
   },
 }
 
@@ -894,27 +847,27 @@ export const ncCapaService = {
 export const documentControlService = {
   getAll: async () => {
     try {
-      return await apiService.get('/api/v1/qc-documents')
+      return await apiService.get('/qc-documents')
     } catch (error) {
       console.error('Error fetching documents:', error)
       throw error
     }
   },
-  getById: (id) => apiService.get(`/api/v1/qc-documents/${id}`),
+  getById: (id) => apiService.get(`/qc-documents/${id}`),
   create: async (data) => {
-    return await apiService.post('/api/v1/qc-documents', data)
+    return await apiService.post('/qc-documents', data)
   },
   update: async (id, data) => {
-    return await apiService.put(`/api/v1/qc-documents/${id}`, data)
+    return await apiService.put(`/qc-documents/${id}`, data)
   },
   lock: async (id) => {
-    return await apiService.patch(`/api/v1/qc-documents/${id}/lock`)
+    return await apiService.patch(`/qc-documents/${id}/lock`)
   },
   unlock: async (id) => {
-    return await apiService.patch(`/api/v1/qc-documents/${id}/unlock`)
+    return await apiService.patch(`/qc-documents/${id}/unlock`)
   },
   delete: async (id) => {
-    return await apiService.delete(`/api/v1/qc-documents/${id}`)
+    return await apiService.delete(`/qc-documents/${id}`)
   },
 }
 
@@ -924,10 +877,10 @@ export const qaReportsService = {
     try {
       // Fetch real data from all QA endpoints to calculate compliance
       const [sops, documents, qcChecks, audits] = await Promise.all([
-        apiService.get('/api/v1/sops'),
-        apiService.get('/api/v1/qc-documents'),
-        apiService.get('/api/v1/qc-checks'),
-        apiService.get('/api/v1/audits')
+        apiService.get('/sops'),
+        apiService.get('/qc-documents'),
+        apiService.get('/qc-checks'),
+        apiService.get('/audits')
       ])
 
       // Calculate compliance scores based on actual data
@@ -963,7 +916,7 @@ export const qaReportsService = {
   },
   getOverdueCAPA: async () => {
     try {
-      const ncCapa = await apiService.get('/api/v1/nc-capa')
+      const ncCapa = await apiService.get('/nc-capa')
       const today = new Date()
 
       // Filter for overdue items
@@ -988,7 +941,7 @@ export const qaReportsService = {
   },
   getSOPReviewReminders: async () => {
     try {
-      const sops = await apiService.get('/api/v1/sops')
+      const sops = await apiService.get('/sops')
       const today = new Date()
       const thirtyDaysFromNow = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000))
 
@@ -1018,10 +971,10 @@ export const qaReportsService = {
   getAuditReadiness: async () => {
     try {
       const [sops, qcChecks, documents, ncCapa] = await Promise.all([
-        apiService.get('/api/v1/sops'),
-        apiService.get('/api/v1/qc-checks'),
-        apiService.get('/api/v1/qc-documents'),
-        apiService.get('/api/v1/nc-capa')
+        apiService.get('/sops'),
+        apiService.get('/qc-checks'),
+        apiService.get('/qc-documents'),
+        apiService.get('/nc-capa')
       ])
 
       const today = new Date()

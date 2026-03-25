@@ -54,10 +54,10 @@ class Settings(BaseSettings):
     
     # File Upload
     UPLOAD_DIR: str = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "uploads")
-    MAX_FILE_SIZE: int = 2097152  # 2MB
-    MAX_IMAGE_SIZE: int = 1048576  # 1MB
+    MAX_FILE_SIZE: int = 10485760  # 10MB
+    MAX_IMAGE_SIZE: int = 5242880  # 5MB
     ALLOWED_IMAGE_TYPES: str = "image/jpeg,image/png,image/jpg"
-    ALLOWED_DOCUMENT_TYPES: str = "application/pdf"
+    ALLOWED_DOCUMENT_TYPES: str = "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/png,image/jpg"
     
     # Storage
     STORAGE_TYPE: str = "local"  # local or s3

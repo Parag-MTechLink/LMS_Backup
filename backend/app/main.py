@@ -22,8 +22,10 @@ from app.core.config import settings
 from app.core.database import Base, engine
 from app.core.migrations import run_all_migrations
 from app.core.logging_config import configure_logging
-from app.models import FAQKnowledgeBase, RFQRequest, User, AuditLog  # noqa: F401 - register models for create_all
+from app.models import FAQKnowledgeBase, User, AuditLog  # noqa: F401 - register models for create_all
 from app.modules.crm.models import CRMCustomer, CRMFieldMapping
+from app.modules.rfqs.models import RFQ
+from app.modules.estimations.models import Estimation, EstimationTestItem, TestType
 
 # Import Routers
 from app.modules.organization import routes as organization_routes
@@ -65,11 +67,21 @@ async def lifespan(app: FastAPI):
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
     os.makedirs(os.path.join(settings.UPLOAD_DIR, "logos"), exist_ok=True)
     os.makedirs(os.path.join(settings.UPLOAD_DIR, "documents"), exist_ok=True)
+    os.makedirs(os.path.join(settings.UPLOAD_DIR, "rfqs"), exist_ok=True)
     
-    # Enable pgvector before creating tables that use it
-    from app.services.faq_loader import ensure_pgvector_extension
-    ensure_pgvector_extension()
-    # Create database tables (in production, use Alembic migrations)
+    # Ensure missing columns exist in public schema (Fix for UndefinedColumn error)
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE public.rfqs ADD COLUMN IF NOT EXISTS details JSONB DEFAULT '{}'::jsonb;"))
+            conn.execute(text("ALTER TABLE public.estimations ADD COLUMN IF NOT EXISTS details JSONB DEFAULT '{}'::jsonb;"))
+            conn.execute(text("ALTER TABLE public.rfqs ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;"))
+            conn.execute(text("ALTER TABLE public.rfqs ADD COLUMN IF NOT EXISTS rfq_file_path VARCHAR;"))
+            conn.execute(text("ALTER TABLE public.rfq_requests ADD COLUMN IF NOT EXISTS rfq_file_path VARCHAR;"))
+        logging.getLogger("app").info("Database columns verified in public schema.")
+    except Exception as e:
+        logging.getLogger("app").warning(f"Failed to add columns to public schema: {e}")
+
+    # Lab recommendation engine (optional: requires LAB_ENGINE_DATABASE_URL)
     Base.metadata.create_all(bind=engine)
 
     # Run custom standard migrations (our .py scripts)
@@ -256,6 +268,7 @@ app.add_middleware(
 # Mount static files for uploads
 if os.path.exists(settings.UPLOAD_DIR):
     app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+    app.mount("/api/v1/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads_v1")
 
 # Include routers (auth routes are registered directly on app above)
 app.include_router(
@@ -321,8 +334,8 @@ app.include_router(scope_management_router, prefix="/api/v1/scope-management", t
 from app.routes.chatbot import router as chatbot_router
 app.include_router(chatbot_router, prefix="/api/v1/chat", tags=["Chatbot"])
 
-from app.routes.rfq import router as rfq_upload_router
-app.include_router(rfq_upload_router, prefix="/api/v1")
+# from app.routes.rfq import router as rfq_upload_router
+# app.include_router(rfq_upload_router, prefix="/api/v1")
 
 
 @app.get("/")

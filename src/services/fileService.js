@@ -1,89 +1,92 @@
-/**
- * File Upload Service
- * API calls for file upload and management
- */
-import axios from 'axios';
-
-const FILE_API_URL = import.meta.env.VITE_FILE_API_URL || 'http://127.0.0.1:8000/api/v1/files';
+import api from './api';
 
 export const fileService = {
     /**
      * Upload laboratory logo
      * @param {File} file - Image file (JPG/PNG, max 1MB)
+     * @param {string} organizationId - Optional organization ID
      * @returns {Promise<string>} File URL
      */
-    async uploadLogo(file) {
+    async uploadLogo(file, organizationId = null) {
         const formData = new FormData();
         formData.append('file', file);
 
         try {
-            const response = await axios.post(`${FILE_API_URL}/upload/logo`, formData, {
+            const url = organizationId 
+                ? `/files/upload/logo?organization_id=${organizationId}` 
+                : '/files/upload/logo';
+                
+            const response = await api.post(url, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
 
-            return response.data.file_url;
+            return response.file_url;
         } catch (error) {
-            const message = error.response?.data?.detail || 'Logo upload failed';
+            const message = error.message || 'Logo upload failed';
             throw new Error(message);
         }
     },
 
     /**
-     * Upload document (PDF)
-     * @param {File} file - PDF file (max 2MB)
-     * @param {string} docType - Document type (general, compliance, policy, etc.)
+     * Upload document (PDF, Word, Excel, etc.)
+     * @param {File} file - Document file
+     * @param {string} docType - Document type
+     * @param {string} organizationId - Optional organization ID
      * @returns {Promise<string>} File URL
      */
-    async uploadDocument(file, docType = 'general') {
+    async uploadDocument(file, docType = 'general', organizationId = null) {
         const formData = new FormData();
         formData.append('file', file);
 
         try {
-            const response = await axios.post(
-                `${FILE_API_URL}/upload/document?doc_type=${docType}`,
-                formData,
-                {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                }
-            );
+            let url = `/files/upload/document?doc_type=${docType}`;
+            if (organizationId) {
+                url += `&organization_id=${organizationId}`;
+            }
 
-            return response.data.file_url;
+            const response = await api.post(url, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            return response.file_url;
         } catch (error) {
-            const message = error.response?.data?.detail || 'Document upload failed';
+            const message = error.message || 'Document upload failed';
             throw new Error(message);
         }
     },
 
     /**
      * Upload multiple documents
-     * @param {File[]} files - Array of PDF files
+     * @param {File[]} files - Array of document files
      * @param {string} docType - Document type
+     * @param {string} organizationId - Optional organization ID
      * @returns {Promise<Array>} Array of file URLs
      */
-    async uploadMultiple(files, docType = 'general') {
+    async uploadMultiple(files, docType = 'general', organizationId = null) {
         const formData = new FormData();
         files.forEach((file) => {
             formData.append('files', file);
         });
 
         try {
-            const response = await axios.post(
-                `${FILE_API_URL}/upload/multiple?doc_type=${docType}`,
-                formData,
-                {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                }
-            );
+            let url = `/files/upload/multiple?doc_type=${docType}`;
+            if (organizationId) {
+                url += `&organization_id=${organizationId}`;
+            }
 
-            return response.data.files.map((f) => f.file_url);
+            const response = await api.post(url, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            return response.files.map((f) => f.file_url);
         } catch (error) {
-            const message = error.response?.data?.detail || 'Multiple file upload failed';
+            const message = error.message || 'Multiple file upload failed';
             throw new Error(message);
         }
     },
@@ -95,12 +98,12 @@ export const fileService = {
      */
     async deleteFile(fileUrl) {
         try {
-            await axios.delete(`${FILE_API_URL}/delete`, {
+            await api.delete('/files/delete', {
                 params: { file_url: fileUrl },
             });
             return true;
         } catch (error) {
-            const message = error.response?.data?.detail || 'File deletion failed';
+            const message = error.message || 'File deletion failed';
             throw new Error(message);
         }
     },
