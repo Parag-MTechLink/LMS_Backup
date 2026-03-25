@@ -26,7 +26,8 @@ import {
   TrendingDown,
   Settings,
   Info,
-  X
+  X,
+  Play
 } from 'lucide-react'
 import { 
   projectsService, 
@@ -51,6 +52,7 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 
 function LabManagementDashboard() {
   const navigate = useNavigate()
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
     projects: 0,
@@ -63,11 +65,11 @@ function LabManagementDashboard() {
     trfs: 0
   })
   const [recentActivities, setRecentActivities] = useState([])
-  const [chartData, setChartData] = useState([])
-  const [statusDistribution, setStatusDistribution] = useState([])
+  // chartData and statusDistribution moved to useMemo for reactivity
   // Store full lists for real-time selector filtering
   const [allProjects, setAllProjects] = useState([])
   const [allTestExecutions, setAllTestExecutions] = useState([])
+  const [allTestPlans, setAllTestPlans] = useState([])
   const [allInstruments, setAllInstruments] = useState([])
   const [allCalibrations, setAllCalibrations] = useState([])
   const [performanceMetrics, setPerformanceMetrics] = useState({
@@ -76,7 +78,6 @@ function LabManagementDashboard() {
     onTimeDelivery: 0,
     customerSatisfaction: 0
   })
-  const [testExecutionData, setTestExecutionData] = useState([])
   const [revenueData, setRevenueData] = useState([])
   const [refreshing, setRefreshing] = useState(false)
   const [timeRange, setTimeRange] = useState('6M')
@@ -101,7 +102,9 @@ function LabManagementDashboard() {
     spaceTarget: 70,
     storageTarget: 50
   })
+  // Popups for info details
   const [activeInfoPopup, setActiveInfoPopup] = useState(null)
+  const [activeOpInfo, setActiveOpInfo] = useState(null) // New state for operational metrics info
   
   // Calculate deadlines for various systems
   const deadlines = useMemo(() => {
@@ -156,12 +159,203 @@ function LabManagementDashboard() {
 
   // Close info popup when clicking outside
   useEffect(() => {
-    const handleGlobalClick = () => setActiveInfoPopup(null)
-    if (activeInfoPopup) {
+    const handleGlobalClick = () => {
+      setActiveInfoPopup(null)
+      setActiveOpInfo(null)
+    }
+    if (activeInfoPopup || activeOpInfo) {
       document.addEventListener('click', handleGlobalClick)
     }
     return () => document.removeEventListener('click', handleGlobalClick)
-  }, [activeInfoPopup])
+  }, [activeInfoPopup, activeOpInfo])
+
+  // Helper to filter items by diagram time range
+  // NOTE: The backend serializes dates as camelCase aliases (createdAt, startDate, endDate, updatedAt)
+  const filterByDiagramRange = (items, range, customRange) => {
+    if (!items || !Array.isArray(items)) return []
+    
+    // Helper to extract the best date from an item — camelCase first (API response), then snake_case (fallback)
+    const getDate = (item) => {
+      const raw = 
+        item.createdAt || item.startDate || item.updatedAt || item.endDate ||
+        item.created_at || item.start_date || item.updated_at || item.end_date ||
+        item.receivedDate || item.date || item.dueDate || item.due_date ||
+        item.sampleDate || item.trfDate
+      if (!raw) return null
+      const d = new Date(raw)
+      return isNaN(d) ? null : d
+    }
+
+    if (range === 'Custom' && customRange.start && customRange.end) {
+      const start = new Date(customRange.start)
+      const end = new Date(customRange.end)
+      end.setHours(23, 59, 59, 999) // include the full end day
+      return items.filter(item => {
+        const d = getDate(item)
+        return d && d >= start && d <= end
+      })
+    } else if (range !== 'Custom' && range !== 'All') {
+      const monthsCount = {'1M': 1, '3M': 3, '6M': 6, '1Y': 12}[range]
+      if (!monthsCount) return items
+      const cutoff = new Date()
+      cutoff.setMonth(cutoff.getMonth() - monthsCount)
+      return items.filter(item => {
+        const d = getDate(item)
+        // If no valid date, include the item (don't silently drop data)
+        if (!d) return true
+        return d >= cutoff
+      })
+    }
+    return items
+  }
+
+  // Reactive Status Distribution for Pie Chart & Legend
+  // Date cutoff computed INLINE so React's useMemo dependency tracking is guaranteed
+  const statusDistribution = useMemo(() => {
+    const getProjectDate = (p) => {
+      // Use the same priority as Monthly Trends for consistency
+      const raw = p.createdAt || p.startDate || p.created_at || p.start_date
+      if (!raw) return null
+      const d = new Date(raw)
+      return isNaN(d) ? null : d
+    }
+
+    let filtered = allProjects
+    if (chartsTimeRange === 'Custom' && chartsCustomRange.start && chartsCustomRange.end) {
+      const start = new Date(chartsCustomRange.start)
+      const end = new Date(chartsCustomRange.end)
+      end.setHours(23, 59, 59, 999)
+      filtered = allProjects.filter(p => { const d = getProjectDate(p); return d && d >= start && d <= end })
+    } else if (chartsTimeRange !== 'Custom' && chartsTimeRange !== 'All') {
+      const monthsCount = { '1M': 1, '3M': 3, '6M': 6, '1Y': 12 }[chartsTimeRange]
+      if (monthsCount) {
+        // ALIGNMENT: Use calendar months similar to Monthly Trends so counts match exactly
+        const now = new Date()
+        const startOfOldestMonth = new Date(now.getFullYear(), now.getMonth() - monthsCount + 1, 1)
+        filtered = allProjects.filter(p => { const d = getProjectDate(p); return d && d >= startOfOldestMonth })
+      }
+    }
+
+    const total = filtered.length
+    const cleanStatus = (s) => (s || '').toLowerCase().replace(/[^a-z]/g, '')
+    const counts = {
+      active:    filtered.filter(p => ['active', 'inprogress', 'ongoing', 'started'].includes(cleanStatus(p.status))).length,
+      completed: filtered.filter(p => ['completed', 'finished', 'closed', 'done'].includes(cleanStatus(p.status))).length,
+      pending:   filtered.filter(p => ['pending', 'onhold', 'hold', 'paused', 'planned'].includes(cleanStatus(p.status))).length,
+    }
+    return [
+      { name: 'Active',    value: counts.active,    color: '#3b82f6', total },
+      { name: 'Completed', value: counts.completed,  color: '#10b981', total },
+      { name: 'Pending',   value: counts.pending,    color: '#f59e0b', total },
+    ]
+  }, [allProjects, chartsTimeRange, chartsCustomRange])
+  // Reactive Chart Data for Monthly Trends
+  // Uses a rolling date window (last N days) consistent with the Project Status pie chart
+  const chartData = useMemo(() => {
+    const monthsCount = {'1M': 1, '3M': 3, '6M': 6, '1Y': 12}[chartsTimeRange] || 6
+    const now = new Date()
+    const result = []
+
+    for (let i = monthsCount - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const monthLabel = months[d.getMonth()]
+      const startOfMonth = new Date(d.getFullYear(), d.getMonth(), 1)
+      const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
+
+      // All date lookups use camelCase (API response format)
+      const getCreatedDate = (item) => {
+        const raw = item.createdAt || item.startDate || item.start_date || item.created_at
+        const dt = new Date(raw)
+        return isNaN(dt) ? null : dt
+      }
+
+      const monthProjects = allProjects.filter(p => {
+        const dt = getCreatedDate(p)
+        return dt && dt >= startOfMonth && dt <= endOfMonth
+      }).length
+
+      const monthTests = allTestExecutions.filter(t => {
+        const dt = getCreatedDate(t)
+        return dt && dt >= startOfMonth && dt <= endOfMonth
+      }).length
+
+      const monthCompleted = allProjects.filter(p => {
+        const dt = getCreatedDate(p)
+        const isCompleted = ['completed', 'finished', 'closed', 'done'].includes((p.status || '').toLowerCase())
+        return isCompleted && dt && dt >= startOfMonth && dt <= endOfMonth
+      }).length
+
+      result.push({ month: monthLabel, projects: monthProjects, tests: monthTests, completed: monthCompleted })
+    }
+    return result
+  }, [allProjects, allTestExecutions, chartsTimeRange])
+
+  // Reactive Test Execution Data for Bar Chart — date cutoff computed INLINE
+  const testExecutionData = useMemo(() => {
+    const getExecDate = (e) => {
+      const raw = e.createdAt || e.startTime || e.created_at || e.start_time
+      if (!raw) return null
+      const d = new Date(raw)
+      return isNaN(d) ? null : d
+    }
+
+    let filtered = allTestExecutions
+    if (chartsTimeRange === 'Custom' && chartsCustomRange.start && chartsCustomRange.end) {
+      const start = new Date(chartsCustomRange.start)
+      const end = new Date(chartsCustomRange.end)
+      end.setHours(23, 59, 59, 999)
+      filtered = allTestExecutions.filter(e => { const d = getExecDate(e); return d && d >= start && d <= end })
+    } else if (chartsTimeRange !== 'Custom' && chartsTimeRange !== 'All') {
+      const monthsCount = { '1M': 1, '3M': 3, '6M': 6, '1Y': 12 }[chartsTimeRange]
+      if (monthsCount) {
+        // ALIGNMENT: Calendar months consistency
+        const now = new Date()
+        const startOfOldestMonth = new Date(now.getFullYear(), now.getMonth() - monthsCount + 1, 1)
+        filtered = allTestExecutions.filter(e => { const d = getExecDate(e); return d && d >= startOfOldestMonth })
+      }
+    }
+
+    // Build a quick id→testType lookup from allTestPlans
+    const planTypeMap = {}
+    allTestPlans.forEach(plan => { planTypeMap[plan.id] = plan.testType || plan.test_type })
+
+    const typeLabels = [
+      { label: 'EMC', apiType: 'EMC' }, { label: 'RF', apiType: 'RF' },
+      { label: 'Safety', apiType: 'Safety' }, { label: 'Environmental', apiType: 'Environmental' },
+      { label: 'Software', apiType: 'Software' }, { label: 'Mechanical', apiType: 'Mechanical' },
+      { label: 'Thermal', apiType: 'Thermal' }, { label: 'Other', apiType: 'Other' },
+    ]
+
+    const counts = typeLabels.map(({ label, apiType }) => {
+      const cleanStatus = (s) => (s || '').toLowerCase().replace(/[^a-z]/g, '')
+      const execs = filtered.filter(e => planTypeMap[e.testPlanId || e.test_plan_id] === apiType)
+      return {
+        name: label,
+        completed:  execs.filter(e => ['completed', 'finished', 'done', 'closed'].includes(cleanStatus(e.status))).length,
+        inProgress: execs.filter(e => ['inprogress', 'started', 'ongoing'].includes(cleanStatus(e.status))).length,
+        pending:    execs.filter(e => ['pending', 'onhold', 'hold', 'planned'].includes(cleanStatus(e.status))).length,
+        total: execs.length,
+      }
+    })
+
+    const hasAnyData = counts.some(c => c.total > 0)
+    if (!hasAnyData) return typeLabels.map(({ label }) => ({ name: label, completed: 0, inProgress: 0, pending: 0, placeholder: true }))
+    return counts.filter(c => c.total > 0)
+  }, [allTestExecutions, allTestPlans, chartsTimeRange, chartsCustomRange])
+
+  const filterByTimeRange = (data, range) => {
+    if (!range || range === 'All' || !data || !Array.isArray(data)) return data
+    const months = { '1M': 1, '3M': 3, '6M': 6, '1Y': 12 }[range]
+    if (!months) return data
+    const cutoff = new Date()
+    cutoff.setMonth(cutoff.getMonth() - months)
+    return data.filter(item => {
+      // Check multiple possible date fields across different modules
+      const dateStr = item.receivedDate || item.createdAt || item.start_date || item.created_at || item.updatedAt || item.updated_at || item.date || item.sampleDate || item.trfDate
+      const date = new Date(dateStr)
+      return !isNaN(date) && date >= cutoff
+    })
+  }
 
   useEffect(() => {
     const savedTargets = localStorage.getItem('dashboardTargets')
@@ -208,25 +402,33 @@ function LabManagementDashboard() {
         calibrationsService.getAll().catch(() => [])
       ])
 
-      setAllTestExecutions(testExecutions)
+      // Filter data by selected time range for stats and metrics
+      const filteredProjects = filterByTimeRange(projects, timeRange)
+      const filteredCustomers = filterByTimeRange(customers, timeRange)
+      const filteredTestPlans = filterByTimeRange(testPlans, timeRange)
+      const filteredRfqs = filterByTimeRange(rfqs, timeRange)
+      const filteredEstimations = filterByTimeRange(estimations, timeRange)
+      const filteredSamples = filterByTimeRange(samples, timeRange)
+      const filteredTrfs = filterByTimeRange(trfs, timeRange)
+      const filteredTestExecutions = filterByTimeRange(testExecutions, timeRange)
+      const filteredTestResults = filterByTimeRange(testResults, timeRange)
+
+      setAllTestExecutions(testExecutions) // Keep full list for charts which have their own filter
       setAllInstruments(allInstruments)
       setAllCalibrations(allCalibrations)
       setRawLists({
-        projects: projects.slice(0, 5),
-        customers: customers.slice(0, 5),
-        testPlans: testPlans.slice(0, 5),
-        rfqs: rfqs.slice(0, 5)
+        projects: filteredProjects.slice(0, 5),
+        customers: filteredCustomers.slice(0, 5),
+        testPlans: filteredTestPlans.slice(0, 5),
+        rfqs: filteredRfqs.slice(0, 5)
       })
 
       setStats({
-        projects: projects.length,
-        customers: customers.length,
-        testPlans: testPlans.length,
-        completedTests: testPlans.filter(p => p.status === 'Completed').length,
-        rfqs: rfqs.length,
-        estimations: estimations.length,
-        samples: samples.length,
-        trfs: trfs.length
+        projects: filteredProjects.length,
+        customers: filteredCustomers.length,
+        testPlans: filteredTestPlans.length,
+        completedTests: filteredTestPlans.filter(p => p.status === 'Completed' || p.status === 'completed').length,
+        rfqs: filteredRfqs.length
       })
 
       // Create recent activities from actual data
@@ -277,57 +479,29 @@ function LabManagementDashboard() {
       }
       setRecentActivities(activities.slice(0, 4))
 
-      // Prepare chart data
-      const projectStatusCounts = {
-        active: projects.filter(p => p.status === 'active').length,
-        completed: projects.filter(p => p.status === 'completed').length,
-        pending: projects.filter(p => p.status === 'pending').length,
-      }
-      setStatusDistribution([
-        { name: 'Active', value: projectStatusCounts.active, color: '#3b82f6' },
-        { name: 'Completed', value: projectStatusCounts.completed, color: '#10b981' },
-        { name: 'Pending', value: projectStatusCounts.pending, color: '#f59e0b' },
-      ])
+      // Status and Chart data now handled by reactive useMemo hooks
 
       // Calculate performance metrics
-      const completedProjectsCount = projects.filter(p => p.status === 'completed').length
-      const totalProjects = projects.length
+      // Calculate performance metrics using filtered data
+      const completedProjectsCount = filteredProjects.filter(p => p.status === 'completed' || p.status === 'Completed').length
+      const totalProjects = filteredProjects.length
       const completionRate = totalProjects > 0 ? (completedProjectsCount / totalProjects) * 100 : 0
       
-      const completedTests = testPlans.filter(t => t.status === 'Completed').length
-      const totalTests = testPlans.length
+      const completedTests = filteredTestPlans.filter(t => t.status === 'Completed' || t.status === 'completed').length
+      const totalTests = filteredTestPlans.length
       const testCompletionRate = totalTests > 0 ? (completedTests / totalTests) * 100 : 0
       
-      const passedResults = testResults.filter(r => r.passFail === 'Pass').length
-      const totalResults = testResults.length
+      const passedResults = filteredTestResults.filter(r => r.passFail === 'Pass' || r.passFail === 'pass').length
+      const totalResults = filteredTestResults.length
       const passRate = totalResults > 0 ? (passedResults / totalResults) * 100 : 0
       
-      setPerformanceMetrics({
-        completionRate: Math.round(completionRate),
-        averageCycleTime: 12, // Mock - calculate from actual data
-        onTimeDelivery: Math.round(testCompletionRate),
-        customerSatisfaction: Math.round(passRate)
-      })
+      // Performance metrics will be set after operational stats to use avgTAT
 
       setAllProjects(projects)
       setAllTestExecutions(testExecutions)
+      setAllTestPlans(testPlans)
 
-      // Prepare monthly data based on actual data
-      const currentYear = new Date().getFullYear()
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-      const monthlyData = months.slice(0, 6).map((month, index) => {
-        // Distribute projects and tests across months
-        const monthProjects = Math.floor(projects.length / 6) + (index < projects.length % 6 ? 1 : 0)
-        const monthTests = Math.floor(testPlans.length / 6) + (index < testPlans.length % 6 ? 1 : 0)
-        return {
-          month,
-          fullDate: new Date(currentYear, index, 1).toISOString(),
-          projects: monthProjects,
-          tests: monthTests,
-          completed: Math.floor(monthProjects * 0.7)
-        }
-      })
-      setChartData(monthlyData)
+      // Monthly data now handled by reactive useMemo hooks
 
       // Test execution data for bar chart — logic moved to render for timeline support
       const revenueDataItems = estimations.map((est, index) => ({
@@ -342,8 +516,8 @@ function LabManagementDashboard() {
       const totalInstruments = inventorySummary.totalInstruments || allInstruments.length || 1
       const utilization = Math.round((activeInstruments / totalInstruments) * 100)
 
-      // Calculate TAT: average days between project creation and completion for completed projects
-      const completedProjectsList = projects.filter(p => p.status === 'completed' || p.status === 'Completed')
+      // Calculate TAT: average days between project creation and completion for completed projects in timeframe
+      const completedProjectsList = filteredProjects.filter(p => p.status === 'completed' || p.status === 'Completed')
       let avgTAT = null // null means no data — no fallback
       if (completedProjectsList.length > 0) {
         const validDurations = completedProjectsList
@@ -368,15 +542,15 @@ function LabManagementDashboard() {
         ? Math.round(((currentTatTarget - avgTAT) / currentTatTarget) * 100)
         : null
 
-      // Personnel workload: based purely on real active projects + in-progress test plans
-      const activeProjectsCount = projects.filter(p => p.status === 'active' || p.status === 'Active').length
-      const inProgressTestsCount = testPlans.filter(t => t.status === 'In Progress').length
+      // Personnel workload: based on filtered active projects + in-progress test plans
+      const activeProjectsCount = filteredProjects.filter(p => p.status === 'active' || p.status === 'Active').length
+      const inProgressTestsCount = filteredTestPlans.filter(t => t.status === 'In Progress' || t.status === 'in progress').length
       const personnelWorkload = Math.min(100, Math.round(activeProjectsCount * 15 + inProgressTestsCount * 8))
 
-      // Space/Storage: based on actual sample count vs a reasonable lab capacity
+      // Space/Storage: based on filtered sample count vs a reasonable lab capacity
       const labCapacity = 50 // reasonable assumption for max concurrent samples
-      const spaceUtilization = Math.min(100, Math.round((samples.length / labCapacity) * 100))
-      const storageCapacity = Math.min(100, Math.round((samples.length / labCapacity) * 80))
+      const spaceUtilization = Math.min(100, Math.round((filteredSamples.length / labCapacity) * 100))
+      const storageCapacity = Math.min(100, Math.round((filteredSamples.length / labCapacity) * 80))
 
       setOperationalStats({
         equipmentUtilization: utilization,
@@ -390,7 +564,16 @@ function LabManagementDashboard() {
         completedCount: completedProjectsList.length // Capture for UI display
       })
 
+      // Set performance metrics using real calculated values
+      setPerformanceMetrics({
+        completionRate: Math.round(completionRate),
+        averageCycleTime: avgTAT || 0,
+        onTimeDelivery: Math.round(testCompletionRate),
+        customerSatisfaction: Math.round(passRate)
+      })
+
     } catch (error) {
+      console.error('Dashboard load error:', error)
       if (!silent) toast.error('Failed to load dashboard data')
     } finally {
       setLoading(false)
@@ -411,18 +594,18 @@ function LabManagementDashboard() {
 
   const statsData = [
     {
-      id: 'projects',
-      name: 'Active Projects',
-      value: stats.projects.toString(),
-      change: `${stats.projects} total projects`,
-      icon: FolderKanban,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      link: '/lab/management/projects',
+      id: 'rfqs',
+      name: 'RFQs',
+      value: stats.rfqs.toString(),
+      change: `${stats.rfqs} total rfqs`,
+      icon: FileText,
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      link: '/lab/management/rfqs',
       renderDetails: (list) => list.map(item => (
         <div key={item.id} className="text-sm border-b border-gray-100 py-2 last:border-0 flex justify-between items-center gap-2">
-           <span className="font-medium text-gray-800 truncate">{item.name}</span>
-           <span className="text-xs text-gray-500 whitespace-nowrap">{item.clientName || 'N/A'}</span>
+           <span className="font-medium text-gray-800 truncate">{item.customerName || item.companyName || 'Unknown'}</span>
+           <span className="text-xs text-gray-500 whitespace-nowrap">{item.receivedDate ? new Date(item.receivedDate).toLocaleDateString() : 'N/A'}</span>
         </div>
       ))
     },
@@ -438,7 +621,23 @@ function LabManagementDashboard() {
       renderDetails: (list) => list.map(item => (
         <div key={item.id} className="text-sm border-b border-gray-100 py-2 last:border-0 flex justify-between items-center gap-2">
            <span className="font-medium text-gray-800 truncate">{item.companyName}</span>
-           <span className="text-xs text-gray-500 whitespace-nowrap">{item.industry || 'Unknown'}</span>
+           <span className="text-xs text-gray-500 whitespace-nowrap">{item.contactPerson || item.status || 'Active'}</span>
+        </div>
+      ))
+    },
+    {
+      id: 'projects',
+      name: 'Projects',
+      value: stats.projects.toString(),
+      change: `${stats.projects} total projects`,
+      icon: FolderKanban,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      link: '/lab/management/projects',
+      renderDetails: (list) => list.map(item => (
+        <div key={item.id} className="text-sm border-b border-gray-100 py-2 last:border-0 flex justify-between items-center gap-2">
+           <span className="font-medium text-gray-800 truncate">{item.name}</span>
+           <span className="text-xs text-gray-500 whitespace-nowrap">{item.clientName || 'N/A'}</span>
         </div>
       ))
     },
@@ -455,22 +654,6 @@ function LabManagementDashboard() {
         <div key={item.id} className="text-sm border-b border-gray-100 py-2 last:border-0 flex justify-between items-center gap-2">
            <span className="font-medium text-gray-800 truncate">{item.name}</span>
            <span className="text-xs text-blue-600 font-medium whitespace-nowrap">{item.status}</span>
-        </div>
-      ))
-    },
-    {
-      id: 'rfqs',
-      name: 'RFQs',
-      value: stats.rfqs.toString(),
-      change: `${stats.estimations} estimations`,
-      icon: FileText,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50',
-      link: '/lab/management/rfqs',
-      renderDetails: (list) => list.map(item => (
-        <div key={item.id} className="text-sm border-b border-gray-100 py-2 last:border-0 flex justify-between items-center gap-2">
-           <span className="font-medium text-gray-800 truncate">{item.companyName || 'Unknown'}</span>
-           <span className="text-xs text-gray-500 whitespace-nowrap">{item.expectedDate ? new Date(item.expectedDate).toLocaleDateString() : 'N/A'}</span>
         </div>
       ))
     },
@@ -666,7 +849,12 @@ function LabManagementDashboard() {
         >
           <div className="absolute top-2 right-2 z-30">
             <button
-               onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_ontime' ? null : 'perf_ontime') }}
+               onClick={(e) => { 
+                 e.stopPropagation(); 
+                 const newVal = activeInfoPopup === 'perf_ontime' ? null : 'perf_ontime';
+                 setActiveInfoPopup(newVal);
+                 if (newVal) setActiveOpInfo(null);
+               }}
                className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_ontime' ? 'text-green-700 bg-green-200' : 'text-green-400'}`}
                title="View logic"
             >
@@ -722,7 +910,12 @@ function LabManagementDashboard() {
         >
           <div className="absolute top-2 right-2 z-30">
             <button
-               onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_cycletime' ? null : 'perf_cycletime') }}
+               onClick={(e) => { 
+                 e.stopPropagation(); 
+                 const newVal = activeInfoPopup === 'perf_cycletime' ? null : 'perf_cycletime';
+                 setActiveInfoPopup(newVal);
+                 if (newVal) setActiveOpInfo(null);
+               }}
                className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_cycletime' ? 'text-purple-700 bg-purple-200' : 'text-purple-400'}`}
                title="View logic"
             >
@@ -771,7 +964,12 @@ function LabManagementDashboard() {
         >
           <div className="absolute top-2 right-2 z-30">
             <button
-               onClick={(e) => { e.stopPropagation(); setActiveInfoPopup(activeInfoPopup === 'perf_passrate' ? null : 'perf_passrate') }}
+               onClick={(e) => { 
+                 e.stopPropagation(); 
+                 const newVal = activeInfoPopup === 'perf_passrate' ? null : 'perf_passrate';
+                 setActiveInfoPopup(newVal);
+                 if (newVal) setActiveOpInfo(null);
+               }}
                className={`p-1.5 rounded-full hover:bg-white/50 transition-colors ${activeInfoPopup === 'perf_passrate' ? 'text-orange-700 bg-orange-200' : 'text-orange-400'}`}
                title="View logic"
             >
@@ -847,8 +1045,37 @@ function LabManagementDashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Equipment Utilization */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-700">Equipment Utilization</h3>
+          <div className="space-y-4 relative">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-700">Equipment Utilization</h3>
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  const newVal = activeOpInfo === 'equipment' ? null : 'equipment';
+                  setActiveOpInfo(newVal);
+                  if (newVal) setActiveInfoPopup(null);
+                }}
+                className={`p-1.5 rounded-full transition-colors ${activeOpInfo === 'equipment' ? 'text-primary bg-primary/10' : 'text-gray-400 hover:text-primary hover:bg-gray-100'}`}
+              >
+                <Info className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {activeOpInfo === 'equipment' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute z-50 top-8 left-0 right-0 p-3 bg-white shadow-xl border border-gray-100 rounded-lg text-xs text-gray-600 leading-relaxed"
+                >
+                  Calculated as: <code className="bg-gray-100 px-1 rounded">(Active / Total) × 100</code>. 
+                  Synchronized with the real-time status of all laboratory instruments in the Inventory module.
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="h-48 flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <RadialBarChart 
@@ -883,8 +1110,38 @@ function LabManagementDashboard() {
           </div>
 
           {/* Lab Capacity */}
-          <div className="space-y-6">
-            <h3 className="text-sm font-medium text-gray-700">Resource Capacity</h3>
+          <div className="space-y-6 relative">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-700">Resource Capacity</h3>
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  const newVal = activeOpInfo === 'capacity' ? null : 'capacity';
+                  setActiveOpInfo(newVal);
+                  if (newVal) setActiveInfoPopup(null);
+                }}
+                className={`p-1.5 rounded-full transition-colors ${activeOpInfo === 'capacity' ? 'text-primary bg-primary/10' : 'text-gray-400 hover:text-primary hover:bg-gray-100'}`}
+              >
+                <Info className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {activeOpInfo === 'capacity' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute z-50 top-8 left-0 right-0 p-3 bg-white shadow-xl border border-gray-100 rounded-lg text-xs text-gray-600 space-y-2"
+                >
+                  <p><strong>Workload:</strong> Active projects vs. total personnel capacity.</p>
+                  <p><strong>Space:</strong> Total lab footprint occupancy.</p>
+                  <p><strong>Storage:</strong> Sample slot availability (Occupied vs. Total).</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="space-y-5">
 
               {/* Personnel Workload */}
@@ -972,9 +1229,37 @@ function LabManagementDashboard() {
             </div>
           </div>
           {/* TAT Performance */}
-          <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 flex flex-col justify-between">
+          <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 flex flex-col justify-between relative">
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-4">Turnaround Time (TAT)</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-medium text-gray-700">Turnaround Time (TAT)</h3>
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    const newVal = activeOpInfo === 'tat' ? null : 'tat';
+                    setActiveOpInfo(newVal);
+                    if (newVal) setActiveInfoPopup(null);
+                  }}
+                  className={`p-1.5 rounded-full transition-colors ${activeOpInfo === 'tat' ? 'text-primary bg-primary/10' : 'text-gray-400 hover:text-primary hover:bg-gray-100'}`}
+                >
+                  <Info className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <AnimatePresence>
+                {activeOpInfo === 'tat' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute z-50 top-12 left-5 right-5 p-3 bg-white shadow-xl border border-gray-100 rounded-lg text-xs text-gray-600 leading-relaxed"
+                  >
+                    The average number of days taken to complete a project (Release Date - Creation Date). 
+                    Calculated for all projects finalized within the currently selected Global Time Range.
+                  </motion.div>
+                )}
+              </AnimatePresence>
               {operationalStats.avgTAT === null ? (
                 <div className="flex flex-col items-center justify-center py-4 text-center">
                   <Clock className="w-8 h-8 text-gray-300 mb-2" />
@@ -1226,7 +1511,7 @@ function LabManagementDashboard() {
           <span className="text-xs text-gray-400 ml-2 hidden sm:inline">Unified control for charts below</span>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {['Custom','1M','3M','6M','1Y'].map(tl => (
+          {['All', '1M', '3M', '6M', '1Y', 'Custom'].map(tl => (
             <button
               key={tl}
               onClick={() => setChartsTimeRange(tl)}
@@ -1275,27 +1560,12 @@ function LabManagementDashboard() {
               <BarChart3 className="w-5 h-5 text-primary" />
               <h3 className="text-lg font-semibold text-gray-900">Monthly Trends</h3>
             </div>
-            <button className="text-sm text-primary hover:text-primary-dark">View Details →</button>
+            <button onClick={() => navigate('/lab/management/projects')} className="text-sm text-primary hover:text-primary-dark font-medium">View Details →</button>
           </div>
           <ResponsiveContainer width="100%" height={280}>
             {(() => {
-              const data = (() => {
-                if (chartsTimeRange === 'Custom') {
-                  if (!chartsCustomRange.start || !chartsCustomRange.end) return chartData
-                  const start = new Date(chartsCustomRange.start)
-                  const end = new Date(chartsCustomRange.end)
-                  return chartData.filter(d => {
-                    const dDate = new Date(d.fullDate)
-                    return dDate >= start && dDate <= end
-                  })
-                }
-                const monthsLimit = {'1M': 1, '3M': 3, '6M': 6, '1Y': 12}
-                const count = monthsLimit[chartsTimeRange] || chartData.length
-                return chartData.slice(0, count)
-              })()
-
-              const hasData = data.some(d => d.projects > 0 || d.tests > 0 || d.completed > 0)
-              const displayData = hasData ? data : data.length > 0 ? data.map(d => ({ ...d, projects: 0, tests: 0, completed: 0 })) : [
+              const hasData = chartData.some(d => d.projects > 0 || d.tests > 0 || d.completed > 0)
+              const displayData = hasData ? chartData : chartData.length > 0 ? chartData.map(d => ({ ...d, projects: 0, tests: 0, completed: 0 })) : [
                 { month: 'N/A', projects: 0, tests: 0, completed: 0 }
               ]
 
@@ -1351,37 +1621,9 @@ function LabManagementDashboard() {
           </div>
           <ResponsiveContainer width="100%" height={260}>
             {(() => {
-              const data = (() => {
-                let filtered = allProjects;
-                if (chartsTimeRange === 'Custom' && chartsCustomRange.start && chartsCustomRange.end) {
-                  const start = new Date(chartsCustomRange.start)
-                  const end = new Date(chartsCustomRange.end)
-                  filtered = allProjects.filter(p => {
-                    const d = new Date(p.createdAt || p.start_date || p.created_at)
-                    return d >= start && d <= end
-                  })
-                } else if (chartsTimeRange !== 'Custom') {
-                  const monthsCount = {'1M': 1, '3M': 3, '6M': 6, '1Y': 12}[chartsTimeRange] || 6
-                  const cutoff = new Date()
-                  cutoff.setMonth(cutoff.getMonth() - monthsCount)
-                  filtered = allProjects.filter(p => new Date(p.createdAt || p.start_date || p.created_at) >= cutoff)
-                }
-                
-                const counts = {
-                  active: filtered.filter(p => (p.status || '').toLowerCase() === 'active').length,
-                  completed: filtered.filter(p => (p.status || '').toLowerCase() === 'completed').length,
-                  pending: filtered.filter(p => (p.status || '').toLowerCase() === 'pending').length,
-                }
-                const result = [
-                  { name: 'Active', value: counts.active, color: '#3b82f6' },
-                  { name: 'Completed', value: counts.completed, color: '#10b981' },
-                  { name: 'Pending', value: counts.pending, color: '#f59e0b' },
-                ].filter(d => d.value > 0)
-
-                return result.length > 0 ? result : [{ name: 'No Data', value: 1, color: '#e5e7eb' }]
-              })()
-
-              const isPlaceholder = data.length === 1 && data[0].name === 'No Data'
+              const hasData = statusDistribution.some(d => d.value > 0)
+              const data = hasData ? statusDistribution.filter(d => d.value > 0) : [{ name: 'No Data', value: 1, color: '#e5e7eb' }]
+              const isPlaceholder = !hasData
 
               return (
                 <PieChart>
@@ -1438,39 +1680,11 @@ function LabManagementDashboard() {
           </div>
         </div>
         {(() => {
-          let filtered = allTestExecutions;
-          if (chartsTimeRange === 'Custom' && chartsCustomRange.start && chartsCustomRange.end) {
-            const start = new Date(chartsCustomRange.start)
-            const end = new Date(chartsCustomRange.end)
-            filtered = allTestExecutions.filter(e => {
-              const d = new Date(e.createdAt || e.created_at)
-              return d >= start && d <= end
-            })
-          } else if (chartsTimeRange !== 'Custom') {
-            const monthsCount = {'1M': 1, '3M': 3, '6M': 6, '1Y': 12}[chartsTimeRange] || 6
-            const cutoff = new Date()
-            cutoff.setMonth(cutoff.getMonth() - monthsCount)
-            filtered = allTestExecutions.filter(e => new Date(e.createdAt || e.created_at) >= cutoff)
-          }
-
-          const hasRealData = filtered.length > 0;
-          const execLabels = ['EMC', 'RF', 'Safety', 'Env']
-          const displayData = execLabels.map((label, i) => {
-            const apiType = label === 'Env' ? 'Environmental' : label
-            const completed = filtered.filter(e => (e.status || '').toLowerCase() === 'completed' && (e.testType === apiType || e.test_type === apiType)).length
-            const pending = filtered.filter(e => (e.status || '').toLowerCase() === 'pending' && (e.testType === apiType || e.test_type === apiType)).length
-            
-            // Placeholder logic if no data for selection
-            if (!hasRealData) {
-               return { name: label, completed: 0, pending: 0, placeholder: true }
-            }
-            
-            return { name: label, completed, pending }
-          })
-
+          const hasRealData = testExecutionData.some(d => !d.placeholder);
+          
           return (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={displayData} barCategoryGap="30%">
+              <BarChart data={testExecutionData} barCategoryGap="30%">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" stroke="#6b7280" tick={{ fontSize: 12 }} />
                 <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} allowDecimals={false} domain={[0, hasRealData ? 'auto' : 5]} />
@@ -1484,6 +1698,7 @@ function LabManagementDashboard() {
                 />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Bar dataKey="completed" fill={hasRealData ? "#10b981" : "#e5e7eb"} name="Completed" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="inProgress" fill={hasRealData ? "#3b82f6" : "#e5e7eb"} name="In Progress" radius={[6, 6, 0, 0]} />
                 <Bar dataKey="pending" fill={hasRealData ? "#f59e0b" : "#f3f4f6"} name="Pending" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
