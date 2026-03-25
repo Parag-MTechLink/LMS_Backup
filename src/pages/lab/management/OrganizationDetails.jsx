@@ -104,7 +104,7 @@ export default function OrganizationDetails() {
   const navigate = useNavigate()
   const { organizationData, updateOrganizationData } = useLabData()
   const [currentStep, setCurrentStep] = useState(1)
-  const [organizationId, setOrganizationId] = useState(null)  // Always start fresh
+  const [organizationId, setOrganizationId] = useState(organizationData?.id || null)
   const [loading, setLoading] = useState(false)
   const [checklist, setChecklist] = useState(null)  // Backend checklist data
   const [errors, setErrors] = useState({})
@@ -234,6 +234,13 @@ export default function OrganizationDetails() {
 
   // Use useEffect to fetch checklist when step changes to 11
   useEffect(() => {
+    // Sync organizationId if it's available in context but not locally
+    if (organizationData?.id && !organizationId) {
+      setOrganizationId(organizationData.id)
+    }
+  }, [organizationData, organizationId])
+
+  useEffect(() => {
     if (currentStep === 11 && organizationId) {
       fetchChecklist()
     }
@@ -247,27 +254,34 @@ export default function OrganizationDetails() {
   const handleFileUpload = async (field, file) => {
     if (!file) return
 
-    // Validate file size (2MB for PDFs, 1MB for images)
-    const maxSize = field === 'labLogo' ? 1 * 1024 * 1024 : 2 * 1024 * 1024
+    // Validate file size (10MB for all documents matching backend)
+    const maxSize = 10 * 1024 * 1024
     if (file.size > maxSize) {
-      toast.error(`File size should not exceed ${field === 'labLogo' ? '1MB' : '2MB'}`)
+      toast.error(`File size should not exceed 10MB`)
       return
     }
 
-    // Validate file type
-    const allowedTypes = field === 'labLogo'
-      ? ['image/jpeg', 'image/jpg', 'image/png']
-      : ['application/pdf']
+    // Validate file type (matching expanded backend list)
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'image/jpeg',
+      'image/jpg',
+      'image/png'
+    ]
 
     if (!allowedTypes.includes(file.type)) {
-      toast.error(`Please upload ${field === 'labLogo' ? 'JPG/PNG' : 'PDF'} files only`)
+      toast.error(`Invalid file type. Please upload PDF, Word, Excel or Image files.`)
       return
     }
 
     // Upload file to backend
     try {
       setLoading(true)
-      const fileUrl = await uploadFile(file, field)
+      const fileUrl = await uploadFile(file, field, formData.id || null)
       handleInputChange(field, fileUrl)
       toast.success('File uploaded successfully!')
     } catch (error) {
@@ -538,7 +552,6 @@ export default function OrganizationDetails() {
         if (!formData.sameAsLabAddress) {
           if (!formData.registeredAddress?.trim()) newErrors.registeredAddress = 'Please enter address'
           if (!formData.registeredState?.trim()) newErrors.registeredState = 'Please enter state'
-          if (!formData.registeredDistrict?.trim()) newErrors.registeredDistrict = 'Please enter district'
           if (!formData.registeredCity?.trim()) newErrors.registeredCity = 'Please enter city'
           if (!formData.registeredPinCode?.trim()) newErrors.registeredPinCode = 'Please enter pin code'
           
@@ -589,7 +602,6 @@ export default function OrganizationDetails() {
         if (!formData.accountNumber?.trim()) newErrors.accountNumber = 'Please enter account number'
         if (!formData.ifscCode?.trim()) newErrors.ifscCode = 'Please enter IFSC code'
         if (!formData.branchName?.trim()) newErrors.branchName = 'Please enter branch name'
-        if (!formData.gstNumber?.trim()) newErrors.gstNumber = 'Please enter GST number'
 
         setErrors(newErrors)
         if (Object.keys(newErrors).length > 0) {
@@ -649,8 +661,6 @@ export default function OrganizationDetails() {
       }
       case 7: {
         const newErrors = {}
-        if (!formData.adequacySanctionedLoad?.trim()) newErrors.adequacySanctionedLoad = 'Please fill in adequacy of sanctioned load details'
-        if (formData.waterSource === 'Select') newErrors.waterSource = 'Please select water source'
 
         setErrors(newErrors)
         if (Object.keys(newErrors).length > 0) {
@@ -661,19 +671,16 @@ export default function OrganizationDetails() {
       }
       case 8: {
         const newErrors = {}
-        if (!formData.gpsLatitude?.trim()) newErrors.gpsLatitude = 'Please enter latitude'
-        if (!formData.gpsLongitude?.trim()) newErrors.gpsLongitude = 'Please enter longitude'
         
         formData.accreditationDocuments.forEach((doc, index) => {
           if (doc.type === 'Select') newErrors[`accreditationDocuments_${index}_type`] = 'Required'
           if (!doc.certificateNo?.trim()) newErrors[`accreditationDocuments_${index}_certificateNo`] = 'Required'
           if (doc.type === 'Other' && !doc.typeOther?.trim()) newErrors[`accreditationDocuments_${index}_typeOther`] = 'Required'
-          if (!doc.validityDate) newErrors[`accreditationDocuments_${index}_validityDate`] = 'Required'
         })
 
         setErrors(newErrors)
         if (Object.keys(newErrors).length > 0) {
-          toast.error('Please upload layout, organization chart and enter GPS coordinates')
+          toast.error('Please upload accreditation details')
           return false
         }
         break
@@ -681,21 +688,15 @@ export default function OrganizationDetails() {
       case 9: {
         const newErrors = {}
         if (!formData.qualityManualTitle?.trim()) newErrors.qualityManualTitle = 'Required'
-        if (!formData.qualityManualIssueNumber?.trim()) newErrors.qualityManualIssueNumber = 'Required'
-        if (!formData.qualityManualIssueDate) newErrors.qualityManualIssueDate = 'Required'
-        if (!formData.qualityManualAmendments?.trim()) newErrors.qualityManualAmendments = 'Required'
         
         formData.sopList.forEach((sop, index) => {
           if (!sop.title?.trim()) newErrors[`sopList_${index}_title`] = 'Required'
           if (!sop.number?.trim()) newErrors[`sopList_${index}_number`] = 'Required'
-          if (!sop.issueNumber?.trim()) newErrors[`sopList_${index}_issueNumber`] = 'Required'
-          if (!sop.issueDate) newErrors[`sopList_${index}_issueDate`] = 'Required'
-          if (!sop.amendments?.trim()) newErrors[`sopList_${index}_amendments`] = 'Required'
         })
 
         setErrors(newErrors)
         if (Object.keys(newErrors).length > 0) {
-          toast.error('Please fill in all quality manual and SOP details')
+          toast.error('Please fill in mandatory quality manual and SOP details')
           return false
         }
         break
@@ -705,22 +706,16 @@ export default function OrganizationDetails() {
         formData.qualityFormats.forEach((format, index) => {
           if (!format.title?.trim()) newErrors[`qualityFormats_${index}_title`] = 'Required'
           if (!format.number?.trim()) newErrors[`qualityFormats_${index}_number`] = 'Required'
-          if (!format.issueNumber?.trim()) newErrors[`qualityFormats_${index}_issueNumber`] = 'Required'
-          if (!format.issueDate) newErrors[`qualityFormats_${index}_issueDate`] = 'Required'
-          if (!format.amendments?.trim()) newErrors[`qualityFormats_${index}_amendments`] = 'Required'
         })
 
         formData.qualityProcedures.forEach((proc, index) => {
           if (!proc.title?.trim()) newErrors[`qualityProcedures_${index}_title`] = 'Required'
           if (!proc.number?.trim()) newErrors[`qualityProcedures_${index}_number`] = 'Required'
-          if (!proc.issueNumber?.trim()) newErrors[`qualityProcedures_${index}_issueNumber`] = 'Required'
-          if (!proc.issueDate) newErrors[`qualityProcedures_${index}_issueDate`] = 'Required'
-          if (!proc.amendments?.trim()) newErrors[`qualityProcedures_${index}_amendments`] = 'Required'
         })
         
         setErrors(newErrors)
         if (Object.keys(newErrors).length > 0) {
-          toast.error('Please fill in all quality formats and procedures details')
+          toast.error('Please fill in mandatory quality formats and procedures details')
           return false
         }
         break
@@ -730,12 +725,6 @@ export default function OrganizationDetails() {
         break
     }
     return true
-  }
-
-  const handleNext = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, steps.length))
-    }
   }
 
   const handlePrevious = () => {
@@ -760,6 +749,7 @@ export default function OrganizationDetails() {
         })
 
         setOrganizationId(newOrg.id)
+        updateOrganizationData({ ...formData, id: newOrg.id }) // Update context with new ID
         toast.success('Organization created successfully!')
       } else if (organizationId) {
         // Update existing organization
@@ -884,15 +874,17 @@ export default function OrganizationDetails() {
           transition={{ duration: 0.3 }}
         >
           <Card>
-            <p className="text-sm text-red-500 mb-4 px-6 pt-4">Please fill all the mandatory details in the form (*)</p>
             {/* Step 1: Laboratory Details */}
             {currentStep === 1 && (
               <div className="space-y-6">
                 <div className="border-b border-gray-200 pb-4">
-                  <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                    <Building2 className="w-6 h-6 text-primary" />
-                    Laboratory Details
-                  </h2>
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                      <Building2 className="w-6 h-6 text-primary" />
+                      Laboratory Details
+                    </h2>
+                    <p className="text-xs text-red-500 font-medium italic">Please fill all the mandatory details in the form (*)</p>
+                  </div>
                   <p className="text-sm text-gray-600 mt-1">
                     Enter complete name and address of the Laboratory and submit proof of address.
                   </p>
@@ -911,7 +903,7 @@ export default function OrganizationDetails() {
                       <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
                         <Upload className="w-5 h-5 text-gray-400 mr-2" />
                         <span className="text-sm text-gray-600">
-                          {formData.labLogo ? formData.labLogo.name : 'Choose file...'}
+                            {formData.labLogo ? (typeof formData.labLogo === 'string' ? formData.labLogo.split('/').pop() : formData.labLogo.name) : 'Choose file...'}
                         </span>
                         <input
                           type="file"
@@ -1070,7 +1062,7 @@ export default function OrganizationDetails() {
                       <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 hover:border-primary rounded-xl cursor-pointer transition-colors">
                         <Upload className="w-5 h-5 text-gray-400 mr-2" />
                         <span className="text-sm text-gray-600">
-                          {formData.labAddressProofDocument ? formData.labAddressProofDocument.name : 'Choose file...'}
+                            {formData.labAddressProofDocument ? (typeof formData.labAddressProofDocument === 'string' ? formData.labAddressProofDocument.split('/').pop() : formData.labAddressProofDocument.name) : 'Choose file...'}
                         </span>
                         <input
                           type="file"
@@ -1099,10 +1091,13 @@ export default function OrganizationDetails() {
                 {/* Registered Office */}
                 <div className="space-y-6">
                   <div className="border-b border-gray-200 pb-4">
-                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                      <MapPin className="w-6 h-6 text-primary" />
-                      Address of Registered Office / Head Office
-                    </h2>
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                        <MapPin className="w-6 h-6 text-primary" />
+                        Address of Registered Office / Head Office
+                      </h2>
+                      <p className="text-xs text-red-500 font-medium italic">Please fill all the mandatory details in the form (*)</p>
+                    </div>
                     <p className="text-sm text-gray-600 mt-1">
                       Fill complete address of registered office (if different from the address filled above), otherwise click same as above.
                     </p>
@@ -1348,7 +1343,7 @@ export default function OrganizationDetails() {
                         <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
                           <Upload className="w-5 h-5 text-gray-400 mr-2" />
                           <span className="text-sm text-gray-600">
-                            {formData.topManagementDocument ? formData.topManagementDocument.name : 'Choose file...'}
+                              {formData.topManagementDocument ? (typeof formData.topManagementDocument === 'string' ? formData.topManagementDocument.split('/').pop() : formData.topManagementDocument.name) : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -1404,7 +1399,7 @@ export default function OrganizationDetails() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="md:col-span-2">
                         <Input
-                          label="Name"
+                          label="Name (Optional)"
                           value={formData.parentName}
                           onChange={(e) => handleInputChange('parentName', e.target.value)}
                           placeholder="Enter parent organization name"
@@ -1413,7 +1408,7 @@ export default function OrganizationDetails() {
 
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Address
+                          Address (Optional)
                         </label>
                         <textarea
                           value={formData.parentAddress}
@@ -1426,7 +1421,7 @@ export default function OrganizationDetails() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Country
+                          Country (Optional)
                         </label>
                         <select
                           value={formData.parentCountry}
@@ -1438,28 +1433,28 @@ export default function OrganizationDetails() {
                       </div>
 
                       <Input
-                        label="State"
+                        label="State (Optional)"
                         value={formData.parentState}
                         onChange={(e) => handleInputChange('parentState', e.target.value)}
                         placeholder="Enter state"
                       />
 
                       <Input
-                        label="District"
+                        label="District (Optional)"
                         value={formData.parentDistrict}
                         onChange={(e) => handleInputChange('parentDistrict', e.target.value)}
                         placeholder="Enter district"
                       />
 
                       <Input
-                        label="City"
+                        label="City (Optional)"
                         value={formData.parentCity}
                         onChange={(e) => handleInputChange('parentCity', e.target.value)}
                         placeholder="Enter city"
                       />
 
                       <Input
-                        label="Pin Code"
+                        label="Pin Code (Optional)"
                         value={formData.parentPinCode}
                         onChange={(e) => handleInputChange('parentPinCode', e.target.value)}
                         placeholder="Enter pin code"
@@ -1525,7 +1520,7 @@ export default function OrganizationDetails() {
                     />
 
                     <Input
-                      label={<>GST Number <span className="text-red-500">*</span></>}
+                      label="GST Number (Optional)"
                       value={formData.gstNumber}
                       onChange={(e) => {
                         handleInputChange('gstNumber', e.target.value)
@@ -1548,7 +1543,7 @@ export default function OrganizationDetails() {
                         <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.cancelledCheque ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                           <Upload className={`w-5 h-5 mr-2 ${errors.cancelledCheque ? 'text-red-400' : 'text-gray-400'}`} />
                           <span className={`text-sm ${errors.cancelledCheque ? 'text-red-500' : 'text-gray-600'}`}>
-                            {formData.cancelledCheque ? formData.cancelledCheque.name : 'Choose file...'}
+                              {formData.cancelledCheque ? (typeof formData.cancelledCheque === 'string' ? formData.cancelledCheque.split('/').pop() : formData.cancelledCheque.name) : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -1766,7 +1761,7 @@ export default function OrganizationDetails() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Legal Identity Proof Document
+                      Legal Identity Proof Document (Optional)
                     </label>
                     <p className="text-xs text-gray-500 mb-2">
                       Only PDF file of up to 2 MB size are allowed.
@@ -1776,7 +1771,7 @@ export default function OrganizationDetails() {
                         <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.legalIdentityDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                           <Upload className={`w-5 h-5 mr-2 ${errors.legalIdentityDocument ? 'text-red-400' : 'text-gray-400'}`} />
                           <span className={`text-sm ${errors.legalIdentityDocument ? 'text-red-500' : 'text-gray-600'}`}>
-                            {formData.legalIdentityDocument ? formData.legalIdentityDocument.name : 'Choose file...'}
+                            {formData.legalIdentityDocument ? (typeof formData.legalIdentityDocument === 'string' ? formData.legalIdentityDocument.split('/').pop() : formData.legalIdentityDocument.name) : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -1808,10 +1803,13 @@ export default function OrganizationDetails() {
             {currentStep === 5 && (
               <div className="space-y-6">
                 <div className="border-b border-gray-200 pb-4">
-                  <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                    <FileText className="w-6 h-6 text-primary" />
-                    Statutory Compliance Documents
-                  </h2>
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                      <FileText className="w-6 h-6 text-primary" />
+                      Statutory Compliance Documents
+                    </h2>
+                    <p className="text-xs text-red-500 font-medium italic">Please fill all the mandatory details in the form (*)</p>
+                  </div>
                   <p className="text-sm text-gray-600 mt-1">
                     Upload the documents related to statutory compliance (if required by the Laboratory).
                   </p>
@@ -1876,7 +1874,7 @@ export default function OrganizationDetails() {
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Document
+                            Document (Optional)
                           </label>
                           <p className="text-xs text-gray-500 mb-2">
                             Upload a document to provide details of clearances received by the Lab as per document selected in the list.
@@ -1952,10 +1950,13 @@ export default function OrganizationDetails() {
             {currentStep === 6 && (
               <div className="space-y-6">
                 <div className="border-b border-gray-200 pb-4">
-                  <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                    <FileText className="w-6 h-6 text-primary" />
-                    Undertakings & Policies
-                  </h2>
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                      <FileText className="w-6 h-6 text-primary" />
+                      Undertakings & Policies
+                    </h2>
+                    <p className="text-xs text-red-500 font-medium italic">Please fill all the mandatory details in the form (*)</p>
+                  </div>
                   <p className="text-sm text-gray-600 mt-1">
                     Upload the undertakings as required in following fields (Signed and Stamped as per the instructions given in the forms).
                   </p>
@@ -1965,7 +1966,7 @@ export default function OrganizationDetails() {
                   {/* Impartiality Document */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Upload Impartiality Document
+                      Upload Impartiality Document (Optional)
                     </label>
                     <p className="text-xs text-gray-500 mb-2">
                       Upload an Impartiality Document as per format provided. Only PDF file of up to 2 MB size are allowed.
@@ -1975,7 +1976,7 @@ export default function OrganizationDetails() {
                         <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.impartialityDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                           <Upload className={`w-5 h-5 mr-2 ${errors.impartialityDocument ? 'text-red-400' : 'text-gray-400'}`} />
                           <span className={`text-sm ${errors.impartialityDocument ? 'text-red-500' : 'text-gray-600'}`}>
-                            {formData.impartialityDocument ? formData.impartialityDocument.name : 'Choose file...'}
+                            {formData.impartialityDocument ? (typeof formData.impartialityDocument === 'string' ? formData.impartialityDocument.split('/').pop() : formData.impartialityDocument.name) : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -2003,7 +2004,7 @@ export default function OrganizationDetails() {
                   {/* Terms & Conditions Document */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Upload Terms & Conditions Document
+                      Upload Terms & Conditions Document (Optional)
                     </label>
                     <p className="text-xs text-gray-500 mb-2">
                       Upload a Terms & Conditions Document as per format provided. Only PDF file of up to 2 MB size are allowed.
@@ -2013,7 +2014,7 @@ export default function OrganizationDetails() {
                         <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.termsConditionsDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                           <Upload className={`w-5 h-5 mr-2 ${errors.termsConditionsDocument ? 'text-red-400' : 'text-gray-400'}`} />
                           <span className={`text-sm ${errors.termsConditionsDocument ? 'text-red-500' : 'text-gray-600'}`}>
-                            {formData.termsConditionsDocument ? formData.termsConditionsDocument.name : 'Choose file...'}
+                            {formData.termsConditionsDocument ? (typeof formData.termsConditionsDocument === 'string' ? formData.termsConditionsDocument.split('/').pop() : formData.termsConditionsDocument.name) : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -2041,7 +2042,7 @@ export default function OrganizationDetails() {
                   {/* Code of Ethics Document */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Upload Code of Ethics Document
+                      Upload Code of Ethics Document (Optional)
                     </label>
                     <p className="text-xs text-gray-500 mb-2">
                       Upload a Code of Ethics Document as per format provided. Only PDF file of up to 2 MB size are allowed.
@@ -2051,7 +2052,7 @@ export default function OrganizationDetails() {
                         <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.codeOfEthicsDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                           <Upload className={`w-5 h-5 mr-2 ${errors.codeOfEthicsDocument ? 'text-red-400' : 'text-gray-400'}`} />
                           <span className={`text-sm ${errors.codeOfEthicsDocument ? 'text-red-500' : 'text-gray-600'}`}>
-                            {formData.codeOfEthicsDocument ? formData.codeOfEthicsDocument.name : 'Choose file...'}
+                            {formData.codeOfEthicsDocument ? (typeof formData.codeOfEthicsDocument === 'string' ? formData.codeOfEthicsDocument.split('/').pop() : formData.codeOfEthicsDocument.name) : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -2079,7 +2080,7 @@ export default function OrganizationDetails() {
                   {/* Testing Charges Policy Document */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Upload Testing Charges Policy Document
+                      Upload Testing Charges Policy Document (Optional)
                     </label>
                     <p className="text-xs text-gray-500 mb-2">
                       Upload a Testing Charges Document as per format provided. Only PDF file of up to 2 MB size are allowed.
@@ -2089,7 +2090,7 @@ export default function OrganizationDetails() {
                         <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.testingChargesPolicyDocument ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                           <Upload className={`w-5 h-5 mr-2 ${errors.testingChargesPolicyDocument ? 'text-red-400' : 'text-gray-400'}`} />
                           <span className={`text-sm ${errors.testingChargesPolicyDocument ? 'text-red-500' : 'text-gray-600'}`}>
-                            {formData.testingChargesPolicyDocument ? formData.testingChargesPolicyDocument.name : 'Choose file...'}
+                            {formData.testingChargesPolicyDocument ? (typeof formData.testingChargesPolicyDocument === 'string' ? formData.testingChargesPolicyDocument.split('/').pop() : formData.testingChargesPolicyDocument.name) : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -2121,18 +2122,21 @@ export default function OrganizationDetails() {
             {currentStep === 7 && (
               <div className="space-y-6">
                 <div className="border-b border-gray-200 pb-4">
-                  <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                    <Zap className="w-6 h-6 text-primary" />
-                    Power / Electricity And Water Supply
-                  </h2>
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                      <Zap className="w-6 h-6 text-primary" />
+                      Infrastructure - Power & Water Supply
+                    </h2>
+                    <p className="text-xs text-red-500 font-medium italic">Please fill all the mandatory details in the form (*)</p>
+                  </div>
                   <p className="text-sm text-gray-600 mt-1">
-                    Upload documents related to Power supply, Power Backup and Water supply.
+                    Enter details of power and water supply infrastructure at the Laboratory.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6">
                   <Input
-                    label={<>Adequacy of Sanctioned Load / Captive Power for Testing <span className="text-red-500">*</span></>}
+                    label="Adequacy of Sanctioned Load / Captive Power for Testing (Optional)"
                     value={formData.adequacySanctionedLoad}
                     onChange={(e) => {
                       handleInputChange('adequacySanctionedLoad', e.target.value)
@@ -2180,7 +2184,7 @@ export default function OrganizationDetails() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Water Source <span className="text-red-500">*</span>
+                      Water Source (Optional)
                     </label>
                     <p className="text-xs text-gray-500 mb-2">
                       Make a selection from the List if Lab has Municipal Supply or Own Source or Both.
@@ -2209,10 +2213,13 @@ export default function OrganizationDetails() {
                 {/* Accreditation Documents */}
                 <div className="space-y-6">
                   <div className="border-b border-gray-200 pb-4">
-                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                      <Award className="w-6 h-6 text-primary" />
-                      Accreditation Documents / Certification Details
-                    </h2>
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                        <Award className="w-6 h-6 text-primary" />
+                        Accreditation Documents / Certification Details
+                      </h2>
+                      <p className="text-xs text-red-500 font-medium italic">Please fill all the mandatory details in the form (*)</p>
+                    </div>
                     <p className="text-sm text-gray-600 mt-1">
                       Upload Certificate of Accreditation / Registration and Scope as per IS/ISO/IEC 17025.
                     </p>
@@ -2245,7 +2252,7 @@ export default function OrganizationDetails() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Certification Type
+                                Certification Type <span className="text-red-500">*</span>
                               </label>
                               <select
                                 value={doc.type}
@@ -2259,7 +2266,7 @@ export default function OrganizationDetails() {
                             </div>
 
                             <Input
-                              label="Certificate No."
+                              label={<>Certificate No. <span className="text-red-500">*</span></>}
                               value={doc.certificateNo}
                               onChange={(e) => updateAccreditationDocument(doc.id, 'certificateNo', e.target.value)}
                               placeholder="Enter certificate number"
@@ -2279,7 +2286,7 @@ export default function OrganizationDetails() {
                             {/* Upload Certificate */}
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Upload Certificate
+                                Upload Certificate (Optional)
                               </label>
                               <p className="text-xs text-gray-500 mb-2">
                                 Upload a document to provide details of Accreditation/Certifications received by the Lab.
@@ -2338,7 +2345,7 @@ export default function OrganizationDetails() {
                             {/* Upload Scope */}
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Upload Scope
+                                Upload Scope (Optional)
                               </label>
                               <p className="text-xs text-gray-500 mb-2">
                                 Upload a document to provide details of Scope for which Lab is Accredited.
@@ -2412,10 +2419,13 @@ export default function OrganizationDetails() {
                 {/* Other Lab Details */}
                 <div className="space-y-6">
                   <div className="border-b border-gray-200 pb-4">
-                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                      <Info className="w-6 h-6 text-primary" />
-                      Other Lab Details
-                    </h2>
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                        <Info className="w-6 h-6 text-primary" />
+                        Other Lab Details
+                      </h2>
+                      <p className="text-xs text-red-500 font-medium italic">Please fill all the mandatory details in the form (*)</p>
+                    </div>
                     <p className="text-sm text-gray-600 mt-1">
                       Any other information including Recognition / Accreditation by other Govt Department / Agencies.
                     </p>
@@ -2436,7 +2446,7 @@ export default function OrganizationDetails() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Attach Document
+                      Attach Document (Optional)
                     </label>
                     <p className="text-xs text-gray-500 mb-2">
                       Upload any supporting document for validation. Only PDF file of up to 2 MB size are allowed.
@@ -2446,7 +2456,7 @@ export default function OrganizationDetails() {
                         <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary transition-colors">
                           <Upload className="w-5 h-5 text-gray-400 mr-2" />
                           <span className="text-sm text-gray-600">
-                            {formData.otherDetailsDocument ? formData.otherDetailsDocument.name : 'Choose file...'}
+                            {formData.otherDetailsDocument ? (typeof formData.otherDetailsDocument === 'string' ? formData.otherDetailsDocument.split('/').pop() : formData.otherDetailsDocument.name) : 'Choose file...'}
                           </span>
                           <input
                             type="file"
@@ -2471,9 +2481,12 @@ export default function OrganizationDetails() {
                 {/* Other Details - Layout, Organization Chart, GPS */}
                 <div className="space-y-6">
                   <div className="border-b border-gray-200 pb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      Additional Details
-                    </h2>
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        Additional Details
+                      </h2>
+                      <p className="text-xs text-red-500 font-medium italic">Please fill all the mandatory details in the form (*)</p>
+                    </div>
                     <p className="text-sm text-gray-600 mt-1">
                       Provide the details of Lab Layout, Organization Chart and GPS Location details.
                     </p>
@@ -2483,7 +2496,7 @@ export default function OrganizationDetails() {
                     {/* Layout of Laboratory Premises */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Layout of Laboratory Premises
+                        Layout of Laboratory Premises (Optional)
                       </label>
                       <p className="text-xs text-gray-500 mb-2">
                         Upload a document to provide building/floor plans of the Lab. Only PDF file of up to 2 MB size are allowed.
@@ -2493,7 +2506,7 @@ export default function OrganizationDetails() {
                           <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.layoutLabPremises ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                             <Upload className={`w-5 h-5 mr-2 ${errors.layoutLabPremises ? 'text-red-400' : 'text-gray-400'}`} />
                             <span className={`text-sm ${errors.layoutLabPremises ? 'text-red-500' : 'text-gray-600'}`}>
-                              {formData.layoutLabPremises ? formData.layoutLabPremises.name : 'Choose file...'}
+                              {formData.layoutLabPremises ? (typeof formData.layoutLabPremises === 'string' ? formData.layoutLabPremises.split('/').pop() : formData.layoutLabPremises.name) : 'Choose file...'}
                             </span>
                             <input
                               type="file"
@@ -2521,7 +2534,7 @@ export default function OrganizationDetails() {
                     {/* Organization Chart */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Organization Chart
+                        Organization Chart (Optional)
                       </label>
                       <p className="text-xs text-gray-500 mb-2">
                         Upload a document to provide details of Organization Structure Diagram on Lab Letter Head.
@@ -2532,7 +2545,7 @@ export default function OrganizationDetails() {
                           <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${errors.organizationChart ? 'border-red-400 bg-red-50 text-red-500' : 'border-gray-300 hover:border-primary'} rounded-xl cursor-pointer transition-colors`}>
                             <Upload className={`w-5 h-5 mr-2 ${errors.organizationChart ? 'text-red-400' : 'text-gray-400'}`} />
                             <span className={`text-sm ${errors.organizationChart ? 'text-red-500' : 'text-gray-600'}`}>
-                              {formData.organizationChart ? formData.organizationChart.name : 'Choose file...'}
+                              {formData.organizationChart ? (typeof formData.organizationChart === 'string' ? formData.organizationChart.split('/').pop() : formData.organizationChart.name) : 'Choose file...'}
                             </span>
                             <input
                               type="file"
@@ -2561,14 +2574,14 @@ export default function OrganizationDetails() {
                   {/* GPS Coordinates */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      GPS Coordinates <span className="text-red-500">*</span>
+                      GPS Coordinates (Optional)
                     </label>
                     <p className="text-xs text-gray-500 mb-2">
                       Enter the GPS Coordinates (Latitude & Longitude) of the LAB. You may use Google Maps to ascertain these details.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Input
-                        label={<>Latitude <span className="text-red-500">*</span></>}
+                        label="Latitude (Optional)"
                         value={formData.gpsLatitude}
                         onChange={(e) => {
                           handleInputChange('gpsLatitude', e.target.value)
@@ -2578,7 +2591,7 @@ export default function OrganizationDetails() {
                         placeholder="Enter latitude"
                       />
                       <Input
-                        label={<>Longitude <span className="text-red-500">*</span></>}
+                        label="Longitude (Optional)"
                         value={formData.gpsLongitude}
                         onChange={(e) => {
                           handleInputChange('gpsLongitude', e.target.value)
@@ -2599,10 +2612,13 @@ export default function OrganizationDetails() {
                 {/* Quality Manual / Document */}
                 <div className="space-y-6">
                   <div className="border-b border-gray-200 pb-4">
-                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                      <BookOpen className="w-6 h-6 text-primary" />
-                      Quality Manual / Document
-                    </h2>
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                        <BookOpen className="w-6 h-6 text-primary" />
+                        Quality Manual / Document
+                      </h2>
+                      <p className="text-xs text-red-500 font-medium italic">Please fill all the mandatory details in the form (*)</p>
+                    </div>
                     <p className="text-sm text-gray-600 mt-1">
                       Enter the details of latest Quality Manual.
                     </p>
@@ -2623,7 +2639,7 @@ export default function OrganizationDetails() {
                     </div>
 
                     <Input
-                      label={<>Issue Number <span className="text-red-500">*</span></>}
+                      label="Issue Number (Optional)"
                       value={formData.qualityManualIssueNumber}
                       onChange={(e) => {
                         handleInputChange('qualityManualIssueNumber', e.target.value)
@@ -2635,7 +2651,7 @@ export default function OrganizationDetails() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Issue Date <span className="text-red-500">*</span>
+                        Issue Date (Optional)
                       </label>
                       <input
                         type="date"
@@ -2654,7 +2670,7 @@ export default function OrganizationDetails() {
                     </div>
 
                     <Input
-                      label={<>Amendments <span className="text-red-500">*</span></>}
+                      label="Amendments (Optional)"
                       value={formData.qualityManualAmendments}
                       onChange={(e) => {
                         handleInputChange('qualityManualAmendments', e.target.value)
@@ -2699,16 +2715,19 @@ export default function OrganizationDetails() {
                         </Button>
                       )}
                     </div>
-                    {errors.qualityManualDocument && <p className="mt-1 text-sm text-red-600">{errors.qualityManualDocument}</p>}
+                    <p className="mt-1 text-sm text-red-600">{errors.qualityManualDocument}</p>
                   </div>
                 </div>
 
                 {/* Standard Operating Procedures */}
                 <div className="space-y-6">
                   <div className="border-b border-gray-200 pb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      Standard Operating Procedures
-                    </h2>
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        Standard Operating Procedures
+                      </h2>
+                      <p className="text-xs text-red-500 font-medium italic">Please fill all the mandatory details in the form (*)</p>
+                    </div>
                     <p className="text-sm text-gray-600 mt-1">
                       Enter the details of latest Standard Operating Procedures.
                     </p>
@@ -2762,7 +2781,7 @@ export default function OrganizationDetails() {
                             />
 
                             <Input
-                              label={<>SOP Issue Number <span className="text-red-500">*</span></>}
+                              label="SOP Issue Number (Optional)"
                               value={sop.issueNumber}
                               onChange={(e) => {
                                 updateSOP(sop.id, 'issueNumber', e.target.value)
@@ -2774,7 +2793,7 @@ export default function OrganizationDetails() {
 
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-2">
-                                SOP Issue Date <span className="text-red-500">*</span>
+                                SOP Issue Date (Optional)
                               </label>
                               <input
                                 type="date"
@@ -2790,7 +2809,7 @@ export default function OrganizationDetails() {
                             </div>
 
                             <Input
-                              label={<>SOP Amendments <span className="text-red-500">*</span></>}
+                              label="SOP Amendments (Optional)"
                               value={sop.amendments}
                               onChange={(e) => {
                                 updateSOP(sop.id, 'amendments', e.target.value)
@@ -2823,10 +2842,13 @@ export default function OrganizationDetails() {
                 {/* Quality Formats */}
                 <div className="space-y-6">
                   <div className="border-b border-gray-200 pb-4">
-                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                      <ClipboardList className="w-6 h-6 text-primary" />
-                      Quality Formats
-                    </h2>
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                        <ClipboardList className="w-6 h-6 text-primary" />
+                        Quality Formats
+                      </h2>
+                      <p className="text-xs text-red-500 font-medium italic">Please fill all the mandatory details in the form (*)</p>
+                    </div>
                     <p className="text-sm text-gray-600 mt-1">
                       Enter the details of latest Quality Formats.
                     </p>
@@ -2869,14 +2891,14 @@ export default function OrganizationDetails() {
                             />
 
                             <Input
-                              label="Format Number"
+                              label="Format Number (Optional)"
                               value={format.number}
                               onChange={(e) => updateQualityFormat(format.id, 'number', e.target.value)}
                               placeholder="Enter format number"
                             />
 
                             <Input
-                              label="Issue Number"
+                              label="Issue Number (Optional)"
                               value={format.issueNumber}
                               onChange={(e) => updateQualityFormat(format.id, 'issueNumber', e.target.value)}
                               placeholder="Enter issue number"
@@ -2884,7 +2906,7 @@ export default function OrganizationDetails() {
 
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Issue Date
+                                Issue Date (Optional)
                               </label>
                               <input
                                 type="date"
@@ -2896,7 +2918,7 @@ export default function OrganizationDetails() {
                             </div>
 
                             <Input
-                              label="Amendments"
+                              label="Amendments (Optional)"
                               value={format.amendments}
                               onChange={(e) => updateQualityFormat(format.id, 'amendments', e.target.value)}
                               placeholder="Enter amendments"
@@ -2920,9 +2942,12 @@ export default function OrganizationDetails() {
                 {/* Quality Procedures */}
                 <div className="space-y-6">
                   <div className="border-b border-gray-200 pb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      Quality Procedures
-                    </h2>
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        Quality Procedures
+                      </h2>
+                      <p className="text-xs text-red-500 font-medium italic">Please fill all the mandatory details in the form (*)</p>
+                    </div>
                     <p className="text-sm text-gray-600 mt-1">
                       Copies of such documents of the laboratory which cover the requirements specific to this scheme which inter alia include,
                       but not limited to the following.
@@ -2955,25 +2980,23 @@ export default function OrganizationDetails() {
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Input
-                              label="Procedure Title"
+                              label={<>Procedure Title <span className="text-red-500">*</span></>}
                               value={procedure.title}
                               onChange={(e) => updateQualityProcedure(procedure.id, 'title', e.target.value)}
                               placeholder="Enter procedure title"
-                              required
                             />
 
                             <Input
-                              label="Procedure Number"
+                              label={<>Procedure Number <span className="text-red-500">*</span></>}
                               value={procedure.number}
                               onChange={(e) => updateQualityProcedure(procedure.id, 'number', e.target.value)}
                               placeholder="Enter procedure number"
-                              required
                             />
                           </div>
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Attach Quality Procedure <span className="text-red-500">*</span>
+                              Attach Quality Procedure (Optional)
                             </label>
                             <p className="text-xs text-gray-500 mb-2">
                               Upload the Quality Procedures followed by the Lab. Only PDF file of up to 2 MB size are allowed.
@@ -3030,23 +3053,21 @@ export default function OrganizationDetails() {
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Input
-                              label="Issue Number"
+                              label="Issue Number (Optional)"
                               value={procedure.issueNumber}
                               onChange={(e) => updateQualityProcedure(procedure.id, 'issueNumber', e.target.value)}
                               placeholder="Enter issue number"
-                              required
                             />
 
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Issue Date <span className="text-red-500">*</span>
+                                Issue Date (Optional)
                               </label>
                               <input
                                 type="date"
                                 value={procedure.issueDate}
                                 onChange={(e) => updateQualityProcedure(procedure.id, 'issueDate', e.target.value)}
                                 placeholder="dd/mm/yyyy"
-                                required
                                 className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                               />
                               <p className="text-xs text-gray-500 mt-1">
@@ -3055,11 +3076,10 @@ export default function OrganizationDetails() {
                             </div>
 
                             <Input
-                              label="Amendments"
+                              label="Amendments (Optional)"
                               value={procedure.amendments}
                               onChange={(e) => updateQualityProcedure(procedure.id, 'amendments', e.target.value)}
                               placeholder="Enter amendments"
-                              required
                             />
                           </div>
                         </div>
@@ -3083,11 +3103,14 @@ export default function OrganizationDetails() {
             {currentStep === 11 && (
               <div className="space-y-8">
                 <div className="border-b border-gray-200 pb-4">
-                  <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                    <CheckCircle2 className="w-6 h-6 text-primary" />
-                    Checklist
-                  </h2>
-                  <p className="text-sm text-gray-600 mt-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                      <CheckCircle2 className="w-6 h-6 text-primary" />
+                      Checklist
+                    </h2>
+                    <p className="text-xs text-red-500 font-medium italic">Please fill all the mandatory details in the form (*)</p>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">
                     Validate the completeness of each section of the Lab Registration process.
                   </p>
                 </div>
@@ -3177,18 +3200,14 @@ export default function OrganizationDetails() {
               </Button>
 
               <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleSave}
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Save & Next
-                </Button>
-
                 {currentStep < steps.length ? (
-                  <Button onClick={handleNext}>
-                    Next
-                    <ChevronRight className="w-4 h-4 ml-2" />
+                  <Button 
+                    onClick={handleSave}
+                    className="flex items-center gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    Save & Next
+                    <ChevronRight className="w-4 h-4" />
                   </Button>
                 ) : (
                   <Button onClick={handleSubmit}>

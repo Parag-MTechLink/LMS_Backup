@@ -19,7 +19,7 @@ export class ChatService {
    */
   async sendMessage(message, sessionId, context) {
     try {
-      const token = localStorage.getItem('labManagementAccessToken') || 
+      const token = localStorage.getItem('authToken') || 
                    localStorage.getItem('accessToken')
 
       const response = await fetch(`${this.apiUrl}/message`, {
@@ -56,7 +56,7 @@ export class ChatService {
    */
   async getHistory(sessionId) {
     try {
-      const token = localStorage.getItem('labManagementAccessToken') || 
+      const token = localStorage.getItem('authToken') || 
                    localStorage.getItem('accessToken')
 
       const response = await fetch(`${this.apiUrl}/history?session_id=${sessionId}`, {

@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { rfqsService, customersService } from '../../../services/labManagementApi'
 import { getApiErrorMessage } from '../../../utils/apiError'
 import toast, { Toaster } from 'react-hot-toast'
-import { Plus, X, FileSpreadsheet, Trash2, Download, User, Mail, Phone, Package, Calendar, AlertCircle, CheckCircle, Clock, Eye, ChevronDown } from 'lucide-react'
+import { Plus, X, FileSpreadsheet, Trash2, Download, User, Mail, Phone, Package, Calendar, AlertCircle, CheckCircle, Clock, Eye, ChevronDown, Trash, FileText } from 'lucide-react'
 import RouteSkeleton from '../../../components/RouteSkeleton'
 import ConfirmDeleteModal from '../../../components/labManagement/ConfirmDeleteModal'
 import { useLabManagementAuth } from '../../../contexts/LabManagementAuthContext'
+import Input from '../../../components/labManagement/Input'
+import clsx from 'clsx'
 
 function RFQs() {
   const navigate = useNavigate()
@@ -37,7 +39,23 @@ function RFQs() {
     customerId: 0,
     product: '',
     receivedDate: new Date().toISOString().split('T')[0],
+    details: {}
   })
+  const [dynamicFields, setDynamicFields] = useState([]) // [{ key: '', value: '' }]
+
+  const addDynamicField = () => {
+    setDynamicFields([...dynamicFields, { key: '', value: '' }])
+  }
+
+  const removeDynamicField = (index) => {
+    setDynamicFields(dynamicFields.filter((_, i) => i !== index))
+  }
+
+  const handleDynamicFieldChange = (index, field, value) => {
+    const updated = [...dynamicFields]
+    updated[index][field] = value
+    setDynamicFields(updated)
+  }
 
   useEffect(() => {
     loadData()
@@ -69,10 +87,21 @@ function RFQs() {
 
     try {
       setIsSubmitting(true)
-      await rfqsService.create(formData)
+      
+      // Build details from dynamicFields
+      const details = {}
+      dynamicFields.forEach(field => {
+        if (field.key.trim()) {
+          details[field.key.trim()] = field.value
+        }
+      })
+
+      const payload = { ...formData, details }
+      await rfqsService.create(payload)
       toast.success('RFQ created successfully')
       setShowModal(false)
-      setFormData({ customerId: 0, product: '', receivedDate: new Date().toISOString().split('T')[0] })
+      setFormData({ customerId: 0, product: '', receivedDate: new Date().toISOString().split('T')[0], details: {} })
+      setDynamicFields([])
       loadData()
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to create RFQ')
@@ -83,14 +112,14 @@ function RFQs() {
 
   const handleUploadSubmit = async () => {
     if (!uploadFile) {
-      toast.error('Please select an Excel file (.xlsx)')
+      toast.error('Please select a Word file (.docx)')
       return
     }
     setUploading(true)
     setUploadError(null)
     setUploadMissing([])
     try {
-      const res = await rfqsService.uploadExcel(uploadFile)
+      const res = await rfqsService.upload(uploadFile)
       const errList = res.errors ?? res.missing_fields ?? []
       if (res.status === 'Incomplete' && errList.length) {
         setUploadMissing(errList)
@@ -144,6 +173,15 @@ function RFQs() {
       toast.error('Failed to update status')
     } finally {
       setSavingRfqStatus(false)
+    }
+  }
+
+  const handleDownloadRfqFile = async () => {
+    if (!viewRfq) return
+    try {
+      await rfqsService.downloadUploadedFile(viewRfq.id)
+    } catch {
+      toast.error('Failed to download file')
     }
   }
 
@@ -211,8 +249,8 @@ function RFQs() {
             onClick={() => { setShowUploadModal(true); setUploadError(null); setUploadMissing([]); setUploadFile(null); }}
             className="px-6 py-3 border-2 border-primary text-primary font-semibold rounded-xl hover:bg-primary/10 transition-all duration-200 flex items-center justify-center space-x-2"
           >
-            <FileSpreadsheet className="w-5 h-5" />
-            <span>Upload RFQ (Excel)</span>
+            <Download className="w-5 h-5 transition-transform group-hover:-translate-y-1" />
+            <span>Upload RFQ (Word)</span>
           </button>
         </div>
       </div>
@@ -318,254 +356,276 @@ function RFQs() {
             </tbody>
           </table>
         </div>
-      </div>
-
-      {/* ── View RFQ Details Modal ── */}
+      </div>      {/* ── View RFQ Details Modal ── */}
       {viewRfq && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-200 max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl border border-gray-200 max-h-[90vh] overflow-hidden flex flex-col"
           >
             {/* Modal Header */}
-            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-primary/5 to-primary/10 rounded-t-2xl">
+            <div className="p-8 border-b border-gray-100 bg-gradient-to-br from-primary/5 via-white to-primary/5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-md">
-                    <Eye className="w-5 h-5 text-white" />
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-xl shadow-primary/20 ring-4 ring-primary/10">
+                    <FileText className="w-7 h-7 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">RFQ Details</h2>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      ID: <span className="font-mono">{viewRfq.id}</span>
-                    </p>
+                    <h2 className="text-2xl font-black text-gray-900 tracking-tight">Job Request Details</h2>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-bold rounded uppercase tracking-wider">RFQ ID: {viewRfq.id}</span>
+                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider bg-gradient-to-r ${getStatusColor(displayRfq?.status ?? viewRfq.status)} text-white`}>
+                        {displayRfq?.status ?? viewRfq.status}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <button
                   onClick={() => { setViewRfq(null); setViewDetails(null); }}
-                  className="p-2 hover:bg-white/70 rounded-xl transition-colors"
+                  className="p-3 hover:bg-gray-100 rounded-2xl transition-all active:scale-90 bg-gray-50 text-gray-400 hover:text-gray-900"
                 >
-                  <X className="w-5 h-5 text-gray-500" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
             </div>
 
-            {viewLoading ? (
-              <div className="p-10 flex flex-col items-center justify-center gap-3 text-gray-400">
-                <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                <span className="text-sm">Loading details…</span>
-              </div>
-            ) : (
-              <div className="p-6 space-y-6">
-                {/* Status badge */}
-                <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full bg-gradient-to-r ${getStatusColor(displayRfq?.status ?? viewRfq.status)} text-white shadow-sm`}>
-                    {getStatusIcon(displayRfq?.status ?? viewRfq.status)}
-                    {displayRfq?.status ?? viewRfq.status}
-                  </span>
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              {viewLoading ? (
+                <div className="p-20 flex flex-col items-center justify-center gap-4 text-gray-400">
+                  <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                  <span className="text-sm font-medium animate-pulse tracking-widest uppercase">Fetching Data...</span>
                 </div>
-
-                {/* Info grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Customer */}
-                  <div className="bg-gray-50 rounded-xl p-4 flex gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <User className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Customer</p>
-                      <p className="text-sm font-semibold text-gray-900 mt-0.5 truncate">
+              ) : (
+                <div className="p-8 space-y-10">
+                  {/* Primary Info Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                        <User className="w-5 h-5 text-primary" />
+                      </div>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Customer Entity</p>
+                      <p className="text-lg font-bold text-gray-900 mt-1 leading-tight">
                         {displayRfq?.customerName ?? displayRfq?.company_name ?? viewRfq.customerName}
                       </p>
-                      {displayRfq?.contact_person && (
-                        <p className="text-xs text-gray-500 mt-0.5">{displayRfq.contact_person}</p>
-                      )}
                     </div>
-                  </div>
 
-                  {/* Product */}
-                  <div className="bg-gray-50 rounded-xl p-4 flex gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                      <Package className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Product / Project</p>
-                      <p className="text-sm font-semibold text-gray-900 mt-0.5 truncate">
+                    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
+                        <Package className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Product / Project</p>
+                      <p className="text-lg font-bold text-gray-900 mt-1 leading-tight">
                         {displayRfq?.product ?? displayRfq?.project_type ?? viewRfq.product}
                       </p>
                     </div>
-                  </div>
 
-                  {/* Email */}
-                  {displayRfq?.email && (
-                    <div className="bg-gray-50 rounded-xl p-4 flex gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
-                        <Mail className="w-4 h-4 text-purple-600" />
+                    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center mb-4">
+                        <Calendar className="w-5 h-5 text-orange-600" />
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Email</p>
-                        <p className="text-sm font-semibold text-gray-900 mt-0.5 truncate">{displayRfq.email}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Phone */}
-                  {displayRfq?.phone && (
-                    <div className="bg-gray-50 rounded-xl p-4 flex gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
-                        <Phone className="w-4 h-4 text-green-600" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Phone</p>
-                        <p className="text-sm font-semibold text-gray-900 mt-0.5">{displayRfq.phone}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Received Date */}
-                  <div className="bg-gray-50 rounded-xl p-4 flex gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
-                      <Calendar className="w-4 h-4 text-orange-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Received Date</p>
-                      <p className="text-sm font-semibold text-gray-900 mt-0.5">
-                        {new Date(displayRfq?.receivedDate ?? viewRfq.receivedDate).toLocaleDateString('en-US', {
-                          year: 'numeric', month: 'long', day: 'numeric'
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Received On</p>
+                      <p className="text-lg font-bold text-gray-900 mt-1 leading-tight">
+                        {new Date(displayRfq?.receivedDate ?? viewRfq.receivedDate).toLocaleDateString('en-GB', {
+                          day: '2-digit', month: 'short', year: 'numeric'
                         })}
                       </p>
                     </div>
                   </div>
 
-                  {/* Deadline */}
-                  {displayRfq?.deadline && (
-                    <div className="bg-gray-50 rounded-xl p-4 flex gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
-                        <Calendar className="w-4 h-4 text-red-500" />
+                  {/* Document & Quick Actions */}
+                  <div className="flex flex-col sm:flex-row gap-6">
+                    {displayRfq?.rfq_file_path && (
+                      <div className="flex-1 bg-primary/5 rounded-2xl p-6 border border-primary/10 flex items-center justify-between group">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                            <Download className="w-6 h-6" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[10px] text-primary/60 font-bold uppercase tracking-widest">Original File</p>
+                            <p className="text-sm font-bold text-gray-900 truncate max-w-[200px]">
+                              {displayRfq.rfq_file_path.split(/[\\/]/).pop()}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleDownloadRfqFile}
+                          className="px-6 py-2.5 bg-primary text-white text-sm font-black rounded-xl hover:bg-primary-dark transition-all active:scale-95 shadow-lg shadow-primary/25 flex items-center gap-2"
+                        >
+                          <Download className="w-4 h-4" />
+                          Download
+                        </button>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Deadline</p>
-                        <p className="text-sm font-semibold text-gray-900 mt-0.5">
-                          {new Date(displayRfq.deadline).toLocaleDateString('en-US', {
-                            year: 'numeric', month: 'long', day: 'numeric'
-                          })}
-                        </p>
+                    )}
+                  </div>
+
+                  {/* Equipment Under Test (EUT) Details */}
+                  {displayRfq?.details && Object.keys(displayRfq.details).length > 0 && (
+                    <div className="space-y-8">
+                      <div className="flex items-center gap-3">
+                        <div className="h-px flex-1 bg-gray-100" />
+                        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap">Equipment Under Test (EUT) Details</h4>
+                        <div className="h-px flex-1 bg-gray-100" />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Technical Specifications */}
+                        <div className="space-y-4">
+                          <h5 className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-primary rounded-full" />
+                            Technical Specifications
+                          </h5>
+                          <div className="grid grid-cols-1 gap-3">
+                            {[
+                              { label: 'Supply Voltage', key: 'Supply Voltage' },
+                              { label: 'Operating Frequency', key: 'Operating Frequency' },
+                              { label: 'Current', key: 'Current' },
+                              { label: 'Weight', key: 'Weight' },
+                              { label: 'Dimensions', key: 'Dimensions' }
+                            ].map(spec => displayRfq.details[spec.key] && (
+                              <div key={spec.key} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase">{spec.label}</span>
+                                <span className="text-xs font-black text-gray-900">{displayRfq.details[spec.key]}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Connectivity & Software */}
+                        <div className="space-y-4">
+                          <h5 className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-primary rounded-full" />
+                            Connectivity & Software
+                          </h5>
+                          <div className="grid grid-cols-1 gap-3">
+                            {[
+                              { label: 'Power Ports', key: 'Power Ports' },
+                              { label: 'Signal Lines', key: 'Signal Lines' },
+                              { label: 'Software Name', key: 'Software Name' },
+                              { label: 'Software Version', key: 'Software Version' }
+                            ].map(spec => displayRfq.details[spec.key] && (
+                              <div key={spec.key} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase">{spec.label}</span>
+                                <span className="text-xs font-black text-gray-900">{displayRfq.details[spec.key]}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Generic / Other details */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        {Object.entries(displayRfq.details)
+                          .filter(([key]) => ![
+                            'Supply Voltage', 'Operating Frequency', 'Current', 'Weight', 'Dimensions',
+                            'Power Ports', 'Signal Lines', 'Software Name', 'Software Version',
+                            'Designation', 'Project Code', 'Quantity', 'Manufacturer', 'Model No', 'Serial No'
+                          ].includes(key))
+                          .map(([key, value]) => (
+                            <div key={key} className="p-3 rounded-xl border border-gray-100 bg-white shadow-sm">
+                              <label className="text-[9px] uppercase font-black tracking-widest text-gray-400 block mb-1">{key}</label>
+                              <p className="text-xs text-gray-900 font-bold">{value || '—'}</p>
+                            </div>
+                        ))}
                       </div>
                     </div>
                   )}
-                </div>
 
-                {/* Sample / Test Details */}
-                {displayRfq?.sample_details && Array.isArray(displayRfq.sample_details) && displayRfq.sample_details.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
-                        {displayRfq.sample_details.length}
-                      </span>
-                      Test / Sample Items
-                    </h3>
-                    <div className="overflow-hidden rounded-xl border border-gray-200">
-                      <table className="min-w-full divide-y divide-gray-100">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">#</th>
-                            <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Test Name</th>
-                            <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Standard</th>
-                            <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Qty</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 bg-white">
-                          {displayRfq.sample_details.map((item, i) => (
-                            <tr key={i} className="hover:bg-primary/5 transition-colors">
-                              <td className="px-4 py-2.5 text-xs text-gray-400">{i + 1}</td>
-                              <td className="px-4 py-2.5 text-sm text-gray-900 font-medium">{item.test_name ?? item.name ?? '—'}</td>
-                              <td className="px-4 py-2.5 text-sm text-gray-600">{item.standard ?? '—'}</td>
-                              <td className="px-4 py-2.5 text-sm text-gray-600 text-right">{item.quantity ?? '—'}</td>
-                            </tr>
+                  {/* Missing fields warning */}
+                  {displayRfq?.missing_fields?.length > 0 && (
+                    <div className="rounded-2xl bg-red-50 border border-red-100 p-6 flex gap-4 animate-pulse">
+                      <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-black text-red-900 uppercase tracking-widest mb-2">Attention Required</p>
+                        <p className="text-sm text-red-700 font-medium">The document is missing some critical fields that need manual correction.</p>
+                        <ul className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1">
+                          {displayRfq.missing_fields.map((f, i) => (
+                            <li key={i} className="text-xs text-red-600 font-bold flex items-center gap-1.5">
+                              <span className="w-1 h-1 bg-red-400 rounded-full" />
+                              {f}
+                            </li>
                           ))}
-                        </tbody>
-                      </table>
+                        </ul>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Missing fields warning */}
-                {displayRfq?.missing_fields?.length > 0 && (
-                  <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 flex gap-3">
-                    <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold text-amber-800 mb-1">Missing / Invalid Fields</p>
-                      <ul className="list-disc list-inside text-sm text-amber-700 space-y-0.5">
-                        {displayRfq.missing_fields.map((f, i) => <li key={i}>{f}</li>)}
-                      </ul>
+                  {/* Status Management */}
+                  <div className="bg-gray-50/80 rounded-3xl p-8 space-y-6 border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-primary" />
+                        Workflow Management
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase">Current:</span>
+                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider bg-gradient-to-r ${getStatusColor(displayRfq?.status ?? viewRfq.status)} text-white`}>
+                          {displayRfq?.status ?? viewRfq.status}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                )}
+                    
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      {[
+                        { value: 'pending', label: 'Hold', color: 'border-yellow-200 text-yellow-700 hover:bg-yellow-50 hover:border-yellow-300' },
+                        { value: 'pending review', label: 'Review', color: 'border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300' },
+                        { value: 'approved', label: 'Approve', color: 'border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300' },
+                        { value: 'rejected', label: 'Reject', color: 'border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300' },
+                      ].map(opt => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setRfqStatus(opt.value)}
+                          className={`px-4 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all duration-300 transform active:scale-95 shadow-sm
+                            ${rfqStatus === opt.value
+                              ? 'ring-4 ring-primary/10 border-primary bg-primary text-white shadow-lg shadow-primary/25'
+                              : `${opt.color} bg-white`
+                            }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
 
-                {/* ── Status Change ── */}
-                <div className="border border-gray-200 rounded-xl p-4 space-y-3">
-                  <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                    Change Status
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { value: 'pending', label: 'Pending', border: 'border-yellow-200 bg-yellow-50 text-yellow-800' },
-                      { value: 'pending review', label: 'Pending Review', border: 'border-blue-200 bg-blue-50 text-blue-800' },
-                      { value: 'approved', label: 'Approved', border: 'border-green-200 bg-green-50 text-green-800' },
-                      { value: 'rejected', label: 'Rejected', border: 'border-red-200 bg-red-50 text-red-800' },
-                    ].map(opt => (
+                    <div className="space-y-4">
+                      <textarea
+                        rows={2}
+                        value={rfqComment}
+                        onChange={e => setRfqComment(e.target.value)}
+                        placeholder="Internal notes or comments regarding this status change..."
+                        className="w-full px-5 py-4 text-sm font-medium border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none resize-none transition-all placeholder:text-gray-300"
+                      />
                       <button
-                        key={opt.value}
-                        onClick={() => setRfqStatus(opt.value)}
-                        className={`px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all duration-150
-                          ${rfqStatus === opt.value
-                            ? 'ring-2 ring-offset-1 ring-primary border-primary bg-primary/10 text-primary'
-                            : `${opt.border} hover:opacity-80`
-                          }`}
+                        onClick={handleSaveRfqStatus}
+                        disabled={savingRfqStatus || rfqStatus === (displayRfq?.status ?? viewRfq?.status ?? '')}
+                        className="w-full py-4 bg-gradient-to-r from-primary to-primary-dark text-white text-sm font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:grayscale transition-all"
                       >
-                        {opt.label}
+                        {savingRfqStatus ? 'Processing...' : 'Apply Status Change'}
                       </button>
-                    ))}
+                    </div>
                   </div>
-                  <textarea
-                    rows={2}
-                    value={rfqComment}
-                    onChange={e => setRfqComment(e.target.value)}
-                    placeholder="Optional comment"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all"
-                  />
-                  <button
-                    onClick={handleSaveRfqStatus}
-                    disabled={savingRfqStatus || rfqStatus === (displayRfq?.status ?? viewRfq?.status ?? '')}
-                    className="w-full py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold rounded-xl shadow hover:shadow-md hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-150"
-                  >
-                    {savingRfqStatus ? 'Saving…' : 'Save Status'}
-                  </button>
                 </div>
+              )}
+            </div>
 
-                {/* Footer actions */}
-                <div className="flex gap-3 pt-2 border-t border-gray-100">
-                  <button
-                    onClick={() => { setViewRfq(null); setViewDetails(null); }}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={() => {
-                      setViewRfq(null)
-                      setViewDetails(null)
-                      navigate(`/lab/management/estimations?createFromRfq=${viewRfq.id}`)
-                    }}
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
-                  >
-                    Create Estimation
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* Modal Footer */}
+            <div className="p-8 border-t border-gray-100 bg-gray-50/50 flex gap-4">
+              <button
+                onClick={() => { setViewRfq(null); setViewDetails(null); }}
+                className="flex-1 px-6 py-4 border-2 border-gray-200 rounded-2xl text-gray-600 text-xs font-black uppercase tracking-widest hover:bg-white hover:border-gray-300 hover:text-gray-900 transition-all active:scale-95 shadow-sm"
+              >
+                Close View
+              </button>
+              <button
+                onClick={() => {
+                  setViewRfq(null)
+                  setViewDetails(null)
+                  navigate(`/lab/management/estimations?createFromRfq=${viewRfq.id}`)
+                }}
+                className="flex-1 px-6 py-4 bg-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-black transition-all active:scale-95 shadow-xl shadow-gray-200"
+              >
+                Build Estimation
+              </button>
+            </div>
           </motion.div>
         </div>
       )}
@@ -590,52 +650,111 @@ function RFQs() {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <p className="text-sm text-red-500 mb-4">Please fill all the mandatory details in the form (*)</p>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Customer <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  value={formData.customerId}
-                  onChange={(e) => setFormData({ ...formData, customerId: parseInt(e.target.value) })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                >
-                  <option value={0}>Select Customer</option>
-                  {customers.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
-                      {customer.companyName}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[70vh]">
+              <p className="text-sm font-medium text-gray-500">
+                Please fill all the mandatory details in the form (*)
+              </p>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Product <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Customer <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={formData.customerId}
+                    onChange={(e) => setFormData({ ...formData, customerId: parseInt(e.target.value) })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                  >
+                    <option value={0}>Select Customer</option>
+                    {customers.map((customer) => (
+                      <option key={customer.id} value={customer.id}>
+                        {customer.companyName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <Input
+                  label={<>Product / Project <span className="text-red-500">*</span></>}
                   required
                   value={formData.product}
                   onChange={(e) => setFormData({ ...formData, product: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                  placeholder="Enter product name"
+                  placeholder="e.g. Environmental Testing - Batch A"
+                  icon={<Package className="w-5 h-5" />}
                 />
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Received Date <span className="text-red-500">*</span>
-                </label>
-                <input
+                <Input
+                  label={<>Received Date <span className="text-red-500">*</span></>}
                   type="date"
                   required
                   value={formData.receivedDate}
                   onChange={(e) => setFormData({ ...formData, receivedDate: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  icon={<Calendar className="w-5 h-5" />}
                 />
+              </div>
+
+              {/* Dynamic Enrichment Section */}
+              <div className="pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                    <Plus className="w-4 h-4 text-primary" />
+                    Customization Enrichment
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={addDynamicField}
+                    className="text-xs font-medium text-primary hover:text-primary-dark transition-colors flex items-center gap-1"
+                  >
+                    Add Field
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <AnimatePresence>
+                    {dynamicFields.map((field, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        className="flex gap-2 items-start"
+                      >
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            placeholder="Field Name (e.g. Email)"
+                            value={field.key}
+                            onChange={(e) => handleDynamicFieldChange(index, 'key', e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                          />
+                        </div>
+                        <div className="flex-[1.5]">
+                          <input
+                            type="text"
+                            placeholder="Value"
+                            value={field.value}
+                            onChange={(e) => handleDynamicFieldChange(index, 'value', e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeDynamicField(index)}
+                          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <Trash className="w-4 h-4" />
+                        </button>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+
+                  {dynamicFields.length === 0 && (
+                    <p className="text-xs text-gray-400 italic text-center py-2">
+                      No custom fields added yet.
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-3 pt-4">
@@ -659,73 +778,115 @@ function RFQs() {
         </div>
       )}
 
-      {/* Upload RFQ (Excel) Modal */}
+      {/* ── Create / Upload RFQ Modal ── */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white rounded-3xl shadow-2xl max-w-xl w-full border border-gray-200 overflow-hidden"
           >
-            <div className="p-6 border-b border-gray-200">
+            <div className="p-8 border-b border-gray-100 bg-gradient-to-br from-primary/5 via-white to-primary/5">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Upload RFQ (Excel)</h2>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Download className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase">Import Word RFQ</h2>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Automated Data Extraction</p>
+                  </div>
+                </div>
                 <button
-                  onClick={() => { setShowUploadModal(false); setUploadFile(null); setUploadError(null); setUploadMissing([]); }}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  onClick={() => setShowUploadModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-xl transition-all active:scale-90"
                 >
-                  <X className="w-5 h-5 text-gray-500" />
+                  <X className="w-5 h-5 text-gray-400" />
                 </button>
               </div>
             </div>
-            <div className="p-6 space-y-4">
-              <p className="text-sm text-gray-600">Upload a .xlsx file. Row 2: company, contact, email, phone, project title, testing type, deadline, urgent; from row 6: test name, standard, quantity.</p>
-              <button
-                type="button"
-                onClick={() => rfqsService.downloadTemplate().catch(() => toast.error('Failed to download template'))}
-                className="flex items-center gap-2 text-sm text-primary hover:underline font-medium"
-              >
-                <Download className="w-4 h-4" />
-                Download Excel template
-              </button>
-              <input
-                type="file"
-                accept=".xlsx"
-                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-medium"
-              />
+
+            <div className="p-8 space-y-8">
+              <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                <p className="text-sm text-gray-600 font-medium leading-relaxed mb-4">
+                  Upload the filled <span className="font-bold text-gray-900 tracking-tight">Job Request Form (.docx)</span>. Our parser will automatically extract customer details, product info, and project parameters.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => rfqsService.downloadTemplate().catch(() => toast.error('Failed to download template'))}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-white border-2 border-primary/20 text-primary text-xs font-black uppercase tracking-widest rounded-xl hover:bg-primary/5 hover:border-primary/40 transition-all active:scale-[0.98] shadow-sm"
+                >
+                  <Download className="w-4 h-4" />
+                  Get Word Template
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Select Document</label>
+                <div className="relative group">
+                  <input
+                    type="file"
+                    accept=".docx"
+                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  />
+                  <div className="w-full h-32 border-2 border-dashed border-gray-200 rounded-3xl flex flex-col items-center justify-center gap-2 group-hover:border-primary/40 group-hover:bg-primary/5 transition-all duration-300">
+                    <div className="w-10 h-10 rounded-full bg-gray-50 group-hover:bg-white flex items-center justify-center transition-colors shadow-sm">
+                      <FileText className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
+                    </div>
+                    <p className="text-xs font-bold text-gray-500 group-hover:text-primary transition-colors text-center px-4">
+                      {uploadFile ? uploadFile.name : 'Click to browse or drag & drop'}
+                    </p>
+                    <p className="text-[10px] text-gray-300 font-medium tracking-wide">Supported: Microsoft Word (.docx)</p>
+                  </div>
+                </div>
+              </div>
+
               {uploadError && (
-                <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-800">
-                  {uploadError}
+                <div className="rounded-2xl bg-red-50 border border-red-100 p-4 flex gap-3 animate-in slide-in-from-top-2">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                  <p className="text-xs font-bold text-red-700 leading-relaxed">{uploadError}</p>
                 </div>
               )}
+
               {uploadMissing?.length > 0 && (
-                <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-900">
-                  <p className="font-medium mb-1">Missing or invalid fields:</p>
-                  <ul className="list-disc list-inside">
+                <div className="rounded-2xl bg-orange-50 border border-orange-100 p-5 space-y-3">
+                  <div className="flex items-center gap-2 text-orange-600">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Incomplete Data</span>
+                  </div>
+                  <ul className="grid grid-cols-1 gap-1">
                     {uploadMissing.map((f, i) => (
-                      <li key={i}>{f}</li>
+                      <li key={i} className="text-[10px] text-orange-700 font-bold px-2 py-0.5">
+                        • {f}
+                      </li>
                     ))}
                   </ul>
                 </div>
               )}
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => { setShowUploadModal(false); setUploadFile(null); setUploadError(null); setUploadMissing([]); }}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleUploadSubmit}
-                  disabled={!uploadFile || uploading}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                >
-                  {uploading ? 'Uploading...' : 'Upload'}
-                </button>
-              </div>
+            </div>
+
+            <div className="p-8 bg-gray-50/50 border-t border-gray-100 flex gap-4">
+              <button
+                onClick={() => { setShowUploadModal(false); setUploadFile(null); setUploadError(null); setUploadMissing([]); }}
+                className="flex-1 px-6 py-4 bg-white border-2 border-gray-200 rounded-2xl text-gray-600 text-xs font-black uppercase tracking-widest hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 shadow-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUploadSubmit}
+                disabled={uploading || !uploadFile}
+                className="flex-1 px-6 py-4 bg-primary text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-primary-dark transition-all active:scale-95 shadow-xl shadow-primary/25 disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2"
+              >
+                {uploading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Parsing...
+                  </>
+                ) : (
+                  'Start Upload'
+                )}
+              </button>
             </div>
           </motion.div>
         </div>

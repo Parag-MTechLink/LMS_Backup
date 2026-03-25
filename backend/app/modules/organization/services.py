@@ -239,8 +239,23 @@ class OrganizationService:
         for idx, shift_data in enumerate(data.shift_timings):
             # Convert string times to time objects
             shift_dict = shift_data.model_dump()
-            shift_dict['shift_from'] = datetime.strptime(shift_dict['shift_from'], '%H:%M').time()
-            shift_dict['shift_to'] = datetime.strptime(shift_dict['shift_to'], '%H:%M').time()
+            
+            # Robust time parsing
+            try:
+                if isinstance(shift_dict['shift_from'], str) and shift_dict['shift_from']:
+                    shift_dict['shift_from'] = datetime.strptime(shift_dict['shift_from'], '%H:%M').time()
+                elif not shift_dict['shift_from']:
+                    shift_dict['shift_from'] = time(9, 0) # Default to 9 AM
+                
+                if isinstance(shift_dict['shift_to'], str) and shift_dict['shift_to']:
+                    shift_dict['shift_to'] = datetime.strptime(shift_dict['shift_to'], '%H:%M').time()
+                elif not shift_dict['shift_to']:
+                    shift_dict['shift_to'] = time(18, 0) # Default to 6 PM
+            except (ValueError, TypeError):
+                # Fallback defaults if parsing fails
+                shift_dict['shift_from'] = time(9, 0)
+                shift_dict['shift_to'] = time(18, 0)
+
             shift_dict['order_index'] = idx
             
             shift = models.ShiftTiming(
@@ -499,7 +514,7 @@ class OrganizationService:
             organization.lab_name,
             organization.lab_address,
             organization.lab_state,
-            organization.lab_district,
+            # organization.lab_district, # Made optional
             organization.lab_city,
             organization.lab_pin_code
         ])
@@ -507,7 +522,7 @@ class OrganizationService:
             step_id=1,
             step_name="Laboratory Details",
             is_completed=step1_complete,
-            required_fields=["lab_name", "lab_address", "lab_state", "lab_district", "lab_city", "lab_pin_code"],
+            required_fields=["lab_name", "lab_address", "lab_state", "lab_city", "lab_pin_code"],
             missing_fields=[]
         ))
         

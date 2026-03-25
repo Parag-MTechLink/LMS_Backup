@@ -190,6 +190,15 @@ def list_test_results(
                                  execution_id=execution_id, pass_fail=pass_fail)
 
 
+@router.get("/test-results/statistics", response_model=schemas.TestResultStatistics, tags=["Test Results"])
+def get_test_result_statistics(
+    execution_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """Get test result statistics"""
+    return crud.get_test_result_statistics(db, execution_id=execution_id)
+
+
 @router.get("/test-results/{result_id}", response_model=schemas.TestResultResponse, tags=["Test Results"])
 def get_test_result(result_id: int, db: Session = Depends(get_db)):
     """Get a specific test result"""
@@ -242,13 +251,7 @@ def review_test_result(result_id: int, review: schemas.TestResultReview, db: Ses
     return reviewed_result
 
 
-@router.get("/test-results/statistics", response_model=schemas.TestResultStatistics, tags=["Test Results"])
-def get_test_result_statistics(
-    execution_id: Optional[int] = Query(None),
-    db: Session = Depends(get_db)
-):
-    """Get test result statistics"""
-    return crud.get_test_result_statistics(db, execution_id=execution_id)
+
 
 
 # Test Parameter Routes

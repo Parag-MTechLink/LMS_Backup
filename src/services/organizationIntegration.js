@@ -303,13 +303,13 @@ export async function saveOrganizationStep(organizationId, step, formData) {
 /**
  * Upload file and return URL
  */
-export async function uploadFile(file, fieldName) {
+export async function uploadFile(file, fieldName, organizationId = null) {
     if (!file) return null;
 
     try {
         // Determine file type
         if (fieldName === 'labLogo') {
-            return await fileService.uploadLogo(file);
+            return await fileService.uploadLogo(file, organizationId);
         } else {
             // Determine document type based on field name
             let docType = 'general';
@@ -318,7 +318,7 @@ export async function uploadFile(file, fieldName) {
             else if (fieldName.includes('accreditation')) docType = 'accreditation';
             else if (fieldName.includes('quality')) docType = 'quality';
 
-            return await fileService.uploadDocument(file, docType);
+            return await fileService.uploadDocument(file, docType, organizationId);
         }
     } catch (error) {
         console.error('File upload failed:', error);

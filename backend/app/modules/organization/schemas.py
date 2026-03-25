@@ -186,7 +186,7 @@ class LaboratoryDetailsUpdate(BaseModel):
     lab_address: str = Field(..., min_length=1)
     lab_country: str = "India"
     lab_state: str = Field(..., min_length=1, max_length=100)
-    lab_district: str = Field(..., min_length=1, max_length=100)
+    lab_district: Optional[str] = Field(None, max_length=100)
     lab_city: str = Field(..., min_length=1, max_length=100)
     lab_pin_code: str = Field(..., min_length=6, max_length=10)
     lab_logo_url: Optional[str] = None
@@ -376,7 +376,7 @@ class OrganizationCreate(BaseModel):
     lab_name: str = Field(..., min_length=1, max_length=255)
     lab_address: str = Field(..., min_length=1)
     lab_state: str = Field(..., min_length=1, max_length=100)
-    lab_district: str = Field(..., min_length=1, max_length=100)
+    lab_district: Optional[str] = Field(None, max_length=100)
     lab_city: str = Field(..., min_length=1, max_length=100)
     lab_pin_code: str = Field(..., min_length=6, max_length=10)
 
@@ -388,7 +388,7 @@ class OrganizationResponse(BaseModel):
     lab_address: str
     lab_country: str
     lab_state: str
-    lab_district: str
+    lab_district: Optional[str]
     lab_city: str
     lab_pin_code: str
     lab_logo_url: Optional[str]

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 class EstimationTestItemCreate(BaseModel):
     testTypeId: int
@@ -11,6 +11,7 @@ class EstimationTestItemCreate(BaseModel):
 class EstimationTestItemOut(EstimationTestItemCreate):
     id: int
     estimationId: int
+    testTypeName: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -21,6 +22,7 @@ class EstimationCreate(BaseModel):
     margin: float
     discount: float
     notes: str | None = None
+    details: Optional[Dict[str, Any]] = {}
 
 class EstimationOut(BaseModel):
     id: int
@@ -29,9 +31,11 @@ class EstimationOut(BaseModel):
     version: int
     totalCost: float
     totalHours: float
+    subtotal: float = 0
     margin: float
     discount: float
     notes: Optional[str] = None
+    details: Optional[Dict[str, Any]] = {}
     status: str
     items: List[EstimationTestItemOut] = []
 
@@ -49,5 +53,16 @@ class EstimationReview(BaseModel):
 class TestTypeOut(BaseModel):
     id: int
     name: str
-    hsnCode: str
+    parentId: Optional[int] = None
+    hsnCode: Optional[str] = None
     defaultRate: float
+    unit: str
+    description: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class TestTypeHierarchy(TestTypeOut):
+    children: List["TestTypeHierarchy"] = []
+
+TestTypeHierarchy.model_rebuild()

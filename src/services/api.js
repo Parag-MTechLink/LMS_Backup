@@ -54,8 +54,21 @@ api.interceptors.response.use(
                 message,
             });
         }
+        
         if (error.response?.status === 401) {
-            localStorage.removeItem('authToken');
+            // Graceful 401 handling:
+            // Only clear auth and redirect if a token was actually sent and rejected as invalid/expired.
+            const hasAuthHeader = error.config && error.config.headers && error.config.headers.Authorization;
+            if (hasAuthHeader) {
+                localStorage.removeItem('authToken');
+                // Also remove other potential user context keys
+                localStorage.removeItem('user'); 
+                
+                // Prevent infinite loop if already on login page
+                if (window.location.pathname !== '/login') {
+                    window.location.href = '/login';
+                }
+            }
         }
         return Promise.reject(new Error(message));
     }

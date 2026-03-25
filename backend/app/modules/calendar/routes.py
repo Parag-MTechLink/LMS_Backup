@@ -100,6 +100,17 @@ def get_events(
     )
 
 
+# Utility Endpoints (Must be before {id} routes)
+@router.get("/events/search/{query}", response_model=List[schemas.CalendarEventResponse])
+def search_events(
+    query: str,
+    limit: int = Query(50, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    """Search events by title, description, or location"""
+    return crud.search_events(db, query, limit)
+
+
 @router.get("/events/{event_id}", response_model=schemas.CalendarEventResponse)
 def get_event(
     event_id: int,
@@ -137,12 +148,4 @@ def delete_event(
     return None
 
 
-# Utility Endpoints
-@router.get("/events/search/{query}", response_model=List[schemas.CalendarEventResponse])
-def search_events(
-    query: str,
-    limit: int = Query(50, ge=1, le=100),
-    db: Session = Depends(get_db)
-):
-    """Search events by title, description, or location"""
-    return crud.search_events(db, query, limit)
+

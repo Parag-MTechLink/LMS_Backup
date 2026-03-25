@@ -16,6 +16,8 @@ def _is_public_path(path: str) -> bool:
         return True
     if path.startswith("/api/v1/auth"):
         return True
+    if path.startswith("/api/v1/uploads"):
+        return True
     return False
 
 
