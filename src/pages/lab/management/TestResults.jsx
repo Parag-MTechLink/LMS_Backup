@@ -120,18 +120,17 @@ function TestResults() {
         toast.loading(`Downloading report for Result #${result.id}...`, { id: `dl-${result.id}` })
         const url = result.attachments[0]
         const res = await apiService.client.get(url, { responseType: 'blob' })
-        const blobUrl = URL.createObjectURL(res.data)
+        const blob = res instanceof Blob ? res : new Blob([res])
+        const blobUrl = URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = blobUrl
         
-        const contentDisposition = res.headers['content-disposition']
+        // Use "TestPlanName - ExecutionName" for the filename
+        const planName = result.testPlanName !== '-' ? result.testPlanName : 'Plan'
+        const execName = result.executionName ? result.executionName : `Execution_${result.executionNumber || result.testExecutionId}`
+        const sanitized = `${planName} - ${execName}`.replace(/[/\\?%*:|"<>]/g, '-').replace(/\s+/g, '_')
         const urlExt = url.split('.').pop().split(/#|\?/)[0]
-        let filename = `Report_${result?.id || 'doc'}${urlExt && urlExt.length <= 4 ? '.' + urlExt : ''}`
-        
-        if (contentDisposition) {
-            const match = contentDisposition.match(/filename="?([^"]+)"?/)
-            if (match && match[1]) filename = match[1]
-        }
+        const filename = `${sanitized}${urlExt && urlExt.length <= 4 ? '.' + urlExt : ''}`
         
         link.setAttribute('download', filename)
         document.body.appendChild(link)

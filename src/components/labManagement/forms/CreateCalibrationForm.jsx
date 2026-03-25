@@ -99,7 +99,7 @@ export default function CreateCalibrationForm({ calibration, instruments, onSucc
         try {
           const docResponse = await documentsService.create(fileData)
           // Store the internal download link
-          finalCertificateUrl = `/api/v1/documents/${docResponse.id}/download`
+          finalCertificateUrl = `/documents/${docResponse.id}/download`
         } catch (uploadError) {
           toast.error('Failed to upload certificate file')
           setLoading(false)

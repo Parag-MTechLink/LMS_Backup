@@ -227,6 +227,8 @@ function MappingWizard({ crmCustomerId, onClose, onMigrated }) {
   const [preview, setPreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [manualEmail, setManualEmail] = useState('')
+  const [isDiscarding, setIsDiscarding] = useState(false)
 
   useEffect(() => {
     lockScroll();
@@ -236,7 +238,7 @@ function MappingWizard({ crmCustomerId, onClose, onMigrated }) {
   useEffect(() => {
     if (!crmCustomerId) return
     setLoading(true)
-    apiService.get(`/api/v1/crm/customers/${crmCustomerId}/fields`)
+    apiService.get(`/crm/customers/${crmCustomerId}/fields`)
       .then(data => {
         setFieldsData(data)
         const init = {}
@@ -253,7 +255,11 @@ function MappingWizard({ crmCustomerId, onClose, onMigrated }) {
   const runPreview = async () => {
     setBusy(true)
     try {
-      const result = await apiService.post(`/api/v1/crm/customers/${crmCustomerId}/preview`, { mappings: buildPayload() })
+      const payload = { 
+        mappings: buildPayload(),
+        overrides: manualEmail ? { email: manualEmail } : null
+      }
+      const result = await apiService.post(`/crm/customers/${crmCustomerId}/preview`, payload)
       setPreview(result); setStep(2)
     } catch (err) { toast.error(err?.message || 'Preview failed') }
     finally { setBusy(false) }
@@ -262,11 +268,26 @@ function MappingWizard({ crmCustomerId, onClose, onMigrated }) {
   const doMigrate = async () => {
     setBusy(true)
     try {
-      const result = await apiService.post(`/api/v1/crm/customers/${crmCustomerId}/migrate`, { mappings: buildPayload() })
+      const payload = { 
+        mappings: buildPayload(),
+        overrides: manualEmail ? { email: manualEmail } : null
+      }
+      const result = await apiService.post(`/crm/customers/${crmCustomerId}/migrate`, payload)
       toast.success(result.message || 'Migration successful!')
       setStep(3); onMigrated(crmCustomerId)
     } catch (err) { toast.error(err?.message || 'Migration failed') }
     finally { setBusy(false) }
+  }
+
+  const handleDiscard = async () => {
+    if (!window.confirm('Discard this record? It will be moved to "Skipped" and hidden from pending lists.')) return
+    setIsDiscarding(true)
+    try {
+      await apiService.post(`/crm/customers/${crmCustomerId}/skip`)
+      toast.success('Record discarded')
+      onClose(); onMigrated(crmCustomerId)
+    } catch (err) { toast.error('Failed to discard: ' + err.message) }
+    finally { setIsDiscarding(false) }
   }
 
   const handleMap = (crmField, lmsField) => {
@@ -278,6 +299,11 @@ function MappingWizard({ crmCustomerId, onClose, onMigrated }) {
   }
 
   const emailMapped = Object.values(mappings).includes('email')
+  
+  // Find the mapped email value from raw data
+  const mappedEmailField = Object.keys(mappings).find(k => mappings[k] === 'email')
+  const rawEmailValue = mappedEmailField ? fieldsData?.crm_fields.find(f => f.crm_field === mappedEmailField)?.sample_value : null
+  const hasValidEmail = (emailMapped && rawEmailValue) || manualEmail 
 
   return createPortal(
     <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-xl overscroll-none">
@@ -298,7 +324,35 @@ function MappingWizard({ crmCustomerId, onClose, onMigrated }) {
             </table>
            ) : step === 1 ? (
              <div className="space-y-4">
-                {!emailMapped && <div className="p-2 bg-amber-50 text-amber-700 text-[10px] font-bold rounded border border-amber-100 uppercase">Email must be mapped to migrate</div>}
+                 {!emailMapped && (
+                   <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 space-y-2">
+                     <div className="text-[10px] font-bold text-amber-700 uppercase tracking-wider flex items-center gap-2">
+                       <AlertCircle className="w-3 h-3" /> No Email Field Mapped
+                     </div>
+                     <p className="text-[10px] text-amber-600">Please map a CRM field to "Email" or provide a manual email below to migrate this record.</p>
+                   </div>
+                 )}
+                 {emailMapped && !rawEmailValue && !manualEmail && (
+                   <div className="p-3 bg-red-50 rounded-xl border border-red-100 space-y-2">
+                     <div className="text-[10px] font-bold text-red-700 uppercase tracking-wider flex items-center gap-2">
+                       <AlertCircle className="w-3 h-3" /> Mapped Email Field is Empty
+                     </div>
+                     <p className="text-[10px] text-red-600">The field you mapped to "Email" is empty for this record. Please provide a manual email below.</p>
+                   </div>
+                 )}
+
+                 {(!emailMapped || (emailMapped && !rawEmailValue)) && (
+                   <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100 space-y-2">
+                     <label className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">Manual Email Entry</label>
+                     <input 
+                       type="email" 
+                       value={manualEmail} 
+                       onChange={e => setManualEmail(e.target.value)}
+                       placeholder="Enter customer email address..."
+                       className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20"
+                     />
+                   </div>
+                 )}
                 <div className="rounded-2xl border border-gray-100 overflow-hidden shadow-sm bg-white">
                   <table className="w-full text-left bg-white">
                     <thead className="bg-gray-50 uppercase text-[10px] font-bold text-gray-400">
@@ -317,7 +371,7 @@ function MappingWizard({ crmCustomerId, onClose, onMigrated }) {
                             </div>
                           </td>
                           <td className="px-5 py-3 text-right">
-                            <select value={mappings[f.crm_field]||''} onChange={e=>handleMapChange ? handleMap(f.crm_field, e.target.value) : handleMap(f.crm_field, e.target.value)} 
+                            <select value={mappings[f.crm_field]||''} onChange={e=>handleMap(f.crm_field, e.target.value)} 
                               className="bg-white border border-gray-200 rounded-lg p-1.5 text-xs font-semibold focus:ring-2 focus:ring-blue-500/20 outline-none min-w-[150px]">
                               <option value="">— Skip —</option>
                               {LMS_FIELDS.map(lf=>(<option key={lf} value={lf}>{LMS_FIELD_LABELS[lf]}</option>))}
@@ -348,7 +402,14 @@ function MappingWizard({ crmCustomerId, onClose, onMigrated }) {
           {step < 3 ? (
             <>
               <button onClick={step===0 ? onClose : ()=>setStep(s=>s-1)} className="text-xs font-bold text-gray-500 hover:text-gray-900">{step===0?'Cancel':'Back'}</button>
-              <button onClick={step===0?()=>setStep(1):step===1?runPreview:doMigrate} disabled={busy || (step===1 && !emailMapped)}
+              
+              {step < 2 && (
+                <button onClick={handleDiscard} disabled={isDiscarding} className="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1">
+                  {isDiscarding ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />} Discard Record
+                </button>
+              )}
+
+              <button onClick={step===0?()=>setStep(1):step===1?runPreview:doMigrate} disabled={busy || (step===1 && !hasValidEmail)}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 disabled:opacity-50">
                 {busy && <RefreshCw className="w-3 h-3 animate-spin mr-1 inline" />}{step===2?'Confirm Migration':'Next'}
               </button>
@@ -387,7 +448,7 @@ function CRMImportModal({ onClose, onSuccess, connections, onConnect, onSync, on
   const executeMigration = async (finalMappings) => {
     setProcessing(true);
     try {
-      const res = await apiService.post('/api/v1/crm/import-and-migrate', {
+      const res = await apiService.post('/crm/import-and-migrate', {
         source_system: sourceType === 'file' ? 'manual_import' : sourceType,
         records,
         mappings: finalMappings
@@ -742,10 +803,10 @@ function MappingSettingsSection() {
   const loadAll = useCallback(async () => {
     setLoading(true)
     try {
-      const allCrm = await apiService.get('/api/v1/crm/customers')
+      const allCrm = await apiService.get('/crm/customers')
       const sources = Array.from(new Set(allCrm.map(c => c.source_system)))
       const results = await Promise.allSettled(
-        sources.map(s => apiService.get(`/api/v1/crm/mappings/${s}`).then(d => ({ s, d: d || [] })))
+        sources.map(s => apiService.get(`/crm/mappings/${s}`).then(d => ({ s, d: d || [] })))
       )
       const m = {}
       for (const r of results) if (r.status === 'fulfilled') m[r.value.s] = r.value.d
@@ -758,7 +819,7 @@ function MappingSettingsSection() {
 
   const handleDelete = async (mappingId, source) => {
     try {
-      await apiService.delete(`/api/v1/crm/mappings/${mappingId}`)
+      await apiService.delete(`/crm/mappings/${mappingId}`)
       setMappingsBySource(prev => ({ ...prev, [source]: prev[source].filter(m => m.id !== mappingId) }))
       toast.success('Mapping removed')
     } catch (err) { toast.error(err?.message || 'Failed') }
@@ -831,8 +892,8 @@ function CRMManagerTab({ canManage }) {
   const load = useCallback(async () => {
     try {
       const [crmRes, connRes] = await Promise.all([
-        apiService.get('/api/v1/crm/customers'),
-        apiService.get('/api/v1/crm/connections')
+        apiService.get('/crm/customers'),
+        apiService.get('/crm/connections')
       ]);
       setCrmCustomers(Array.isArray(crmRes) ? crmRes : []);
       setConnections(Array.isArray(connRes) ? connRes : []);
@@ -851,7 +912,7 @@ function CRMManagerTab({ canManage }) {
       return;
     }
     try {
-      const res = await apiService.get(`/api/v1/crm/auth/${provider}`);
+      const res = await apiService.get(`/crm/auth/${provider}`);
       window.location.href = res.url;
     } catch (error) {
       toast.error(`Failed to start ${provider} authentication`);
@@ -861,7 +922,7 @@ function CRMManagerTab({ canManage }) {
   const handleSync = async (provider) => {
     setSyncing(provider);
     try {
-      const res = await apiService.post(`/api/v1/crm/sync/${provider}`);
+      const res = await apiService.post(`/crm/sync/${provider}`);
       toast.success(res.message);
       load();
     } catch (error) {
@@ -874,7 +935,7 @@ function CRMManagerTab({ canManage }) {
   const handleBulkMigrate = async () => {
     setLoading(true);
     try {
-      const res = await apiService.post('/api/v1/crm/bulk-preview');
+      const res = await apiService.post('/crm/bulk-preview');
       setBulkPreview(res);
     } catch (err) {
       toast.error('Failed to generate bulk preview');
@@ -892,7 +953,7 @@ function CRMManagerTab({ canManage }) {
     let totalSuccess = 0;
     try {
       for (const source of pendingSources) {
-        const res = await apiService.post(`/api/v1/crm/migrate-all?source_system=${encodeURIComponent(source)}`);
+        const res = await apiService.post(`/crm/migrate-all?source_system=${encodeURIComponent(source)}`);
         totalSuccess += res.success;
       }
       toast.success(`Bulk migration complete! ${totalSuccess} records migrated.`);
@@ -910,7 +971,7 @@ function CRMManagerTab({ canManage }) {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this CRM record?')) return
     try {
-      await apiService.delete(`/api/v1/crm/customers/${id}`)
+      await apiService.delete(`/crm/customers/${id}`)
       setCrmCustomers(prev => prev.filter(c => c.id !== id))
       toast.success('Record deleted')
     } catch (err) { toast.error(err?.message || 'Delete failed') }

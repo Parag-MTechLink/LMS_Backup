@@ -274,7 +274,6 @@ def quick_login(body: QuickLoginRequest, request: Request, db: Session = Depends
             "email": user.email,
             "full_name": user.full_name,
             "role": user.role,
-            "is_main": user.is_main,
             "gender": user.gender,
             "country": user.country,
             "language": user.language,

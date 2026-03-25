@@ -49,6 +49,17 @@ def delete_crm_customer(customer_id: int, db: Session = Depends(get_db)):
     db.commit()
 
 
+@router.post("/customers/{customer_id}/skip")
+def skip_crm_customer(customer_id: int, db: Session = Depends(get_db)):
+    crm = db.query(CRMCustomer).filter(CRMCustomer.id == customer_id).first()
+    if not crm:
+        raise HTTPException(status_code=404, detail="CRM customer not found")
+    crm.migration_status = "skipped"
+    db.commit()
+    return {"message": "Record marked as skipped"}
+
+
+
 @router.post("/migrate-all", response_model=BulkMigrationResponse)
 def bulk_migrate_by_source(source_system: str, db: Session = Depends(get_db)):
     """
@@ -422,11 +433,14 @@ def preview_migration(
         raise HTTPException(status_code=404, detail="CRM customer not found")
 
     mapped_fields = _apply_mappings(crm.raw_data, request.mappings)
+    if request.overrides:
+        mapped_fields.update(request.overrides)
+        
     mapped_crm_keys = {m.crm_field for m in request.mappings}
     unmapped = [f for f in (crm.raw_data or {}).keys() if f not in mapped_crm_keys]
 
     conflicts = []
-    if "email" in mapped_fields:
+    if "email" in mapped_fields and mapped_fields["email"]:
         existing = db.query(Customer).filter(
             Customer.email == mapped_fields["email"],
             Customer.crm_customer_id != customer_id,
@@ -465,6 +479,8 @@ def migrate_to_lms(
         return {"message": "Already migrated", "customer_id": crm.mapped_customer_id}
 
     mapped_fields = _apply_mappings(crm.raw_data, request.mappings)
+    if request.overrides:
+        mapped_fields.update(request.overrides)
 
     if "email" not in mapped_fields or not mapped_fields["email"]:
         raise HTTPException(status_code=400, detail="'email' field must be mapped before migrating")

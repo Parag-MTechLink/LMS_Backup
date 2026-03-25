@@ -1,6 +1,6 @@
 import { apiService } from './labManagementApi';
 
-const BASE_URL = '/api/v1/scope-management';
+const BASE_URL = '/scope-management';
 
 console.log('scopeManagementService.js initialized with BASE_URL:', BASE_URL);
 
