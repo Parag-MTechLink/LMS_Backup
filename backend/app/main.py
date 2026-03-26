@@ -76,7 +76,7 @@ async def lifespan(app: FastAPI):
             conn.execute(text("ALTER TABLE public.estimations ADD COLUMN IF NOT EXISTS details JSONB DEFAULT '{}'::jsonb;"))
             conn.execute(text("ALTER TABLE public.rfqs ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;"))
             conn.execute(text("ALTER TABLE public.rfqs ADD COLUMN IF NOT EXISTS rfq_file_path VARCHAR;"))
-            conn.execute(text("ALTER TABLE public.rfq_requests ADD COLUMN IF NOT EXISTS rfq_file_path VARCHAR;"))
+            conn.execute(text("ALTER TABLE public.calibrations ADD COLUMN IF NOT EXISTS calibration_method VARCHAR;"))
         logging.getLogger("app").info("Database columns verified in public schema.")
     except Exception as e:
         logging.getLogger("app").warning(f"Failed to add columns to public schema: {e}")

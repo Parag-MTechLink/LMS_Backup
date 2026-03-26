@@ -189,13 +189,15 @@ function Certifications() {
         title="Create New Certification"
         size="lg"
       >
-        <CreateCertificationForm
-          onSuccess={() => {
-            setShowCreateModal(false)
-            loadCertifications()
-          }}
-          onCancel={() => setShowCreateModal(false)}
-        />
+        {showCreateModal && (
+          <CreateCertificationForm
+            onSuccess={() => {
+              setShowCreateModal(false)
+              loadCertifications()
+            }}
+            onCancel={() => setShowCreateModal(false)}
+          />
+        )}
       </Modal>
     </div>
   )

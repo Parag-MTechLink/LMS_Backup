@@ -292,18 +292,20 @@ function InventoryInstruments() {
         title={selectedInstrument ? 'Edit Instrument' : 'Add New Instrument'}
         size="lg"
       >
-        <CreateInstrumentForm
-          instrument={selectedInstrument}
-          onSuccess={() => {
-            setShowCreateModal(false)
-            setSelectedInstrument(null)
-            loadInstruments()
-          }}
-          onCancel={() => {
-            setShowCreateModal(false)
-            setSelectedInstrument(null)
-          }}
-        />
+        {showCreateModal && (
+          <CreateInstrumentForm
+            instrument={selectedInstrument}
+            onSuccess={() => {
+              setShowCreateModal(false)
+              setSelectedInstrument(null)
+              loadInstruments()
+            }}
+            onCancel={() => {
+              setShowCreateModal(false)
+              setSelectedInstrument(null)
+            }}
+          />
+        )}
       </Modal>
     </div>
   )

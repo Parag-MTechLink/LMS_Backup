@@ -205,7 +205,9 @@ function LMSCustomersTab({ canManage }) {
       </div>
 
       <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="Add Customer" size="lg" showCloseIcon={false}>
-        <CreateCustomerForm onSuccess={() => { setShowCreateModal(false); load() }} onCancel={() => setShowCreateModal(false)} />
+        {showCreateModal && (
+          <CreateCustomerForm onSuccess={() => { setShowCreateModal(false); load() }} onCancel={() => setShowCreateModal(false)} />
+        )}
       </Modal>
       <Modal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} title="" size="lg" showCloseIcon={false}>
         <CustomerProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} customer={selectedCustomer} onUpdate={load} />

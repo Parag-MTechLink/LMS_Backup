@@ -359,18 +359,20 @@ function InventoryTransactions() {
         title={selectedTransaction ? 'Edit Transaction' : 'Create New Transaction'}
         size="lg"
       >
-        <CreateTransactionForm
-          transaction={selectedTransaction}
-          onSuccess={() => {
-            setShowCreateModal(false)
-            setSelectedTransaction(null)
-            loadTransactions()
-          }}
-          onCancel={() => {
-            setShowCreateModal(false)
-            setSelectedTransaction(null)
-          }}
-        />
+        {showCreateModal && (
+          <CreateTransactionForm
+            transaction={selectedTransaction}
+            onSuccess={() => {
+              setShowCreateModal(false)
+              setSelectedTransaction(null)
+              loadTransactions()
+            }}
+            onCancel={() => {
+              setShowCreateModal(false)
+              setSelectedTransaction(null)
+            }}
+          />
+        )}
       </Modal>
     </div>
   )

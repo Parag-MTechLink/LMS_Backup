@@ -350,18 +350,20 @@ function QANCCAPA() {
         title={selectedNC ? 'Edit NC/CAPA' : 'New NC/CAPA'}
         size="lg"
       >
-        <CreateNCCAPAForm
-          ncCapa={selectedNC}
-          onSuccess={() => {
-            setShowCreateModal(false)
-            setSelectedNC(null)
-            loadNCCapas()
-          }}
-          onCancel={() => {
-            setShowCreateModal(false)
-            setSelectedNC(null)
-          }}
-        />
+        {showCreateModal && (
+          <CreateNCCAPAForm
+            ncCapa={selectedNC}
+            onSuccess={() => {
+              setShowCreateModal(false)
+              setSelectedNC(null)
+              loadNCCapas()
+            }}
+            onCancel={() => {
+              setShowCreateModal(false)
+              setSelectedNC(null)
+            }}
+          />
+        )}
       </Modal>
     </div>
   )

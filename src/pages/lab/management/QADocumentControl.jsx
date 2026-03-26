@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { Plus, Search, FolderOpen, Lock, Unlock, Download, Eye, Trash2, FileCheck, ArrowLeft } from 'lucide-react'
-import { documentControlService, trfsService } from '../../../services/labManagementApi'
+import { documentControlService, trfsService, getDownloadUrl } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Button from '../../../components/labManagement/Button'
@@ -285,7 +285,7 @@ function QADocumentControl() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => window.open(doc.documentUrl, '_blank')}
+                              onClick={() => window.open(getDownloadUrl(doc.documentUrl), '_blank')}
                               className="flex-1"
                             >
                               <Download className="w-4 h-4 mr-1" />
@@ -470,18 +470,20 @@ function QADocumentControl() {
         title={selectedDocument ? 'Edit Document' : 'Add New Document'}
         size="lg"
       >
-        <CreateDocumentForm
-          document={selectedDocument}
-          onSuccess={() => {
-            setShowCreateModal(false)
-            setSelectedDocument(null)
-            loadDocuments()
-          }}
-          onCancel={() => {
-            setShowCreateModal(false)
-            setSelectedDocument(null)
-          }}
-        />
+        {showCreateModal && (
+          <CreateDocumentForm
+            document={selectedDocument}
+            onSuccess={() => {
+              setShowCreateModal(false)
+              setSelectedDocument(null)
+              loadDocuments()
+            }}
+            onCancel={() => {
+              setShowCreateModal(false)
+              setSelectedDocument(null)
+            }}
+          />
+        )}
       </Modal>
     </div>
   )

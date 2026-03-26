@@ -182,13 +182,15 @@ function NCRs() {
         title="Create New NCR"
         size="lg"
       >
-        <CreateNCRForm
-          onSuccess={() => {
-            setShowCreateModal(false)
-            loadNCRs()
-          }}
-          onCancel={() => setShowCreateModal(false)}
-        />
+        {showCreateModal && (
+          <CreateNCRForm
+            onSuccess={() => {
+              setShowCreateModal(false)
+              loadNCRs()
+            }}
+            onCancel={() => setShowCreateModal(false)}
+          />
+        )}
       </Modal>
     </div>
   )

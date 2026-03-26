@@ -252,19 +252,21 @@ function InventoryCalibration() {
         title={selectedCalibration ? 'Edit Calibration' : 'Add New Calibration'}
         size="lg"
       >
-        <CreateCalibrationForm
-          calibration={selectedCalibration}
-          instruments={instruments}
-          onSuccess={() => {
-            setShowCreateModal(false)
-            setSelectedCalibration(null)
-            loadData()
-          }}
-          onCancel={() => {
-            setShowCreateModal(false)
-            setSelectedCalibration(null)
-          }}
-        />
+        {showCreateModal && (
+          <CreateCalibrationForm
+            calibration={selectedCalibration}
+            instruments={instruments}
+            onSuccess={() => {
+              setShowCreateModal(false)
+              setSelectedCalibration(null)
+              loadData()
+            }}
+            onCancel={() => {
+              setShowCreateModal(false)
+              setSelectedCalibration(null)
+            }}
+          />
+        )}
       </Modal>
     </div>
   )

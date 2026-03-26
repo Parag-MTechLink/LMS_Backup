@@ -343,13 +343,15 @@ function TestPlans() {
         title="Create Test Plan"
         size="lg"
       >
-        <CreateTestPlanForm
-          onSuccess={() => {
-            setShowCreateModal(false)
-            loadTestPlans()
-          }}
-          onCancel={() => setShowCreateModal(false)}
-        />
+        {showCreateModal && (
+          <CreateTestPlanForm
+            onSuccess={() => {
+              setShowCreateModal(false)
+              loadTestPlans()
+            }}
+            onCancel={() => setShowCreateModal(false)}
+          />
+        )}
       </Modal>
 
       {/* Sample Plan Modal */}

@@ -491,20 +491,22 @@ function Projects() {
         title={selectedProject ? "Edit Project" : "Create New Project"}
         size="lg"
       >
-        <CreateProjectForm
-          project={selectedProject}
-          estimationId={searchParams.get('createFromEstimation')}
-          customerId={searchParams.get('customerId')}
-          onSuccess={() => {
-            setShowCreateModal(false)
-            setSelectedProject(null)
-            loadProjects()
-          }}
-          onCancel={() => {
-            setShowCreateModal(false)
-            setSelectedProject(null)
-          }}
-        />
+        {(showCreateModal || !!selectedProject) && (
+          <CreateProjectForm
+            project={selectedProject}
+            estimationId={searchParams.get('createFromEstimation')}
+            customerId={searchParams.get('customerId')}
+            onSuccess={() => {
+              setShowCreateModal(false)
+              setSelectedProject(null)
+              loadProjects()
+            }}
+            onCancel={() => {
+              setShowCreateModal(false)
+              setSelectedProject(null)
+            }}
+          />
+        )}
       </Modal>
 
       <ConfirmDeleteModal

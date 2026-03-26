@@ -308,13 +308,15 @@ function QAAuditCompliance() {
         title="New Audit"
         size="lg"
       >
-        <CreateQAAuditForm
-          onSuccess={() => {
-            setShowCreateModal(false)
-            loadAudits()
-          }}
-          onCancel={() => setShowCreateModal(false)}
-        />
+        {showCreateModal && (
+          <CreateQAAuditForm
+            onSuccess={() => {
+              setShowCreateModal(false)
+              loadAudits()
+            }}
+            onCancel={() => setShowCreateModal(false)}
+          />
+        )}
       </Modal>
 
       {/* Details Modal */}

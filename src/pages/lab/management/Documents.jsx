@@ -8,7 +8,7 @@ import {
   FileText,
   Download,
 } from 'lucide-react'
-import { documentsService } from '../../../services/labManagementApi'
+import { documentsService, getDownloadUrl } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 
 import Card from '../../../components/labManagement/Card'
@@ -50,36 +50,22 @@ function Documents() {
   // ========================
   // View document
   // ========================
-  const handleView = async (doc) => {
-    try {
-      const blob = await documentsService.download(doc.id)
-      const url = window.URL.createObjectURL(blob)
-      window.open(url, '_blank')
-    } catch (error) {
-      console.error(error)
-      toast.error('Failed to view document')
+  const handleView = (doc) => {
+    if (doc.file_path) {
+      window.open(getDownloadUrl(doc.file_path), '_blank')
+    } else {
+      toast.error('File not found')
     }
   }
 
   // ========================
   // Download document
   // ========================
-  const handleDownload = async (doc) => {
-    try {
-      const blob = await documentsService.download(doc.id)
-      const url = window.URL.createObjectURL(blob)
-
-      const a = document.createElement('a')
-      a.href = url
-      a.download = doc.name || `document-${doc.id}`
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-
-      window.URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error(error)
-      toast.error('Failed to download document')
+  const handleDownload = (doc) => {
+    if (doc.file_path) {
+      window.open(getDownloadUrl(doc.file_path), '_blank')
+    } else {
+      toast.error('File not found')
     }
   }
 
@@ -237,13 +223,15 @@ function Documents() {
         title="Upload Document"
         size="lg"
       >
-        <UploadDocumentForm
-          onSuccess={() => {
-            setShowUploadModal(false)
-            loadDocuments()
-          }}
-          onCancel={() => setShowUploadModal(false)}
-        />
+        {showUploadModal && (
+          <UploadDocumentForm
+            onSuccess={() => {
+              setShowUploadModal(false)
+              loadDocuments()
+            }}
+            onCancel={() => setShowUploadModal(false)}
+          />
+        )}
       </Modal>
     </div>
   )

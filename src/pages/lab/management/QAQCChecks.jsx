@@ -293,13 +293,15 @@ function QAQCChecks() {
         title="Add New QC Check"
         size="lg"
       >
-        <CreateQCForm
-          onSuccess={() => {
-            setShowCreateModal(false)
-            loadQCChecks()
-          }}
-          onCancel={() => setShowCreateModal(false)}
-        />
+        {showCreateModal && (
+          <CreateQCForm
+            onSuccess={() => {
+              setShowCreateModal(false)
+              loadQCChecks()
+            }}
+            onCancel={() => setShowCreateModal(false)}
+          />
+        )}
       </Modal>
 
       {/* Record Result Modal */}
@@ -312,18 +314,20 @@ function QAQCChecks() {
         title={`Record QC Result - ${selectedQC?.qcId}`}
         size="md"
       >
-        <RecordQCResultForm
-          qcCheck={selectedQC}
-          onSuccess={() => {
-            setShowRecordModal(false)
-            setSelectedQC(null)
-            loadQCChecks()
-          }}
-          onCancel={() => {
-            setShowRecordModal(false)
-            setSelectedQC(null)
-          }}
-        />
+        {showRecordModal && (
+          <RecordQCResultForm
+            qcCheck={selectedQC}
+            onSuccess={() => {
+              setShowRecordModal(false)
+              setSelectedQC(null)
+              loadQCChecks()
+            }}
+            onCancel={() => {
+              setShowRecordModal(false)
+              setSelectedQC(null)
+            }}
+          />
+        )}
       </Modal>
     </div>
   )

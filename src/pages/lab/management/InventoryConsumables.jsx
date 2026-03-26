@@ -287,18 +287,20 @@ function InventoryConsumables() {
         title={selectedConsumable ? 'Edit Item' : 'Add New Item'}
         size="lg"
       >
-        <CreateConsumableForm
-          consumable={selectedConsumable}
-          onSuccess={() => {
-            setShowCreateModal(false)
-            setSelectedConsumable(null)
-            loadConsumables()
-          }}
-          onCancel={() => {
-            setShowCreateModal(false)
-            setSelectedConsumable(null)
-          }}
-        />
+        {showCreateModal && (
+          <CreateConsumableForm
+            consumable={selectedConsumable}
+            onSuccess={() => {
+              setShowCreateModal(false)
+              setSelectedConsumable(null)
+              loadConsumables()
+            }}
+            onCancel={() => {
+              setShowCreateModal(false)
+              setSelectedConsumable(null)
+            }}
+          />
+        )}
       </Modal>
     </div>
   )

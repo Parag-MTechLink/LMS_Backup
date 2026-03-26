@@ -97,6 +97,24 @@ export default function CreateSOPForm({ sop, onSuccess, onCancel }) {
       const linkedInstruments = linkedInstrumentsInput.split(',').map(i => i.trim()).filter(i => i)
       const linkedDepartments = linkedDepartmentsInput.split(',').map(d => d.trim()).filter(d => d)
 
+      // Handle file upload if it's a File object
+      let uploadedUrl = formData.documentUrl
+      if (formData.documentUrl instanceof File) {
+        try {
+          const uploadRes = await sopService.upload(formData.documentUrl)
+          if (uploadRes.success && uploadRes.file_url) {
+            uploadedUrl = uploadRes.file_url
+          } else {
+            throw new Error('Failed to get file URL from server')
+          }
+        } catch (uploadError) {
+          console.error('File upload failed:', uploadError)
+          toast.error('Failed to upload document. Please try again.')
+          setLoading(false)
+          return
+        }
+      }
+
       // Prepare submit data with proper null handling
       const submitData = {
         sopId: formData.sopId || undefined,
@@ -107,8 +125,8 @@ export default function CreateSOPForm({ sop, onSuccess, onCancel }) {
         effectiveDate: formData.effectiveDate,
         nextReviewDate: formData.nextReviewDate || null,
         approvedBy: formData.approvedBy,
-        // Don't send File objects - only send string URLs or null
-        documentUrl: (formData.documentUrl && typeof formData.documentUrl === 'string') ? formData.documentUrl : null,
+        // Send the uploaded URL or existing string URL
+        documentUrl: (uploadedUrl && typeof uploadedUrl === 'string') ? uploadedUrl : null,
         linkedTests: linkedTests.length > 0 ? linkedTests : null,
         linkedInstruments: linkedInstruments.length > 0 ? linkedInstruments : null,
         linkedDepartments: linkedDepartments.length > 0 ? linkedDepartments : null,
