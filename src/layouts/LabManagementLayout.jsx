@@ -35,9 +35,9 @@ import {
 import { useLabManagementAuth } from '../contexts/LabManagementAuthContext'
 import logo from '../assets/techlink-logo.svg'
 import LiveClock from '../components/labManagement/LiveClock'
-import { 
-  instrumentsService, 
-  projectsService, 
+import {
+  instrumentsService,
+  projectsService,
   testPlansService,
   rfqsService,
   samplesService,
@@ -53,7 +53,6 @@ const allNavItems = [
   { name: 'RFQs', href: '/lab/management/rfqs', icon: FileText },
   { name: 'Customers', href: '/lab/management/customers', icon: Users },
   { name: 'Projects', href: '/lab/management/projects', icon: FolderKanban },
-  { name: 'Test Cases', href: '/lab/management/scope-management', icon: Target },
   { name: 'Test Plans', href: '/lab/management/test-plans', icon: FlaskConical },
   { name: 'Test Executions', href: '/lab/management/test-executions', icon: Play },
   { name: 'Test Results', href: '/lab/management/test-results', icon: BarChart3 },
@@ -135,26 +134,26 @@ function LabManagementLayout() {
           if (calDate) {
             const due = new Date(calDate)
             const daysUntil = Math.round((due - now) / (1000 * 60 * 60 * 24))
-            
+
             if (cal.status === 'Overdue') {
-              built.push({ 
-                id: `cal-overdue-${cal.id}`, 
-                type: 'warning', 
-                title: 'Calibration Overdue', 
-                message: `${instName} (ID: ${cal.instrumentId}) is ${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} overdue.`, 
-                time: `${Math.abs(daysUntil)}d overdue`, 
-                read: false, 
-                link: `/lab/management/inventory/calibration?search=${encodeURIComponent(instName)}` 
+              built.push({
+                id: `cal-overdue-${cal.id}`,
+                type: 'warning',
+                title: 'Calibration Overdue',
+                message: `${instName} (ID: ${cal.instrumentId}) is ${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} overdue.`,
+                time: `${Math.abs(daysUntil)}d overdue`,
+                read: false,
+                link: `/lab/management/inventory/calibration?search=${encodeURIComponent(instName)}`
               })
             } else if (cal.status === 'Due Soon' || (daysUntil <= 7 && daysUntil >= 0)) {
-              built.push({ 
-                id: `cal-soon-${cal.id}`, 
-                type: 'warning', 
-                title: 'Calibration Due Soon', 
-                message: `${instName} (ID: ${cal.instrumentId}) calibration due in ${daysUntil} day${daysUntil !== 1 ? 's' : ''}.`, 
-                time: `In ${daysUntil}d`, 
-                read: false, 
-                link: `/lab/management/inventory/calibration?search=${encodeURIComponent(instName)}` 
+              built.push({
+                id: `cal-soon-${cal.id}`,
+                type: 'warning',
+                title: 'Calibration Due Soon',
+                message: `${instName} (ID: ${cal.instrumentId}) calibration due in ${daysUntil} day${daysUntil !== 1 ? 's' : ''}.`,
+                time: `In ${daysUntil}d`,
+                read: false,
+                link: `/lab/management/inventory/calibration?search=${encodeURIComponent(instName)}`
               })
             }
           }
@@ -352,7 +351,7 @@ function LabManagementLayout() {
           {/* User Profile */}
           <div className="p-6 border-t border-gray-200 bg-gray-50">
             <div className="flex items-center space-x-4">
-              <Link 
+              <Link
                 to="/lab/management/profile"
                 className="flex flex-1 items-center space-x-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md hover:border-primary transition-all duration-200"
               >
@@ -445,7 +444,7 @@ function LabManagementLayout() {
                                 className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.read && !notifReadState[notification.id] ? 'bg-blue-50' : 'bg-white'
                                   }`}
                                 onClick={() => {
-                                  setNotifReadState(r => ({...r, [notification.id]: true}))
+                                  setNotifReadState(r => ({ ...r, [notification.id]: true }))
                                   setNotificationsOpen(false)
                                   if (notification.link) navigate(notification.link)
                                 }}
@@ -482,11 +481,11 @@ function LabManagementLayout() {
                           <div className="p-3 border-t border-gray-200">
                             <button
                               onClick={() => {
-                                  const allRead = {}
-                                  notifications.forEach(n => allRead[n.id] = true)
-                                  setNotifReadState(allRead)
-                                  setNotificationsOpen(false)
-                                }}
+                                const allRead = {}
+                                notifications.forEach(n => allRead[n.id] = true)
+                                setNotifReadState(allRead)
+                                setNotificationsOpen(false)
+                              }}
                               className="w-full text-sm text-primary hover:text-primary-dark font-medium"
                             >
                               Mark all as read
@@ -526,8 +525,8 @@ function LabManagementLayout() {
                           <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
                         </div>
                         <div className="p-1">
-                          <Link 
-                            to="/lab/management/profile" 
+                          <Link
+                            to="/lab/management/profile"
                             className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                             onClick={() => setProfileDropdownOpen(false)}
                           >

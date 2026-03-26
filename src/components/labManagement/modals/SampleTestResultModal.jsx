@@ -126,7 +126,7 @@ function SampleTestResultModal({ isOpen, onClose, result, onUpdate }) {
                 formData.append('file', file)
 
                 const doc = await documentsService.create(formData)
-                newAttachmentUrls = [`/api/v1/documents/${doc.id}/download`]
+                newAttachmentUrls = [`/documents/${doc.id}/download`]
             }
 
             const newFields = {
@@ -245,19 +245,18 @@ function SampleTestResultModal({ isOpen, onClose, result, onUpdate }) {
                                 try {
                                     const url = result.attachments[0]
                                     const res = await apiService.client.get(url, { responseType: 'blob' })
-                                    const blobUrl = URL.createObjectURL(res.data)
+                                    // api.js unwraps response.data, so 'res' is the Blob itself
+                                    const blob = res instanceof Blob ? res : new Blob([res])
+                                    const blobUrl = URL.createObjectURL(blob)
                                     const link = document.createElement('a')
                                     link.href = blobUrl
 
-                                    const contentDisposition = res.headers['content-disposition']
-                                    // Try to get extension from URL if contentDisposition is missing
+                                    // Use "TestPlanName - ExecutionName" for the filename (sanitized)
+                                    const planName = extendedDetails.testPlanName !== '-' ? extendedDetails.testPlanName : 'Plan'
+                                    const execName = extendedDetails.executionName !== '-' ? extendedDetails.executionName : `Execution_${extendedDetails.executionNumber}`
+                                    const sanitized = `${planName} - ${execName}`.replace(/[/\\?%*:|"<>]/g, '-').replace(/\s+/g, '_')
                                     const urlExt = url.split('.').pop().split(/#|\?/)[0]
-                                    let filename = `Report_${result?.id || 'doc'}${urlExt && urlExt.length <= 4 ? '.' + urlExt : ''}`
-
-                                    if (contentDisposition) {
-                                        const match = contentDisposition.match(/filename="?([^"]+)"?/)
-                                        if (match && match[1]) filename = match[1]
-                                    }
+                                    const filename = `${sanitized}${urlExt && urlExt.length <= 4 ? '.' + urlExt : ''}`
 
                                     link.setAttribute('download', filename)
                                     document.body.appendChild(link)

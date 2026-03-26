@@ -145,10 +145,9 @@ class SalesforceProvider(CRMProvider):
             # Save to CRMCustomer
             new_records = 0
             for sf_lead in records:
-                # Deduplicate based on SF Id
                 exists = self.db.query(CRMCustomer).filter(
                     CRMCustomer.source_system == self.provider_name,
-                    CRMCustomer.raw_data['Id'].astext == sf_lead['Id']
+                    CRMCustomer.raw_data['Id'].astext == str(sf_lead['Id'])
                 ).first()
                 
                 if not exists:
@@ -243,10 +242,9 @@ class HubSpotProvider(CRMProvider):
                     "email": props.get("email"),
                     "phone": props.get("phone")
                 }
-                
                 exists = self.db.query(CRMCustomer).filter(
                     CRMCustomer.source_system == self.provider_name,
-                    CRMCustomer.raw_data['Id'].astext == contact['id']
+                    CRMCustomer.raw_data['Id'].astext == str(contact['id'])
                 ).first()
                 
                 if not exists:

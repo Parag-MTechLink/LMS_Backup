@@ -71,6 +71,7 @@ class CRMMigrateRequest(BaseModel):
     Mappings override any saved source-system mappings.
     """
     mappings: List[FieldMapping]
+    overrides: Optional[Dict[str, Any]] = None
 
 
 class MigrationPreviewResponse(BaseModel):

@@ -109,7 +109,7 @@ function UploadTestResultForm({ onSuccess, onCancel }) {
 
             // Construct download URL or path to store in attachments
             // Assuming API structure: /api/v1/documents/{id}/download
-            const attachmentUrl = `/api/v1/documents/${doc.id}/download`
+            const attachmentUrl = `/documents/${doc.id}/download`
 
             // Step 2: Create Test Result linked to Execution
             const generateULR = () => {

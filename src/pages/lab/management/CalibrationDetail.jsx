@@ -77,7 +77,7 @@ function CalibrationDetail() {
         const docId = parseInt(match[1])
         toast.loading(action === 'download' ? 'Downloading certificate...' : 'Fetching certificate preview...')
         const blobData = await documentsService.download(docId)
-        const blob = new Blob([blobData], { type: 'application/pdf' })
+        const blob = blobData instanceof Blob ? blobData : new Blob([blobData], { type: 'application/pdf' })
         const url = window.URL.createObjectURL(blob)
         
         if (action === 'download') {

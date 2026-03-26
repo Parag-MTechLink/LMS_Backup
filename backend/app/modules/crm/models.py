@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, JSON, ForeignKey, Boolean
+from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime
 from app.core.database import Base
 
@@ -17,7 +18,7 @@ class CRMCustomer(Base):
     source_system = Column(String(100), nullable=False, default="manual")  # salesforce, hubspot, csv, manual
 
     # Raw payload from the CRM — all fields preserved, no schema assumed
-    raw_data = Column(JSON, nullable=False)
+    raw_data = Column(JSONB, nullable=False)
 
     # Workflow status
     migration_status = Column(String(50), nullable=False, default="pending")
