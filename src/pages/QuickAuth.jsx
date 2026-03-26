@@ -6,7 +6,7 @@ import { useLabManagementAuth } from '../contexts/LabManagementAuthContext'
 const QUICK_EMAIL    = 'parag@millenniumtechlink.com'
 const QUICK_PASSWORD = 'Parag@11'
 const BYPASS_KEY     = 'mtl-quick-access-2026'
-const API_BASE       = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+const API_BASE       = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const STORAGE_TOKEN = 'labManagementAccessToken'

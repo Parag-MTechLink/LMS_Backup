@@ -9,6 +9,8 @@ class SampleCreate(BaseModel):
     projectId: Optional[int] = None
     projectName: Optional[str] = None
     notes: Optional[str] = None
+    quantity: Optional[int] = None
+    testDetails: Optional[str] = None
 
 class SampleResponse(SampleCreate):
     id: int

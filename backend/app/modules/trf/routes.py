@@ -16,9 +16,12 @@ router = APIRouter(
 def create_trf(
     trf: TRFCreate,
     db: Session = Depends(get_db),
-    _: User = Depends(require_permission("trf:full"))
+    current_user: User = Depends(require_permission("trf:full"))
 ):
     from app.modules.projects.models import Project  # avoid circular imports
+
+    if hasattr(current_user, "role") and current_user.role == "Quality Manager":
+        raise HTTPException(status_code=403, detail="Quality Managers cannot create TRFs.")
 
     if trf.trfNumber:
         existing = db.query(TRF).filter(TRF.trfNumber == trf.trfNumber).first()
@@ -34,6 +37,11 @@ def create_trf(
 
     new_trf = TRF(**trf_data)
     db.add(new_trf)
+    db.flush()
+
+    if not new_trf.trfNumber or not new_trf.trfNumber.strip():
+        new_trf.trfNumber = f"TRF-{new_trf.id:04d}"
+
     db.commit()
     db.refresh(new_trf)
     return new_trf

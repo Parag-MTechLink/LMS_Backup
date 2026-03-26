@@ -219,6 +219,12 @@ function Samples() {
                       {sample.storageLocation}
                     </div>
                   )}
+                  {sample.quantity && (
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Package className="w-4 h-4 mr-2" />
+                      Qty: {sample.quantity}
+                    </div>
+                  )}
                 </div>
               </Card>
             </motion.div>
