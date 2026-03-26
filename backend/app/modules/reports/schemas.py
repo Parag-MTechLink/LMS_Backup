@@ -8,6 +8,7 @@ class ReportResponse(BaseModel):
     name: str
     description: Optional[str]
     file_type: str
+    file_path: str
     status: str
     created_at: datetime
 

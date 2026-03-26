@@ -14,6 +14,20 @@ if (!API_URL && import.meta.env.PROD) {
 const DEV_DEFAULT_BACKEND = 'http://127.0.0.1:8001'
 const API_BASE_URL = API_URL || (import.meta.env.DEV ? DEV_DEFAULT_BACKEND : '')
 
+/**
+ * Construct a full download URL for a file stored on the backend.
+ * @param {string} path - The relative path from the backend (e.g., /uploads/...)
+ * @returns {string} The full absolute URL
+ */
+export const getDownloadUrl = (path) => {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  
+  // Ensure we don't have double slashes
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  return `${API_BASE_URL}${cleanPath}`
+}
+
 class ApiService {
   constructor() {
     this.client = api
@@ -156,15 +170,15 @@ export const customersService = {
   },
   getById: (id) => apiService.get(`/customers/${id}`),
   create: async (data) => {
-    clearCache('customers:')
+    clearCache('/customers')
     return await apiService.post('/customers', data)
   },
   update: async (id, data) => {
-    clearCache('customers:')
+    clearCache('/customers')
     return await apiService.put(`/customers/${id}`, data)
   },
   delete: async (id) => {
-    clearCache('customers:')
+    clearCache('/customers')
     return await apiService.delete(`/customers/${id}`)
   },
 }
@@ -173,9 +187,18 @@ export const customersService = {
 export const rfqsService = {
   getAll: () => apiService.get('/rfqs'),
   getById: (id) => apiService.get(`/rfqs/${id}`),
-  create: (data) => apiService.post('/rfqs', data),
-  delete: (id) => apiService.delete(`/rfqs/${id}`),
-  updateStatus: (id, status) => apiService.patch(`/rfqs/${id}/status`, { status }),
+  create: async (data) => {
+    clearCache('/rfqs')
+    return await apiService.post('/rfqs', data)
+  },
+  delete: async (id) => {
+    clearCache('/rfqs')
+    return await apiService.delete(`/rfqs/${id}`)
+  },
+  updateStatus: async (id, status) => {
+    clearCache('/rfqs')
+    return await apiService.patch(`/rfqs/${id}/status`, { status })
+  },
   upload: async (file) => {
     const formData = new FormData()
     formData.append('file', file)
@@ -225,12 +248,16 @@ export const rfqsService = {
 export const estimationsService = {
   getAll: () => apiService.get('/estimations'),
   getById: (id) => apiService.get(`/estimations/${id}`),
-  create: (data) => apiService.post('/estimations', data),
+  create: async (data) => {
+    clearCache('/estimations')
+    return await apiService.post('/estimations', data)
+  },
   getTestTypes: () => apiService.get('/estimations/test-types'),
   getTestTypesHierarchy: () => apiService.get('/estimations/test-types/hierarchy'),
   uploadRateChart: async (file) => {
     const formData = new FormData()
     formData.append('file', file)
+    clearCache('/estimations')
     return await apiService.post('/estimations/rate-chart/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -238,9 +265,13 @@ export const estimationsService = {
     })
   },
   review: async (id, data) => {
+    clearCache('/estimations')
     return await apiService.post(`/estimations/${id}/review`, data)
   },
-  delete: (id) => apiService.delete(`/estimations/${id}`),
+  delete: async (id) => {
+    clearCache('/estimations')
+    return await apiService.delete(`/estimations/${id}`)
+  },
   downloadRateChartTemplate: async () => {
     try {
       const res = await apiService.client.get('/uploads/Standard_Rate_Chart.pdf', { responseType: 'blob' })
@@ -276,15 +307,15 @@ export const projectsService = {
   getById: (id) => apiService.get(`/projects/${id}`),
   getActivity: (id) => apiService.get(`/projects/${id}/activity`),
   create: async (data) => {
-    clearCache('projects:')
+    clearCache('/projects')
     return await apiService.post('/projects', data)
   },
   update: async (id, data) => {
-    clearCache('projects:')
+    clearCache('/projects')
     return await apiService.put(`/projects/${id}`, data)
   },
   delete: async (id) => {
-    clearCache('projects:')
+    clearCache('/projects')
     return await apiService.delete(`/projects/${id}`)
   },
 }
@@ -336,15 +367,15 @@ export const testPlansService = {
   },
   getById: (id) => apiService.get(`/test-plans/${id}`),
   create: async (data) => {
-    clearCache('testPlans:')
+    clearCache('/test-plans')
     return await apiService.post('/test-plans', data)
   },
   update: async (id, data) => {
-    clearCache('testPlans:')
+    clearCache('/test-plans')
     return await apiService.put(`/test-plans/${id}`, data)
   },
   delete: async (id) => {
-    clearCache('testPlans:')
+    clearCache('/test-plans')
     return await apiService.delete(`/test-plans/${id}`)
   },
 }
@@ -369,19 +400,19 @@ export const testExecutionsService = {
   },
   getById: (id) => apiService.get(`/test-executions/${id}`),
   create: async (data) => {
-    clearCache('testExecutions:')
+    clearCache('/test-executions')
     return await apiService.post('/test-executions', data)
   },
   update: async (id, data) => {
-    clearCache('testExecutions:')
+    clearCache('/test-executions')
     return await apiService.put(`/test-executions/${id}`, data)
   },
   start: async (id) => {
-    clearCache('testExecutions:')
+    clearCache('/test-executions')
     return await apiService.post(`/test-executions/${id}/start`, {})
   },
   complete: async (id) => {
-    clearCache('testExecutions:')
+    clearCache('/test-executions')
     return await apiService.post(`/test-executions/${id}/complete`, {})
   },
 }
@@ -406,11 +437,11 @@ export const testResultsService = {
   },
   getById: (id) => apiService.get(`/test-results/${id}`),
   create: async (data) => {
-    clearCache('testResults:')
+    clearCache('/test-results')
     return await apiService.post('/test-results', data)
   },
   update: async (id, data) => {
-    clearCache('testResults:')
+    clearCache('/test-results')
     return await apiService.put(`/test-results/${id}`, data)
   },
 }
@@ -430,12 +461,15 @@ export const samplesService = {
   },
   getById: (id) => apiService.get(`/samples/${id}`),
   create: async (data) => {
+    clearCache('/samples')
     return await apiService.post('/samples', data)
   },
   update: async (id, data) => {
+    clearCache('/samples')
     return await apiService.put(`/samples/${id}`, data)
   },
   delete: async (id) => {
+    clearCache('/samples')
     return await apiService.delete(`/samples/${id}`)
   },
 }
@@ -455,15 +489,19 @@ export const trfsService = {
   },
   getById: (id) => apiService.get(`/trfs/${id}`),
   create: async (data) => {
+    clearCache('/trfs')
     return await apiService.post('/trfs', data)
   },
   update: async (id, data) => {
+    clearCache('/trfs')
     return await apiService.put(`/trfs/${id}`, data)
   },
   updateStatus: async (id, status, approvedBy) => {
+    clearCache('/trfs')
     return await apiService.patch(`/trfs/${id}/status`, { status, approved_by: approvedBy || null })
   },
   delete: async (id) => {
+    clearCache('/trfs')
     return await apiService.delete(`/trfs/${id}`)
   },
 }
@@ -482,6 +520,7 @@ export const documentsService = {
    * IMPORTANT: bypass apiService.post to avoid JSON header
    */
   create: async (formData) => {
+    clearCache('/documents')
     // apiService.client.post via unified api.js will auto-inject token
     const response = await apiService.client.post('/documents/', formData, {
       headers: {
@@ -509,6 +548,7 @@ export const documentsService = {
    * Delete document (future-ready)
    */
   delete: async (id) => {
+    clearCache('/documents')
     return apiService.delete(`/documents/${id}`)
   },
 }
@@ -526,6 +566,7 @@ export const reportsService = {
    * Upload report (multipart/form-data)
    */
   create: async (formData) => {
+    clearCache('/reports')
     const response = await apiService.client.post(
       '/reports',
       formData,
@@ -563,21 +604,30 @@ export const reportsService = {
 export const auditsService = {
   getAll: () => apiService.get('/audits-section'),
   getById: (id) => apiService.get(`/audits-section/${id}`),
-  create: (data) => apiService.post('/audits-section', data),
+  create: (data) => {
+    clearCache('/audits-section')
+    return apiService.post('/audits-section', data)
+  },
 }
 
 // NCRs Service
 export const ncrsService = {
   getAll: () => apiService.get('/ncrs'),
   getById: (id) => apiService.get(`/ncrs/${id}`),
-  create: (data) => apiService.post('/ncrs', data),
+  create: (data) => {
+    clearCache('/ncrs')
+    return apiService.post('/ncrs', data)
+  },
 }
 
 // Certifications Service
 export const certificationsService = {
   getAll: () => apiService.get('/certifications'),
   getById: (id) => apiService.get(`/certifications/${id}`),
-  create: (data) => apiService.post('/certifications', data),
+  create: (data) => {
+    clearCache('/certifications')
+    return apiService.post('/certifications', data)
+  },
 }
 
 // Inventory Management Services
@@ -594,19 +644,19 @@ export const instrumentsService = {
   },
   getById: (id) => apiService.get(`/instruments/${id}`),
   create: async (data) => {
-    clearCache('instruments')
+    clearCache('/instruments')
     return await apiService.post('/instruments', data)
   },
   update: async (id, data) => {
-    clearCache('instruments')
+    clearCache('/instruments')
     return await apiService.put(`/instruments/${id}`, data)
   },
   deactivate: async (id) => {
-    clearCache('instruments')
+    clearCache('/instruments')
     return await apiService.patch(`/instruments/${id}/deactivate`, {})
   },
   delete: async (id) => {
-    clearCache('instruments')
+    clearCache('/instruments')
     return await apiService.delete(`/instruments/${id}`)
   },
 }
@@ -626,15 +676,15 @@ export const calibrationsService = {
   },
   getById: (id) => apiService.get(`/calibrations/${id}`),
   create: async (data) => {
-    clearCache('calibrations')
+    clearCache('/calibrations')
     return await apiService.post('/calibrations', data)
   },
   update: async (id, data) => {
-    clearCache('calibrations')
+    clearCache('/calibrations')
     return await apiService.put(`/calibrations/${id}`, data)
   },
   delete: async (id) => {
-    clearCache('calibrations')
+    clearCache('/calibrations')
     return await apiService.delete(`/calibrations/${id}`)
   },
 }
@@ -704,14 +754,27 @@ export const sopService = {
   },
   getById: (id) => apiService.get(`/sops/${id}`),
   create: async (data) => {
+    clearCache('/sops')
     return await apiService.post('/sops', data)
   },
   update: async (id, data) => {
+    clearCache('/sops')
     return await apiService.put(`/sops/${id}`, data)
   },
   delete: async (id) => {
+    clearCache('/sops')
     return await apiService.delete(`/sops/${id}`)
   },
+  upload: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('doc_type', 'sop')
+    return await apiService.client.post('/files/upload/document', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  }
 }
 
 // Quality Control Checks Service
@@ -726,15 +789,19 @@ export const qcService = {
   },
   getById: (id) => apiService.get(`/qc-checks/${id}`),
   create: async (data) => {
+    clearCache('/qc-checks')
     return await apiService.post('/qc-checks', data)
   },
   update: async (id, data) => {
+    clearCache('/qc-checks')
     return await apiService.put(`/qc-checks/${id}`, data)
   },
   recordResult: async (id, result) => {
+    clearCache('/qc-checks')
     return await apiService.post(`/qc-checks/${id}/record-result`, result)
   },
   delete: async (id) => {
+    clearCache('/qc-checks')
     return await apiService.delete(`/qc-checks/${id}`)
   },
 }
@@ -751,12 +818,15 @@ export const auditService = {
   },
   getById: (id) => apiService.get(`/audits/${id}`),
   create: async (data) => {
+    clearCache('/audits')
     return await apiService.post('/audits', data)
   },
   update: async (id, data) => {
+    clearCache('/audits')
     return await apiService.put(`/audits/${id}`, data)
   },
   delete: async (id) => {
+    clearCache('/audits')
     return await apiService.delete(`/audits/${id}`)
   },
 }
@@ -773,15 +843,15 @@ export const consumablesService = {
   },
   getById: (id) => apiService.get(`/consumables/${id}`),
   create: async (data) => {
-    clearCache('consumables')
+    clearCache('/consumables')
     return await apiService.post('/consumables', data)
   },
   update: async (id, data) => {
-    clearCache('consumables')
+    clearCache('/consumables')
     return await apiService.put(`/consumables/${id}`, data)
   },
   delete: async (id) => {
-    clearCache('consumables')
+    clearCache('/consumables')
     return await apiService.delete(`/consumables/${id}`)
   },
 }
@@ -798,21 +868,21 @@ export const inventoryTransactionsService = {
   },
   getById: (id) => apiService.get(`/inventory-transactions/${id}`),
   create: async (data) => {
-    clearCache('inventory-transactions')
-    clearCache('consumables')
-    clearCache('instruments')
+    clearCache('/inventory-transactions')
+    clearCache('/consumables')
+    clearCache('/instruments')
     return await apiService.post('/inventory-transactions', data)
   },
   update: async (id, data) => {
-    clearCache('inventory-transactions')
-    clearCache('consumables')
-    clearCache('instruments')
+    clearCache('/inventory-transactions')
+    clearCache('/consumables')
+    clearCache('/instruments')
     return await apiService.put(`/inventory-transactions/${id}`, data)
   },
   delete: async (id) => {
-    clearCache('inventory-transactions')
-    clearCache('consumables')
-    clearCache('instruments')
+    clearCache('/inventory-transactions')
+    clearCache('/consumables')
+    clearCache('/instruments')
     return await apiService.delete(`/inventory-transactions/${id}`)
   },
 }
@@ -829,15 +899,19 @@ export const ncCapaService = {
   },
   getById: (id) => apiService.get(`/nc-capa/${id}`),
   create: async (data) => {
+    clearCache('/nc-capa')
     return await apiService.post('/nc-capa', data)
   },
   update: async (id, data) => {
+    clearCache('/nc-capa')
     return await apiService.put(`/nc-capa/${id}`, data)
   },
   close: async (id, closureData) => {
+    clearCache('/nc-capa')
     return await apiService.patch(`/nc-capa/${id}/close`, closureData)
   },
   delete: async (id) => {
+    clearCache('/nc-capa')
     return await apiService.delete(`/nc-capa/${id}`)
   },
 }
@@ -855,20 +929,35 @@ export const documentControlService = {
   },
   getById: (id) => apiService.get(`/qc-documents/${id}`),
   create: async (data) => {
+    clearCache('/qc-documents')
     return await apiService.post('/qc-documents', data)
   },
   update: async (id, data) => {
+    clearCache('/qc-documents')
     return await apiService.put(`/qc-documents/${id}`, data)
   },
   lock: async (id) => {
+    clearCache('/qc-documents')
     return await apiService.patch(`/qc-documents/${id}/lock`)
   },
   unlock: async (id) => {
+    clearCache('/qc-documents')
     return await apiService.patch(`/qc-documents/${id}/unlock`)
   },
   delete: async (id) => {
+    clearCache('/qc-documents')
     return await apiService.delete(`/qc-documents/${id}`)
   },
+  upload: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('doc_type', 'qc-document')
+    return await apiService.client.post('/files/upload/document', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  }
 }
 
 // QA Reports Service

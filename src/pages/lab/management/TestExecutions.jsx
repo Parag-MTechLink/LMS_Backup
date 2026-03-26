@@ -285,14 +285,16 @@ function TestExecutions() {
         title="Create Test Execution"
         size="lg"
       >
-        <CreateTestExecutionForm
-          testPlanId={testPlanId ? parseInt(testPlanId) : undefined}
-          onSuccess={() => {
-            setShowCreateModal(false)
-            loadExecutions()
-          }}
-          onCancel={() => setShowCreateModal(false)}
-        />
+        {showCreateModal && (
+          <CreateTestExecutionForm
+            testPlanId={testPlanId ? parseInt(testPlanId) : undefined}
+            onSuccess={() => {
+              setShowCreateModal(false)
+              loadExecutions()
+            }}
+            onCancel={() => setShowCreateModal(false)}
+          />
+        )}
       </Modal>
 
       {/* Execution Detail / Edit Modal */}

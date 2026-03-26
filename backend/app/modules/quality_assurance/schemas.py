@@ -3,7 +3,7 @@ Quality Assurance Module Pydantic Schemas
 """
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
-from datetime import date, datetime
+import datetime as py_datetime
 
 
 # ============= SOP Schemas =============
@@ -14,8 +14,8 @@ class SOPBase(BaseModel):
     category: Optional[str] = None
     version: str
     status: Optional[str] = Field(default='Active')
-    effective_date: date = Field(..., alias="effectiveDate")
-    next_review_date: Optional[date] = Field(None, alias="nextReviewDate")
+    effective_date: py_datetime.date = Field(..., alias="effectiveDate")
+    next_review_date: Optional[py_datetime.date] = Field(None, alias="nextReviewDate")
     approved_by: Optional[str] = Field(None, alias="approvedBy")
     document_url: Optional[str] = Field(None, alias="documentUrl")
     linked_tests: Optional[List[str]] = Field(None, alias="linkedTests")
@@ -36,8 +36,8 @@ class SOPUpdate(BaseModel):
     category: Optional[str] = None
     version: Optional[str] = None
     status: Optional[str] = None
-    effective_date: Optional[date] = Field(None, alias="effectiveDate")
-    next_review_date: Optional[date] = Field(None, alias="nextReviewDate")
+    effective_date: Optional[py_datetime.date] = Field(None, alias="effectiveDate")
+    next_review_date: Optional[py_datetime.date] = Field(None, alias="nextReviewDate")
     approved_by: Optional[str] = Field(None, alias="approvedBy")
     document_url: Optional[str] = Field(None, alias="documentUrl")
     linked_tests: Optional[List[str]] = Field(None, alias="linkedTests")
@@ -51,8 +51,8 @@ class SOPUpdate(BaseModel):
 
 class SOPResponse(SOPBase):
     id: int
-    created_at: datetime = Field(..., alias="createdAt")
-    updated_at: datetime = Field(..., alias="updatedAt")
+    created_at: py_datetime.datetime = Field(..., alias="createdAt")
+    updated_at: py_datetime.datetime = Field(..., alias="updatedAt")
 
     class Config:
         from_attributes = True
@@ -71,7 +71,7 @@ class DocumentBase(BaseModel):
     document_type: Optional[str] = Field(None, alias="documentType")
     version: str
     status: Optional[str] = Field(default='Active')
-    effective_date: date = Field(..., alias="effectiveDate")
+    effective_date: py_datetime.date = Field(..., alias="effectiveDate")
     approved_by: Optional[str] = Field(None, alias="approvedBy")
     access_level: Optional[str] = Field(None, alias="accessLevel")
     locked: Optional[bool] = Field(default=False)
@@ -92,7 +92,7 @@ class DocumentUpdate(BaseModel):
     document_type: Optional[str] = Field(None, alias="documentType")
     version: Optional[str] = None
     status: Optional[str] = None
-    effective_date: Optional[date] = Field(None, alias="effectiveDate")
+    effective_date: Optional[py_datetime.date] = Field(None, alias="effectiveDate")
     approved_by: Optional[str] = Field(None, alias="approvedBy")
     access_level: Optional[str] = Field(None, alias="accessLevel")
     locked: Optional[bool] = None
@@ -105,8 +105,8 @@ class DocumentUpdate(BaseModel):
 
 class DocumentResponse(DocumentBase):
     id: int
-    created_at: datetime = Field(..., alias="createdAt")
-    updated_at: datetime = Field(..., alias="updatedAt")
+    created_at: py_datetime.datetime = Field(..., alias="createdAt")
+    updated_at: py_datetime.datetime = Field(..., alias="updatedAt")
 
     class Config:
         from_attributes = True
@@ -131,7 +131,7 @@ class QCCheckBase(BaseModel):
     last_result: Optional[float] = Field(None, alias="lastResult")
     status: Optional[str] = None
     frequency: Optional[str] = None
-    last_check_date: Optional[date] = Field(None, alias="lastCheckDate")
+    last_check_date: Optional[py_datetime.date] = Field(None, alias="lastCheckDate")
     deviation: Optional[bool] = Field(default=False)
     trend: Optional[List[Dict[str, Any]]] = None
 
@@ -152,7 +152,7 @@ class QCCheckUpdate(BaseModel):
     last_result: Optional[float] = Field(None, alias="lastResult")
     status: Optional[str] = None
     frequency: Optional[str] = None
-    last_check_date: Optional[date] = Field(None, alias="lastCheckDate")
+    last_check_date: Optional[py_datetime.date] = Field(None, alias="lastCheckDate")
     deviation: Optional[bool] = None
     trend: Optional[List[Dict[str, Any]]] = None
 
@@ -171,11 +171,11 @@ class QCCheckResponse(BaseModel):
     last_result: Optional[float] = Field(None, alias="lastResult")
     status: Optional[str] = None
     frequency: Optional[str] = None
-    last_check_date: Optional[date] = Field(None, alias="lastCheckDate")
+    last_check_date: Optional[py_datetime.date] = Field(None, alias="lastCheckDate")
     deviation: Optional[bool] = None
     trend: Optional[List[Dict[str, Any]]] = None
-    created_at: datetime = Field(..., alias="createdAt")
-    updated_at: datetime = Field(..., alias="updatedAt")
+    created_at: py_datetime.datetime = Field(..., alias="createdAt")
+    updated_at: py_datetime.datetime = Field(..., alias="updatedAt")
 
     class Config:
         from_attributes = True
@@ -192,8 +192,8 @@ class NCCAPABase(BaseModel):
     status: Optional[str] = Field(default='Open')
     impacted_area: Optional[str] = Field(None, alias="impactedArea")
     action_owner: Optional[str] = Field(None, alias="actionOwner")
-    due_date: date = Field(..., alias="dueDate")
-    closure_date: Optional[date] = Field(None, alias="closureDate")
+    due_date: py_datetime.date = Field(..., alias="dueDate")
+    closure_date: Optional[py_datetime.date] = Field(None, alias="closureDate")
     root_cause: Optional[str] = Field(None, alias="rootCause")
     corrective_action: Optional[str] = Field(None, alias="correctiveAction")
     preventive_action: Optional[str] = Field(None, alias="preventiveAction")
@@ -212,8 +212,8 @@ class NCCAPAUpdate(BaseModel):
     status: Optional[str] = None
     impacted_area: Optional[str] = Field(None, alias="impactedArea")
     action_owner: Optional[str] = Field(None, alias="actionOwner")
-    due_date: Optional[date] = Field(None, alias="dueDate")
-    closure_date: Optional[date] = Field(None, alias="closureDate")
+    due_date: Optional[py_datetime.date] = Field(None, alias="dueDate")
+    closure_date: Optional[py_datetime.date] = Field(None, alias="closureDate")
     root_cause: Optional[str] = Field(None, alias="rootCause")
     corrective_action: Optional[str] = Field(None, alias="correctiveAction")
     preventive_action: Optional[str] = Field(None, alias="preventiveAction")
@@ -224,8 +224,8 @@ class NCCAPAUpdate(BaseModel):
 
 class NCCAPAResponse(NCCAPABase):
     id: int
-    created_at: datetime = Field(..., alias="createdAt")
-    updated_at: datetime = Field(..., alias="updatedAt")
+    created_at: py_datetime.datetime = Field(..., alias="createdAt")
+    updated_at: py_datetime.datetime = Field(..., alias="updatedAt")
 
     class Config:
         from_attributes = True
@@ -238,7 +238,7 @@ class NCCAPAResponse(NCCAPABase):
 class AuditBase(BaseModel):
     audit_id: str = Field(..., alias="auditId")
     audit_type: str = Field(..., alias="auditType")
-    date: date
+    date: py_datetime.date
     auditor_name: str = Field(..., alias="auditorName")
     auditor_organization: Optional[str] = Field(None, alias="auditorOrganization")
     scope: str
@@ -249,7 +249,7 @@ class AuditBase(BaseModel):
     closed_findings: Optional[int] = Field(default=0, alias="closedFindings")
     compliance_score: Optional[float] = Field(None, alias="complianceScore")
     report_url: Optional[str] = Field(None, alias="reportUrl")
-    next_audit_date: Optional[date] = Field(None, alias="nextAuditDate")
+    next_audit_date: Optional[py_datetime.date] = Field(None, alias="nextAuditDate")
 
     class Config:
         populate_by_name = True
@@ -261,7 +261,7 @@ class AuditCreate(AuditBase):
 
 class AuditUpdate(BaseModel):
     audit_type: Optional[str] = Field(None, alias="auditType")
-    date: Optional[date] = None
+    date: Optional[py_datetime.date] = None
     auditor_name: Optional[str] = Field(None, alias="auditorName")
     auditor_organization: Optional[str] = Field(None, alias="auditorOrganization")
     scope: Optional[str] = None
@@ -272,7 +272,7 @@ class AuditUpdate(BaseModel):
     closed_findings: Optional[int] = Field(None, alias="closedFindings")
     compliance_score: Optional[float] = Field(None, alias="complianceScore")
     report_url: Optional[str] = Field(None, alias="reportUrl")
-    next_audit_date: Optional[date] = Field(None, alias="nextAuditDate")
+    next_audit_date: Optional[py_datetime.date] = Field(None, alias="nextAuditDate")
 
     class Config:
         populate_by_name = True
@@ -280,8 +280,8 @@ class AuditUpdate(BaseModel):
 
 class AuditResponse(AuditBase):
     id: int
-    created_at: datetime = Field(..., alias="createdAt")
-    updated_at: datetime = Field(..., alias="updatedAt")
+    created_at: py_datetime.datetime = Field(..., alias="createdAt")
+    updated_at: py_datetime.datetime = Field(..., alias="updatedAt")
 
     class Config:
         from_attributes = True

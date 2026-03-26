@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Search, FileBarChart, Download, Calendar, Upload } from 'lucide-react'
-import { reportsService } from '../../../services/labManagementApi'
+import { reportsService, getDownloadUrl } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Badge from '../../../components/labManagement/Badge'
@@ -32,24 +32,11 @@ function Reports() {
     }
   }
 
-  const handleDownload = async (report) => {
-    try {
-      const blob = await reportsService.download(report.id)
-
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-
-      link.href = url
-      link.download = report.name || 'report'
-
-      document.body.appendChild(link)
-      link.click()
-
-      link.remove()
-      window.URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error(error)
-      toast.error('Failed to download report')
+  const handleDownload = (report) => {
+    if (report.file_path) {
+      window.open(getDownloadUrl(report.file_path), '_blank')
+    } else {
+      toast.error('File not found')
     }
   }
 

@@ -191,13 +191,15 @@ function Audits() {
         title="Create New Audit"
         size="lg"
       >
-        <CreateAuditForm
-          onSuccess={() => {
-            setShowCreateModal(false)
-            loadAudits()
-          }}
-          onCancel={() => setShowCreateModal(false)}
-        />
+        {showCreateModal && (
+          <CreateAuditForm
+            onSuccess={() => {
+              setShowCreateModal(false)
+              loadAudits()
+            }}
+            onCancel={() => setShowCreateModal(false)}
+          />
+        )}
       </Modal>
     </div>
   )

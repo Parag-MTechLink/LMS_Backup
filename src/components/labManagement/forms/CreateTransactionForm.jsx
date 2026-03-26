@@ -148,7 +148,7 @@ export default function CreateTransactionForm({ onSuccess, onCancel, transaction
           ) : (
             <select
               value={formData.itemId}
-              onChange={(e) => setFormData({ ...formData, itemId: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, itemId: parseInt(e.target.value) || '' })}
               className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
               required
             >

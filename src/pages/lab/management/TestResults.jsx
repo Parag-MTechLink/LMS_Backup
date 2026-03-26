@@ -329,13 +329,15 @@ function TestResults() {
         title="Upload Test Result"
         size="lg"
       >
-        <UploadTestResultForm
-          onSuccess={() => {
-            setShowUploadModal(false)
-            loadResults()
-          }}
-          onCancel={() => setShowUploadModal(false)}
-        />
+        {showUploadModal && (
+          <UploadTestResultForm
+            onSuccess={() => {
+              setShowUploadModal(false)
+              loadResults()
+            }}
+            onCancel={() => setShowUploadModal(false)}
+          />
+        )}
       </Modal>
 
       {/* Sample Result Modal */}

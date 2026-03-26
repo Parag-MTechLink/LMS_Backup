@@ -4,7 +4,7 @@ Pydantic schemas for Inventory Management
 
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime, date
+import datetime as py_datetime
 
 
 # Instrument Schemas
@@ -18,8 +18,8 @@ class InstrumentBase(BaseModel):
     lab_location: Optional[str] = Field(None, alias="labLocation")
     assigned_department: Optional[str] = Field(None, alias="assignedDepartment")
     status: str = "Active"
-    purchase_date: Optional[date] = Field(None, alias="purchaseDate")
-    warranty_expiry: Optional[date] = Field(None, alias="warrantyExpiry")
+    purchase_date: Optional[py_datetime.date] = Field(None, alias="purchaseDate")
+    warranty_expiry: Optional[py_datetime.date] = Field(None, alias="warrantyExpiry")
     service_vendor: Optional[str] = Field(None, alias="serviceVendor")
     service_vendor_contact: Optional[str] = Field(None, alias="serviceVendorContact")
     notes: Optional[str] = None
@@ -43,8 +43,8 @@ class InstrumentUpdate(BaseModel):
     lab_location: Optional[str] = Field(None, alias="labLocation")
     assigned_department: Optional[str] = Field(None, alias="assignedDepartment")
     status: Optional[str] = None
-    purchase_date: Optional[date] = Field(None, alias="purchaseDate")
-    warranty_expiry: Optional[date] = Field(None, alias="warrantyExpiry")
+    purchase_date: Optional[py_datetime.date] = Field(None, alias="purchaseDate")
+    warranty_expiry: Optional[py_datetime.date] = Field(None, alias="warrantyExpiry")
     service_vendor: Optional[str] = Field(None, alias="serviceVendor")
     service_vendor_contact: Optional[str] = Field(None, alias="serviceVendorContact")
     notes: Optional[str] = None
@@ -64,13 +64,13 @@ class InstrumentResponse(BaseModel):
     lab_location: Optional[str] = Field(None, alias="labLocation")
     assigned_department: Optional[str] = Field(None, alias="assignedDepartment")
     status: str
-    purchase_date: Optional[date] = Field(None, alias="purchaseDate")
-    warranty_expiry: Optional[date] = Field(None, alias="warrantyExpiry")
+    purchase_date: Optional[py_datetime.date] = Field(None, alias="purchaseDate")
+    warranty_expiry: Optional[py_datetime.date] = Field(None, alias="warrantyExpiry")
     service_vendor: Optional[str] = Field(None, alias="serviceVendor")
     service_vendor_contact: Optional[str] = Field(None, alias="serviceVendorContact")
     notes: Optional[str] = None
-    created_at: datetime = Field(..., alias="createdAt")
-    updated_at: datetime = Field(..., alias="updatedAt")
+    created_at: py_datetime.datetime = Field(..., alias="createdAt")
+    updated_at: py_datetime.datetime = Field(..., alias="updatedAt")
     is_deleted: bool = Field(..., alias="isDeleted")
 
     class Config:
@@ -88,7 +88,7 @@ class ConsumableBase(BaseModel):
     unit: Optional[str] = None
     low_stock_threshold: int = Field(10, alias="lowStockThreshold")
     batch_lot_number: Optional[str] = Field(None, alias="batchLotNumber")
-    expiry_date: Optional[date] = Field(None, alias="expiryDate")
+    expiry_date: Optional[py_datetime.date] = Field(None, alias="expiryDate")
     supplier: Optional[str] = None
     notes: Optional[str] = None
 
@@ -110,7 +110,7 @@ class ConsumableUpdate(BaseModel):
     unit: Optional[str] = None
     low_stock_threshold: Optional[int] = Field(None, alias="lowStockThreshold")
     batch_lot_number: Optional[str] = Field(None, alias="batchLotNumber")
-    expiry_date: Optional[date] = Field(None, alias="expiryDate")
+    expiry_date: Optional[py_datetime.date] = Field(None, alias="expiryDate")
     supplier: Optional[str] = None
     notes: Optional[str] = None
 
@@ -128,12 +128,12 @@ class ConsumableResponse(BaseModel):
     unit: Optional[str] = None
     low_stock_threshold: int = Field(..., alias="lowStockThreshold")
     batch_lot_number: Optional[str] = Field(None, alias="batchLotNumber")
-    expiry_date: Optional[date] = Field(None, alias="expiryDate")
+    expiry_date: Optional[py_datetime.date] = Field(None, alias="expiryDate")
     supplier: Optional[str] = None
     status: Optional[str] = None
     notes: Optional[str] = None
-    created_at: datetime = Field(..., alias="createdAt")
-    updated_at: datetime = Field(..., alias="updatedAt")
+    created_at: py_datetime.datetime = Field(..., alias="createdAt")
+    updated_at: py_datetime.datetime = Field(..., alias="updatedAt")
     is_deleted: bool = Field(..., alias="isDeleted")
 
     class Config:
@@ -146,9 +146,11 @@ class CalibrationBase(BaseModel):
     """Base calibration schema"""
     calibration_id: str = Field(..., alias="calibrationId")
     instrument_id: int = Field(..., alias="instrumentId")
-    last_calibration_date: date = Field(..., alias="lastCalibrationDate")
-    next_due_date: date = Field(..., alias="nextDueDate")
+    last_calibration_date: py_datetime.date = Field(..., alias="lastCalibrationDate")
+    next_due_date: py_datetime.date = Field(..., alias="nextDueDate")
     calibration_frequency: Optional[str] = Field(None, alias="calibrationFrequency")
+    calibration_method: Optional[str] = Field(None, alias="calibrationMethod")
+
     certified_by: Optional[str] = Field(None, alias="certifiedBy")
     certificate_number: Optional[str] = Field(None, alias="certificateNumber")
     certificate_url: Optional[str] = Field(None, alias="certificateUrl")
@@ -167,9 +169,10 @@ class CalibrationUpdate(BaseModel):
     """Schema for updating a calibration"""
     calibration_id: Optional[str] = Field(None, alias="calibrationId")
     instrument_id: Optional[int] = Field(None, alias="instrumentId")
-    last_calibration_date: Optional[date] = Field(None, alias="lastCalibrationDate")
-    next_due_date: Optional[date] = Field(None, alias="nextDueDate")
+    last_calibration_date: Optional[py_datetime.date] = Field(None, alias="lastCalibrationDate")
+    next_due_date: Optional[py_datetime.date] = Field(None, alias="nextDueDate")
     calibration_frequency: Optional[str] = Field(None, alias="calibrationFrequency")
+    calibration_method: Optional[str] = Field(None, alias="calibrationMethod")
     certified_by: Optional[str] = Field(None, alias="certifiedBy")
     certificate_number: Optional[str] = Field(None, alias="certificateNumber")
     certificate_url: Optional[str] = Field(None, alias="certificateUrl")
@@ -185,16 +188,17 @@ class CalibrationResponse(BaseModel):
     calibration_id: str = Field(..., alias="calibrationId")
     instrument_id: int = Field(..., alias="instrumentId")
     instrument_name: Optional[str] = Field(None, alias="instrumentName")
-    last_calibration_date: date = Field(..., alias="lastCalibrationDate")
-    next_due_date: date = Field(..., alias="nextDueDate")
+    last_calibration_date: py_datetime.date = Field(..., alias="lastCalibrationDate")
+    next_due_date: py_datetime.date = Field(..., alias="nextDueDate")
     calibration_frequency: Optional[str] = Field(None, alias="calibrationFrequency")
+    calibration_method: Optional[str] = Field(None, alias="calibrationMethod")
     certified_by: Optional[str] = Field(None, alias="certifiedBy")
     certificate_number: Optional[str] = Field(None, alias="certificateNumber")
     certificate_url: Optional[str] = Field(None, alias="certificateUrl")
     status: Optional[str] = None
     notes: Optional[str] = None
-    created_at: datetime = Field(..., alias="createdAt")
-    updated_at: datetime = Field(..., alias="updatedAt")
+    created_at: py_datetime.datetime = Field(..., alias="createdAt")
+    updated_at: py_datetime.datetime = Field(..., alias="updatedAt")
     is_deleted: bool = Field(..., alias="isDeleted")
 
     class Config:
@@ -212,7 +216,7 @@ class TransactionBase(BaseModel):
     transaction_type: str = Field(..., alias="transactionType")
     quantity: int
     used_by: Optional[str] = Field(None, alias="usedBy")
-    date: date
+    date: py_datetime.date
     purpose: Optional[str] = None
     linked_test_id: Optional[int] = Field(None, alias="linkedTestId")
     linked_test_name: Optional[str] = Field(None, alias="linkedTestName")
@@ -236,7 +240,7 @@ class TransactionUpdate(BaseModel):
     transaction_type: Optional[str] = Field(None, alias="transactionType")
     quantity: Optional[int] = None
     used_by: Optional[str] = Field(None, alias="usedBy")
-    date: Optional[date] = None
+    date: Optional[py_datetime.date] = None
     purpose: Optional[str] = None
     linked_test_id: Optional[int] = Field(None, alias="linkedTestId")
     linked_test_name: Optional[str] = Field(None, alias="linkedTestName")
@@ -256,12 +260,12 @@ class TransactionResponse(BaseModel):
     transaction_type: str = Field(..., alias="transactionType")
     quantity: int
     used_by: Optional[str] = Field(None, alias="usedBy")
-    date: date
+    date: py_datetime.date
     purpose: Optional[str] = None
     linked_test_id: Optional[int] = Field(None, alias="linkedTestId")
     linked_test_name: Optional[str] = Field(None, alias="linkedTestName")
     notes: Optional[str] = None
-    created_at: datetime = Field(..., alias="createdAt")
+    created_at: py_datetime.datetime = Field(..., alias="createdAt")
     is_deleted: bool = Field(..., alias="isDeleted")
 
     class Config:

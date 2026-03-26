@@ -82,11 +82,29 @@ export default function CreateDocumentForm({ document, onSuccess, onCancel }) {
     try {
       setLoading(true)
 
+      // Handle file upload if it's a File object
+      let uploadedUrl = formData.documentUrl
+      if (formData.documentUrl instanceof File) {
+        try {
+          const uploadRes = await documentControlService.upload(formData.documentUrl)
+          if (uploadRes.success && uploadRes.file_url) {
+            uploadedUrl = uploadRes.file_url
+          } else {
+            throw new Error('Failed to get file URL from server')
+          }
+        } catch (uploadError) {
+          console.error('File upload failed:', uploadError)
+          toast.error('Failed to upload document. Please try again.')
+          setLoading(false)
+          return
+        }
+      }
+
       // Prepare submit data - don't send File objects
       const submitData = {
         ...formData,
-        // Only send string URLs or null for documentUrl, not File objects
-        documentUrl: (formData.documentUrl && typeof formData.documentUrl === 'string') ? formData.documentUrl : null
+        // Send the uploaded URL or existing string URL
+        documentUrl: (uploadedUrl && typeof uploadedUrl === 'string') ? uploadedUrl : null
       }
 
       if (document) {

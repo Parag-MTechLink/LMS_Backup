@@ -12,6 +12,7 @@ class DocumentBase(BaseModel):
 class DocumentResponse(DocumentBase):
     id: int
     file_type: str
+    file_path: str
     status: str
     created_at: datetime
 

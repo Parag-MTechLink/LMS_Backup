@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { Plus, Search, FileText, Edit, Trash2, Eye, History, Download, Activity, ArrowLeft } from 'lucide-react'
-import { sopService, testExecutionsService } from '../../../services/labManagementApi'
+import { sopService, testExecutionsService, getDownloadUrl } from '../../../services/labManagementApi'
 import toast from 'react-hot-toast'
 import Card from '../../../components/labManagement/Card'
 import Button from '../../../components/labManagement/Button'
@@ -268,7 +268,7 @@ function QASOPManagement() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(sop.documentUrl, '_blank')}
+                        onClick={() => window.open(getDownloadUrl(sop.documentUrl), '_blank')}
                       >
                         <Download className="w-4 h-4" />
                       </Button>
@@ -298,18 +298,20 @@ function QASOPManagement() {
         title={selectedSOP ? 'Edit SOP' : 'Add New SOP'}
         size="lg"
       >
-        <CreateSOPForm
-          sop={selectedSOP}
-          onSuccess={() => {
-            setShowCreateModal(false)
-            setSelectedSOP(null)
-            loadSOPs()
-          }}
-          onCancel={() => {
-            setShowCreateModal(false)
-            setSelectedSOP(null)
-          }}
-        />
+        {showCreateModal && (
+          <CreateSOPForm
+            sop={selectedSOP}
+            onSuccess={() => {
+              setShowCreateModal(false)
+              setSelectedSOP(null)
+              loadSOPs()
+            }}
+            onCancel={() => {
+              setShowCreateModal(false)
+              setSelectedSOP(null)
+            }}
+          />
+        )}
       </Modal>
 
       {/* Revision History Modal */}
