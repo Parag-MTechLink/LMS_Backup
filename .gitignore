@@ -17,6 +17,7 @@ node_modules
 .env.development.local
 .env.test.local
 .env.production.local
+personal_sprint_changes.md
 
 # Logs
 npm-debug.log*

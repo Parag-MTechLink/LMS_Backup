@@ -113,8 +113,7 @@ function SampleDetails() {
         </div>
       </motion.div>
 
-      {/* Summary cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <div className="space-y-1">
             <p className="text-xs font-medium uppercase text-gray-500">Project</p>
@@ -149,7 +148,28 @@ function SampleDetails() {
             </div>
           </div>
         </Card>
+        <Card>
+          <div className="space-y-1">
+            <p className="text-xs font-medium uppercase text-gray-500">Quantity</p>
+            <div className="flex items-center gap-2 text-sm text-gray-700">
+              <Package className="h-4 w-4 text-gray-400" />
+              <span>{sample.quantity || 'N/A'}</span>
+            </div>
+          </div>
+        </Card>
       </div>
+
+      {sample.testDetails && (
+        <Card>
+          <div className="flex items-center gap-2 mb-2">
+            <FileText className="h-4 w-4 text-gray-400" />
+            <h2 className="text-sm font-semibold text-gray-700">Test Details</h2>
+          </div>
+          <p className="text-sm text-gray-700 whitespace-pre-wrap">
+            {sample.testDetails}
+          </p>
+        </Card>
+      )}
 
       {/* Notes */}
       <Card>

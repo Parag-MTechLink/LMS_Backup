@@ -12,3 +12,5 @@ class Sample(Base):
     projectId = Column(Integer)
     projectName = Column(String)
     notes = Column(String)   # ✅ added
+    quantity = Column(Integer, nullable=True)
+    testDetails = Column(String, nullable=True)

@@ -12,7 +12,9 @@ export default function CreateSampleForm({ projectId, onSuccess, onCancel }) {
     receivedDate: new Date().toISOString().split('T')[0],
     condition: 'Good',
     storageLocation: '',
-    notes: ''
+    notes: '',
+    quantity: '',
+    testDetails: ''
   })
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(false)
@@ -155,6 +157,27 @@ export default function CreateSampleForm({ projectId, onSuccess, onCancel }) {
         placeholder="e.g., Shelf A-12"
         required
       />
+
+      <Input
+        label="Quantity"
+        type="number"
+        value={formData.quantity}
+        onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || '' })}
+        placeholder="e.g., 5"
+      />
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Test Details
+        </label>
+        <textarea
+          value={formData.testDetails}
+          onChange={(e) => setFormData({ ...formData, testDetails: e.target.value })}
+          placeholder="Details about tests for this sample"
+          rows={3}
+          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+        />
+      </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
