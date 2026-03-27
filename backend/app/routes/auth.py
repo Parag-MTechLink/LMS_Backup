@@ -28,6 +28,7 @@ from app.services.auth_service import (
 )
 from app.services.rbac_service import log_audit
 from app.utils.email import send_password_reset_email, send_mfa_code_email
+from app.modules.auth.otp_service import otp_manager
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +132,13 @@ class ResetRequest(BaseModel):
 class PasswordReset(BaseModel):
     token: str
     password: str
+
+class OTPRequest(BaseModel):
+    mobile: str
+
+class OTPVerifyRequest(BaseModel):
+    mobile: str
+    otp: str
 
 
 @router.post("/signup")
@@ -477,3 +485,89 @@ def perform_password_reset(body: PasswordReset, db: Session = Depends(get_db)):
         )
         
     return {"message": message}
+
+import re
+
+def normalize_phone(phone: str | None) -> str:
+    """Remove all non-digit characters from a phone number string."""
+    if not phone:
+        return ""
+    return re.sub(r"\D", "", phone)
+
+@router.post("/send-otp")
+def send_otp(body: OTPRequest, db: Session = Depends(get_db)):
+    """Generate and send OTP to the mobile number."""
+    target_mobile = normalize_phone(body.mobile)
+    if not target_mobile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid mobile number format."
+        )
+
+    # Search for user with matching normalized phone number
+    users = db.query(User).filter(User.phone_no != None).all()
+    
+    # Robust matching: match if the last 10 digits are identical (handles country codes)
+    user = next((
+        u for u in users 
+        if normalize_phone(u.phone_no)[-10:] == target_mobile[-10:]
+    ), None)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User with this mobile number not found. Please ensure your profile is updated with this number."
+        )
+    
+    # Generate OTP (store using normalized mobile)
+    otp_manager.generate_otp(target_mobile)
+    
+    return {"success": True, "message": "OTP sent successfully. Please check your console."}
+
+@router.post("/verify-otp", response_model=LoginResponse)
+def verify_otp(body: OTPVerifyRequest, db: Session = Depends(get_db)):
+    """Verify OTP and return access token."""
+    target_mobile = normalize_phone(body.mobile)
+    verified, message = otp_manager.verify_otp(target_mobile, body.otp)
+    
+    if not verified:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=message
+        )
+    
+    # OTP verified! Fetch user using robust matching (suffix match)
+    users = db.query(User).filter(User.phone_no != None).all()
+    user = next((
+        u for u in users 
+        if normalize_phone(u.phone_no)[-10:] == target_mobile[-10:]
+    ), None)
+
+    if not user:
+         raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found after verification."
+        )
+         
+    token = create_access_token(user_id=str(user.id), role=user.role, email=user.email)
+    
+    return LoginResponse(
+        access_token=token,
+        token_type="bearer",
+        user={
+            "id": str(user.id),
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role,
+            "gender": user.gender,
+            "country": user.country,
+            "language": user.language,
+            "address": user.address,
+            "company_name": user.company_name,
+            "phone_no": user.phone_no,
+            "designation": user.designation,
+            "industry": user.industry,
+            "account_type": user.account_type,
+        },
+        message="Login successful via OTP."
+    )

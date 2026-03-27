@@ -414,6 +414,10 @@ from app.routes.auth import (
     ChangePasswordRequest,
     quick_login as _auth_quick_login,
     QuickLoginRequest,
+    send_otp as _auth_send_otp,
+    verify_otp as _auth_verify_otp,
+    OTPRequest,
+    OTPVerifyRequest,
 )
 from app.models.user_model import User
 from fastapi import Depends
@@ -480,6 +484,16 @@ def auth_reset_password_route(body: PasswordReset, db: Session = Depends(get_db)
 def auth_verify_mfa_route(body: VerifyMFARequest, db: Session = Depends(get_db)):
     """Verify the 6-digit MFA code and issue the final access token."""
     return _auth_verify_mfa(body, db)
+
+
+@app.post("/api/v1/auth/send-otp")
+def auth_send_otp_route(body: OTPRequest, db: Session = Depends(get_db)):
+    return _auth_send_otp(body, db)
+
+
+@app.post("/api/v1/auth/verify-otp", response_model=LoginResponse)
+def auth_verify_otp_route(body: OTPVerifyRequest, db: Session = Depends(get_db)):
+    return _auth_verify_otp(body, db)
 
 
 if __name__ == "__main__":

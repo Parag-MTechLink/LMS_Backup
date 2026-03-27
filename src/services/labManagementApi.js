@@ -136,6 +136,10 @@ export const authService = {
   deleteUser: (userId) => apiService.delete(`/auth/users/${userId}`),
   verifyMfa: (email, code) =>
     apiService.post('/auth/verify-mfa', { email, code }),
+  sendOtp: (mobile) =>
+    apiService.post('/auth/send-otp', { mobile }),
+  verifyOtp: (mobile, otp) =>
+    apiService.post('/auth/verify-otp', { mobile, otp }),
   updateProfile: (data) => {
     clearCache('auth:me')
     return apiService.put('/auth/profile', data)
