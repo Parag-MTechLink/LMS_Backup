@@ -5,7 +5,14 @@ import toast from 'react-hot-toast'
 import { authService } from '../services/labManagementApi'
 import { useLabManagementAuth } from '../contexts/LabManagementAuthContext'
 import { getApiErrorMessage } from '../utils/apiError'
-import { User, Mail, Lock, Briefcase, ArrowRight, X, Eye, EyeOff } from 'lucide-react'
+import { User, Mail, Lock, Briefcase, ArrowRight, X, Eye, EyeOff, Info } from 'lucide-react'
+
+const ALLOWED_DOMAINS = [
+  '@millenniumtechlink.com',
+  '@millenniumtestlabs.com',
+  '@millenniumsemi.com',
+  '@gmail.com',
+]
 
 const ROLES = [
   { value: 'Testing Engineer', label: 'Testing Engineer' },
@@ -24,11 +31,21 @@ export default function Signup() {
   const [role, setRole] = useState('Testing Engineer')
   const { login } = useLabManagementAuth()
   const [loading, setLoading] = useState(false)
+  const [shakeTrigger, setShakeTrigger] = useState(0)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!full_name.trim() || !email.trim() || !password) {
       toast.error('Please fill in all required fields.')
+      return
+    }
+
+    // Email domain validation
+    const emailLower = email.trim().toLowerCase()
+    const isDomainAllowed = ALLOWED_DOMAINS.some(domain => emailLower.endsWith(domain))
+    if (!isDomainAllowed) {
+      setShakeTrigger(prev => prev + 1)
+      toast.error('Registration is restricted, please use authorised domain to register')
       return
     }
     // Universal password validation: 8+ chars, 1 upper, 1 lower, 1 number, 1 any symbol
@@ -143,23 +160,73 @@ export default function Signup() {
                 <label htmlFor="email" className="block text-sm font-medium text-slate-700">
                   Email address
                 </label>
-                <div className="relative mt-2">
-                  <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <motion.div 
+                  className="relative mt-2"
+                  key={shakeTrigger}
+                  animate={email.includes('@') && email.split('@')[1].length > 0 && !ALLOWED_DOMAINS.some(d => email.toLowerCase().endsWith(d)) 
+                    ? { x: [-4, 4, -4, 4, 0] } 
+                    : { x: 0 }
+                  }
+                  transition={{ duration: 0.4 }}
+                >
+                  <Mail className={`absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 transition-colors ${
+                    email.includes('@') && email.split('@')[1].length > 0 && !ALLOWED_DOMAINS.some(d => email.toLowerCase().endsWith(d))
+                      ? 'text-red-500' 
+                      : 'text-slate-400'
+                  }`} />
                   <input
                     id="email"
                     type="email"
                     autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-11 pr-4 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className={`block w-full rounded-xl border py-3 pl-11 pr-4 transition-all focus:outline-none focus:ring-2 ${
+                      email.includes('@') && email.split('@')[1].length > 0 && !ALLOWED_DOMAINS.some(d => email.toLowerCase().endsWith(d))
+                        ? 'border-red-500 bg-red-50/30 ring-red-500/20 text-red-900 focus:border-red-500 focus:ring-red-500/10' 
+                        : 'border-slate-300 bg-slate-50 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500/10'
+                    }`}
                     placeholder="name@company.com"
                   />
-                </div>
+                </motion.div>
                 {email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
                   <p className="mt-1.5 text-xs font-medium text-amber-600">
                     Note: Please enter a valid email address.
                   </p>
                 )}
+
+                {/* Real-time Domain Validation Error */}
+                {email.includes('@') && email.split('@')[1].length > 0 && !ALLOWED_DOMAINS.some(d => email.toLowerCase().endsWith(d)) && (
+                  <p className="mt-1.5 text-xs font-medium text-red-600 flex items-center gap-1">
+                    <X className="h-3 w-3" />
+                    This domain is not allowed for registration.
+                  </p>
+                )}
+
+                <div className="mt-4 group relative inline-block">
+                  <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400 cursor-pointer transition-colors hover:text-slate-600">
+                    <Info className="h-3.5 w-3.5" />
+                    <span>View authorized domains for registration</span>
+                  </div>
+                  
+                  {/* Tooltip / Popover on hover - now on the bottom side */}
+                  <div className="absolute left-0 top-full mt-2 hidden group-hover:block transition-all duration-200 z-50">
+                    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xl min-w-[200px]">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 border-b border-slate-50 pb-1">
+                        Authorized Domains
+                      </p>
+                      <ul className="space-y-1">
+                        {ALLOWED_DOMAINS.map(domain => (
+                          <li key={domain} className="flex items-center gap-2 text-[11px] text-slate-600 whitespace-nowrap">
+                            <div className="h-1 w-1 rounded-full bg-slate-400" />
+                            {domain}
+                          </li>
+                        ))}
+                      </ul>
+                      {/* Tooltip Arrow - pointing up */}
+                      <div className="absolute bottom-full left-4 -mb-1.5 w-3 h-3 bg-white border-t border-l border-slate-200 rotate-45" />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Password */}
