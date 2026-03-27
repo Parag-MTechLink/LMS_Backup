@@ -13,6 +13,7 @@ from app.core.security import (
     generate_mfa_code,
 )
 from app.models.user_model import User, ROLES
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,12 @@ def create_user(
     email = email.strip().lower()
     if not email or "@" not in email:
         return None, "Invalid email address."
+
+    # Validate email domain
+    allowed_domains = settings.allowed_registration_domains_list
+    if allowed_domains:
+        if not any(email.endswith(domain) for domain in allowed_domains):
+            return None, "Registration is restricted, please use authorised domain to register"
 
     role = role.strip()
     if role not in ROLES:
@@ -111,7 +118,6 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
 
 
 import secrets
-from app.core.config import settings
 from datetime import datetime, timedelta
 
 def create_password_reset_token(db: Session, email: str) -> str | None:

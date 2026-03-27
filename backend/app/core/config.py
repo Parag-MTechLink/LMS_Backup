@@ -98,6 +98,9 @@ class Settings(BaseSettings):
     HUBSPOT_CLIENT_ID: str = ""
     HUBSPOT_CLIENT_SECRET: str = ""
 
+    # Email Domain Restriction for Registration
+    ALLOWED_REGISTRATION_DOMAINS: str = "@millenniumtechlink.com,@millenniumtestlabs.com,@millenniumsemi.com,@gmail.com"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -115,6 +118,10 @@ class Settings(BaseSettings):
         """Get allowed document types as list"""
         return [t.strip() for t in self.ALLOWED_DOCUMENT_TYPES.split(",")]
 
+    @property
+    def allowed_registration_domains_list(self) -> List[str]:
+        """Get allowed registration domains as list"""
+        return [d.strip().lower() for d in self.ALLOWED_REGISTRATION_DOMAINS.split(",")]
 
 # Create settings instance
 settings = Settings()
