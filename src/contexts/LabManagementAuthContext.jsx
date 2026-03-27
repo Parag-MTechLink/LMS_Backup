@@ -86,6 +86,22 @@ export function LabManagementAuthProvider({ children }) {
     return res
   }
 
+  const sendOtp = async (mobile) => {
+    return await authService.sendOtp(mobile)
+  }
+
+  const loginWithOtp = async (mobile, otp) => {
+    const res = await authService.verifyOtp(mobile, otp)
+    localStorage.setItem(STORAGE_TOKEN, res.access_token)
+    const u = {
+      ...res.user,
+      name: res.user.full_name,
+    }
+    localStorage.setItem(STORAGE_USER, JSON.stringify(u))
+    setUser(u)
+    return res
+  }
+
   const logout = () => {
     setUser(null)
     localStorage.removeItem(STORAGE_TOKEN)
@@ -99,6 +115,8 @@ export function LabManagementAuthProvider({ children }) {
     loading,
     login,
     verifyMfa,
+    sendOtp,
+    loginWithOtp,
     logout,
     refreshUser: loadUser,
   }
