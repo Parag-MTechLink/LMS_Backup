@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: ai-digital-lms-backend
+    env: python
+    region: singapore # Change to your preferred region (e.g., oregon, frankfurt)
+    plan: free # Change to 'starter' if you need more resources
+    rootDir: backend
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false # You will provide this in the Render Dashboard
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: "http://localhost:5173" # Update this with your frontend Render URL once deployed
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: false
+      - key: PORT
+        value: 8000
